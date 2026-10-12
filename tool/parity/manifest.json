@@ -2028,9 +2028,9 @@
   },
   "l09_feed_reset_sum": {
    "suite": "limits",
-   "case": "a7b5a40c86f4677df3df6a12e707817cf9ad4d157afc6ee330bbaa4199628bf0",
+   "case": "7f698840d0c348e45d5d51df58547151ad7e4f76f9e0c725155792255c9db2c1",
    "outcomes": {
-    "ref-py": "6d2b8b521d0199d795c989004c43f9902f27102c4e0eb7a1e3d15410f9b71a86"
+    "ref-py": "afa9856ae9853c14bbd0f09fe840d06f7740a9f58fc30c74cb1102dd257fa44b"
    }
   },
   "l11_turn_reset_on_resume": {
