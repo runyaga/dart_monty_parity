@@ -94,7 +94,7 @@ def main() -> int:
         print(f'FAIL: {f}')
     if fails:
         print(f'\n{len(fails)} problem(s). Regenerate with tool/parity/oracle/check_expected.py --write '
-              '(see tool/parity/README.md), which rewrites the outcomes and this manifest together.')
+              '(see README.md), which rewrites the outcomes and this manifest together.')
         return 1
     n_out = sum(len(c['outcomes']) for c in got['cases'].values()) + sum(len(p['outcomes']) for p in got['probes'].values())
     print(f'PASS: {len(got["cases"])} cases and {len(got["probes"])} probes bound to {n_out} expected outcomes; '

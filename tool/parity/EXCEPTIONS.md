@@ -2,7 +2,7 @@
 
 Every difference the parity scorer tolerates is a named exception in `tool/parity/rows.json`, with the
 stable ID used below. Nothing else is tolerated, and an exception applies to a case only when the
-difference it names is actually present in that case. Evidence is in the `parity-baseline` CI
+difference it names is actually present in that case. Evidence is in the `parity-baseline-5873ec5` CI
 artifact (`<case>/core-<backend>.json`) against `tool/parity/expected/<case>/`.
 
 **Why each one matters (measured):** with no exceptions, core `5873ec5` on arm64 scores FFI PRESENT

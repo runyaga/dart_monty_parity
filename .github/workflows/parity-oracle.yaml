@@ -5,9 +5,27 @@ name: Parity oracle
 # upstream monty at the pinned commit for three Rust-only probes -- and fails
 # on any byte of difference, or on a manifest that does not bind them.
 #
-# Called from ci.yaml when a parity input changed; also weekly and on demand.
+# Runs when a parity input changes (the paths below), weekly, and on demand.
 on:
-  workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - 'tool/parity/cases/**'
+      - 'tool/parity/expected/**'
+      - 'tool/parity/manifest.json'
+      - 'tool/parity/oracle/**'
+      - 'tool/upstream/**'
+      - 'tool/check_parity_manifest.py'
+      - '.github/workflows/parity-oracle.yaml'
+  pull_request:
+    paths:
+      - 'tool/parity/cases/**'
+      - 'tool/parity/expected/**'
+      - 'tool/parity/manifest.json'
+      - 'tool/parity/oracle/**'
+      - 'tool/upstream/**'
+      - 'tool/check_parity_manifest.py'
+      - '.github/workflows/parity-oracle.yaml'
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'   # Monday 06:00 UTC

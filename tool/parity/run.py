@@ -6,10 +6,11 @@ usage:
   python3 -I tool/parity/run.py dart2js   --core DIR --out OUTDIR [--cases GLOB ...]
   python3 -I tool/parity/run.py dart2wasm --core DIR --out OUTDIR [--cases GLOB ...]
 
---core is the dart_monty_core checkout to measure (default: this repository).
-The runner package (packages/monty_parity) is pointed at it with a
-pubspec_overrides.yaml written for the run and removed afterwards, so the same
-runner measures any core commit whose public API it compiles against.
+--core is the dart_monty_core checkout to measure (required). The runner
+package (packages/monty_parity) is pointed at it with a pubspec_overrides.yaml
+written for the run and removed afterwards, so the same runner measures any
+core commit whose public API it compiles against. Core's native library (FFI)
+is built from that checkout by its build hook, so the VM backend needs Rust.
 
 Writes OUTDIR/<case>/core-<backend>.json (and core1-<backend>.json for
 one-shot cases). A case marked "isolate" runs in its own VM process under a
@@ -157,11 +158,14 @@ def record_platform(out: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('backend', choices=['vm', 'dart2js', 'dart2wasm'])
-    ap.add_argument('--core', type=Path, default=ROOT)
+    ap.add_argument('--core', type=Path, required=True, help='dart_monty_core checkout to measure')
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--cases', nargs='*', default=[])
     a = ap.parse_args()
     core = a.core.resolve()
+    spec = core / 'pubspec.yaml'
+    if 'name: dart_monty_core' not in (spec.read_text().splitlines() if spec.is_file() else []):
+        sys.exit(f'--core {a.core}: not a dart_monty_core checkout (no pubspec.yaml naming dart_monty_core)')
     out = a.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     record_platform(out)
@@ -169,8 +173,7 @@ def main() -> int:
     log.write_text('')
     cases = case_files(a.cases)
     override = PKG / 'pubspec_overrides.yaml'
-    if core != ROOT:
-        override.write_text(f'dependency_overrides:\n  dart_monty_core:\n    path: {core}\n')
+    override.write_text(f'dependency_overrides:\n  dart_monty_core:\n    path: {core}\n')
     try:
         if sh(['dart', 'pub', 'get'], log) != 0:
             sys.exit(f'dart pub get failed; see {log}')

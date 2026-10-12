@@ -10,9 +10,9 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  # Overridden by tool/parity/run.sh when measuring another core checkout.
-  dart_monty_core:
-    path: ../..
+  # The core checkout under test. tool/parity/run.py --core DIR writes a
+  # pubspec_overrides.yaml pointing here at DIR for the run.
+  dart_monty_core: any
 
 dev_dependencies:
   test: ^1.25.0
