@@ -18,18 +18,28 @@ NO-ORACLE. A row's status on a backend follows from its cases
 (tool/parity/rows.json):
 
   PRESENT  every case MATCH
-  PARTIAL  some, not all, MATCH
-  ABSENT   none MATCH
+  PARTIAL  at least one case MATCH, not all
+  ABSENT   no case MATCH, and not every case REFUSED (a row of REFUSED and
+           DIVERGE cases is ABSENT)
   REFUSED  every case REFUSED
 
+PARTIAL is strict: it needs a case that matches upstream in full, every
+compared field equal. A field that merely resembles upstream's (the same text
+in another type, the same value without identity) does not make a match.
+
 A row rule may carry named exceptions: a tolerated difference, each with its
-reason. Nothing else is tolerated.
+reason. Only the exceptions in KEPT_EXCEPTIONS exist, each ignoring one named
+field where the difference is actually present; a rows.json that names any
+other fails. Nothing else is tolerated.
 
 --assert-rows fails when a re-measured row's status differs from the status
 recorded for it in rows.json under the backend's `expect` (the baseline
-measured at dart_monty_core 5873ec5); --assert-baseline fails when the FFI
-PRESENT count over the 185 in-scope manifest rows differs from the manifest's
-frozen baseline (re-measured rows from this run, the rest as recorded).
+measured at dart_monty_core 5873ec5); --assert-baseline fails when a PRESENT
+count over the 185 in-scope manifest rows differs from the one recorded for
+the architecture (re-measured rows from this run, the rest as recorded), and
+on arm64 when the FFI count differs from the manifest's frozen baseline other
+than by the rows rows.json lists under `rescored` (rows whose status these
+scoring rules decide differently from the manifest's method).
 
 Expectations are per CPU architecture. The baseline was measured on arm64;
 `platforms` in rows.json (and in the current-baseline file) lists, per other
@@ -100,57 +110,29 @@ def expand(codes: list[str]) -> list[str]:
     return out
 
 
-def _opaque_as_str(v):
-    """{opaque, text} -> {str, text}: core types repr/cycle/function placeholders; upstream returns the str."""
-    if isinstance(v, list):
-        return [_opaque_as_str(x) for x in v]
-    if isinstance(v, dict):
-        if v.get('t') == 'opaque':
-            return {'t': 'str', 'v': v.get('v')}
-        return {k: _opaque_as_str(x) for k, x in v.items()}
-    return v
-
-
-def _identity_inline(v, table=None):
-    """Resolves id/ref identity markers, so only identity (not value) is ignored."""
-    if table is None:
-        table = {}
-
-        def collect(x):
-            if isinstance(x, dict):
-                if 'id' in x and x.get('t') != 'ref':
-                    table[x['id']] = x
-                for y in x.values():
-                    collect(y)
-            elif isinstance(x, list):
-                for y in x:
-                    collect(y)
-
-        collect(v)
-    if isinstance(v, list):
-        return [_identity_inline(x, table) for x in v]
-    if isinstance(v, dict):
-        if v.get('t') == 'ref' and v.get('id') in table:
-            return _identity_inline({k: x for k, x in table[v['id']].items() if k != 'id'}, table)
-        return {k: _identity_inline(x, table) for k, x in v.items() if k != 'id'}
-    return v
-
-
-def _drop_convert_events(v):
-    """Host-call transcript without convert_value events (core has no conversion hook)."""
-    if isinstance(v, list):
-        return [x for x in v if not (isinstance(x, dict) and x.get('op') == 'convert')]
-    return v
-
-
-NORMALISERS = {
-    'opaque_as_str': ('V', _opaque_as_str),
-    'identity_inline': ('V', _identity_inline),
-    'drop_convert_events': ('H', _drop_convert_events),
+# The only tolerated differences. Each ignores fields where the difference is
+# actually present: `ignore` (case rows: field codes) or `ignore_keys` (probe
+# rows: event keys).
+KEPT_EXCEPTIONS = {
+    'rename-missing-message': 'ignore',
+    'payload-host-type': 'ignore_keys',
+    'no-suspension-position': 'ignore_keys',
 }
 
 
-def compare_steps(ref: dict, got: dict, codes: list[str], normalisers: list[str] = ()) -> list[str]:
+def check_exceptions(rules: dict) -> None:
+    """Fails on any exception that is not one of KEPT_EXCEPTIONS, in the form it is kept in."""
+    bad = []
+    for row, rule in rules.items():
+        for ex in rule.get('exceptions', []):
+            form = KEPT_EXCEPTIONS.get(ex.get('name'))
+            if form is None or form not in ex or set(ex) - {'name', 'reason', 'case', 'probe', 'backends', form}:
+                bad.append(f"{row}: {ex.get('name')}")
+    if bad:
+        sys.exit(f'rows.json names exceptions score.py does not tolerate: {bad} (kept: {sorted(KEPT_EXCEPTIONS)})')
+
+
+def compare_steps(ref: dict, got: dict, codes: list[str]) -> list[str]:
     """Codes of the compared fields that differ."""
     bad = []
     rs, gs = ref.get('steps') or [], got.get('steps') or []
@@ -166,10 +148,6 @@ def compare_steps(ref: dict, got: dict, codes: list[str], normalisers: list[str]
         else:
             rv = [norm(s.get(FIELD[code])) for s in rs]
             gv = [norm(s.get(FIELD[code])) for s in gs]
-            for n in normalisers:
-                field, fn = NORMALISERS[n]
-                if field == code:
-                    rv, gv = [fn(x) for x in rv], [fn(x) for x in gv]
         if rv != gv:
             bad.append(code)
     return bad
@@ -204,35 +182,31 @@ def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path)
         return 'NO-ORACLE', ['?'], []
     codes = expand(rule.get('compare', ALL_CODES))
     applied = []
-    normalisers: list[str] = []
     for ex in rule.get('exceptions', []):
         if ex.get('case') not in (None, cid) or backend not in ex.get('backends', [backend]):
             continue
-        before = compare_steps(ref, got, codes, normalisers)
-        if 'normalise' in ex:
-            after = compare_steps(ref, got, codes, [*normalisers, ex['normalise']])
-            if after != before:
-                normalisers.append(ex['normalise'])
-                applied.append(ex['name'])
-            continue
+        before = compare_steps(ref, got, codes)
         ignore = set(expand(ex['ignore']))
         if ignore & set(before):  # only when the tolerated difference is actually there
             codes = [c for c in codes if c not in ignore]
             applied.append(ex['name'])
-    bad = compare_steps(ref, got, codes, normalisers)
+    bad = compare_steps(ref, got, codes)
     return ('MATCH' if not bad else 'DIVERGE'), bad, applied
 
 
 def row_status(classes: list[str]) -> str:
+    """Strict: PARTIAL needs at least one full MATCH; REFUSED needs every case REFUSED; else ABSENT."""
     counted = [c for c in classes if c != 'NO-ORACLE']
     if not counted:
         return 'UNVERIFIED'
-    if all(c == 'REFUSED' for c in counted):
-        return 'REFUSED'
     n = sum(c == 'MATCH' for c in counted)
     if n == len(counted):
         return 'PRESENT'
-    return 'PARTIAL' if n else 'ABSENT'
+    if n:
+        return 'PARTIAL'
+    if all(c == 'REFUSED' for c in counted):
+        return 'REFUSED'
+    return 'ABSENT'
 
 
 # ------------------------------------------------------------------ probes
@@ -272,6 +246,7 @@ def main() -> int:
     a = ap.parse_args()
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     rules = json.loads(RULES.read_text())['rows']
+    check_exceptions(rules)
     backends = a.backends.split(',')
     manifest = list(csv.DictReader(MANIFEST.open(), delimiter='\t'))
     in_scope = {r['cap_id']: r for r in manifest if r['in_scope'] == 'yes'}
@@ -387,8 +362,14 @@ def main() -> int:
             print(f'FAIL row {row} on {b}: measured {got}, recorded {want}')
     if a.assert_baseline:
         frozen = json.loads(META.read_text())['baseline']['ffi']['PRESENT']
-        if arch == 'arm64' and plat['present']['vm'] != frozen:
-            sys.exit(f'rows.json arm64 FFI PRESENT {plat["present"]["vm"]} contradicts the manifest ({frozen})')
+        rescored = json.loads(RULES.read_text()).get('rescored', {})
+        moved = sum((r['ffi']['to'] == 'PRESENT') - (r['ffi']['from'] == 'PRESENT') for r in rescored.values() if 'ffi' in r)
+        for row, r in rescored.items():
+            if 'ffi' in r and in_scope[row]['baseline_ffi'] != r['ffi']['from']:
+                sys.exit(f'rows.json `rescored` {row}: from {r["ffi"]["from"]}, manifest records {in_scope[row]["baseline_ffi"]}')
+        if arch == 'arm64' and plat['present']['vm'] != frozen + moved:
+            sys.exit(f'rows.json arm64 FFI PRESENT {plat["present"]["vm"]} contradicts the manifest ({frozen}) '
+                     f'and the rows rescored since ({moved:+d})')
         for b in backends:
             want = plat['present'][b]
             got = present[b]
@@ -398,7 +379,7 @@ def main() -> int:
                 print(f'FAIL baseline ({arch}): {label} PRESENT {got}/{len(in_scope)}, recorded {want}/{len(in_scope)}')
             else:
                 print(f'PASS baseline ({arch}): {label} PRESENT {got}/{len(in_scope)}'
-                      + (f' (the manifest\'s frozen baseline, measured on arm64: {frozen})'
+                      + (f' (the manifest\'s frozen baseline, measured on arm64: {frozen}, {moved:+d} rescored)'
                          if b == 'vm' and arch == 'arm64' else ''))
     if a.assert_rows and not mismatches:
         print(f'PASS rows ({arch}): every re-measured row matches its recorded status on {", ".join(backends)}')

@@ -4,9 +4,9 @@
    "measured_on": "macOS arm64: the platform the capability manifest baseline was measured on",
    "rows": {},
    "present": {
-    "vm": 37,
-    "dart2js": 36,
-    "dart2wasm": 36
+    "vm": 36,
+    "dart2js": 35,
+    "dart2wasm": 35
    }
   },
   "x86_64": {
@@ -18,9 +18,9 @@
     }
    },
    "present": {
-    "vm": 36,
-    "dart2js": 36,
-    "dart2wasm": 35
+    "vm": 35,
+    "dart2js": 35,
+    "dart2wasm": 34
    },
    "cause": {
     "float_values": "float(\"nan\") reaches the host with the sign bit set on x86_64 (fff8000000000000; upstream 7ff8000000000000): a core defect, recorded as measured"
@@ -210,16 +210,9 @@
     "r_function",
     "v_repr"
    ],
-   "exceptions": [
-    {
-     "name": "placeholder-type",
-     "reason": "core types a repr/cycle/function placeholder as MontyOpaque; upstream returns the same text as str",
-     "normalise": "opaque_as_str"
-    }
-   ],
    "expect": {
-    "ffi": "PARTIAL",
-    "web": "PARTIAL"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "boundary_value_graph": {
@@ -230,16 +223,9 @@
     "i_alias_is",
     "r_alias"
    ],
-   "exceptions": [
-    {
-     "name": "identity-only",
-     "reason": "core decodes a tree, so shared sub-objects arrive as equal copies; identity-testing cases still differ",
-     "normalise": "identity_inline"
-    }
-   ],
    "expect": {
-    "ffi": "PARTIAL",
-    "web": "PARTIAL"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "host_eager_attributes": {
@@ -248,18 +234,9 @@
     "h_x02_eager_list",
     "h_x03_eager_none"
    ],
-   "exceptions": [
-    {
-     "name": "host-calls-not-compared",
-     "reason": "the host-call transcript differs in events owned by host_value_conversion_hook and host_method_dispatch",
-     "ignore": [
-      "H"
-     ]
-    }
-   ],
    "expect": {
-    "ffi": "PRESENT",
-    "web": "PRESENT"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "host_instance_value": {
@@ -281,13 +258,12 @@
    ],
    "refusal": {
     "message_contains": [
-     "cannot be sent back",
-     "MontyClassType is not a MontyValue"
+     "cannot be sent back"
     ]
    },
    "expect": {
-    "ffi": "REFUSED",
-    "web": "REFUSED"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "host_lazy_attributes": {
@@ -632,19 +608,9 @@
     "b14_date_callhost",
     "b14_date_callhost_tz"
    ],
-   "exceptions": [
-    {
-     "name": "call-host-is-core-default",
-     "reason": "the case asks for os_policy call_host, the only behaviour core has",
-     "case": "b14_date_callhost",
-     "ignore": [
-      "C"
-     ]
-    }
-   ],
    "expect": {
-    "ffi": "PARTIAL",
-    "web": "PARTIAL"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "os_entropy": {
@@ -699,19 +665,9 @@
     "b14_date_fixed",
     "b14_date_callhost"
    ],
-   "exceptions": [
-    {
-     "name": "call-host-is-core-default",
-     "reason": "the case asks for os_policy call_host, the only behaviour core has",
-     "case": "b14_date_callhost",
-     "ignore": [
-      "C"
-     ]
-    }
-   ],
    "expect": {
-    "ffi": "PARTIAL",
-    "web": "PARTIAL"
+    "ffi": "ABSENT",
+    "web": "ABSENT"
    }
   },
   "sleep_policy": {
@@ -1427,18 +1383,8 @@
     "l08_feed_reset_after_timeout",
     "l09_feed_reset_sum"
    ],
-   "exceptions": [
-    {
-     "name": "limit-wording",
-     "reason": "\"time limit exceeded\" vs upstream \"feed time limit exceeded\"; same exception type",
-     "case": "l06_feed_timeout",
-     "ignore": [
-      "Em"
-     ]
-    }
-   ],
    "expect": {
-    "ffi": "PARTIAL",
+    "ffi": "ABSENT",
     "web": "REFUSED"
    }
   },
@@ -1822,6 +1768,81 @@
     "ffi": "ABSENT",
     "web": "ABSENT"
    }
+  }
+ },
+ "rescored": {
+  "lossy_output_placeholders": {
+   "ffi": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "why": "placeholder-type dropped: core types the placeholders as opaque, upstream returns str; no case matches in full"
+  },
+  "boundary_value_graph": {
+   "ffi": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "why": "identity-only dropped: core repeats shared sub-objects as equal copies; no case matches in full"
+  },
+  "host_eager_attributes": {
+   "ffi": {
+    "from": "PRESENT",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "PRESENT",
+    "to": "ABSENT"
+   },
+   "why": "host-calls-not-compared dropped: every case differs in its host-call transcript"
+  },
+  "host_class_type_proxy": {
+   "ffi": {
+    "from": "REFUSED",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "REFUSED",
+    "to": "ABSENT"
+   },
+   "why": "h_b08 is recorded ABSENT (core cannot build a class value), not REFUSED; REFUSED plus ABSENT is ABSENT"
+  },
+  "os_calendar_calls": {
+   "ffi": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "why": "call-host-is-core-default dropped: b14_date_callhost records os_policy as unsupported; no case matches in full"
+  },
+  "clock_source": {
+   "ffi": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "web": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "why": "call-host-is-core-default dropped: b14_date_callhost records os_policy as unsupported; no case matches in full"
+  },
+  "feed_execution_limit": {
+   "ffi": {
+    "from": "PARTIAL",
+    "to": "ABSENT"
+   },
+   "why": "limit-wording dropped: l06_feed_timeout words the timeout differently; no case matches in full on the VM"
   }
  }
 }

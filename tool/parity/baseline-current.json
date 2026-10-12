@@ -2,31 +2,31 @@
  "subject": "dart_monty_core main (0.23.1: 5873ec5 plus the stabilisation changes); rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "note": "`rows`, `cells`, `present` and `totals` are as measured on arm64. `platforms` gives each architecture's PRESENT totals and the rows and cases whose result differs there, with the cause.",
  "present": {
-  "vm": 37,
-  "dart2js": 36,
-  "dart2wasm": 36
+  "vm": 36,
+  "dart2js": 35,
+  "dart2wasm": 35
  },
  "totals": {
   "vm": {
-   "ABSENT": 64,
-   "PRESENT": 37,
-   "PARTIAL": 56,
-   "REFUSED": 2,
-   "N/A": 26
+   "ABSENT": 71,
+   "PRESENT": 36,
+   "PARTIAL": 51,
+   "N/A": 26,
+   "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 60,
-   "PRESENT": 36,
-   "PARTIAL": 56,
-   "REFUSED": 6,
-   "N/A": 27
+   "ABSENT": 66,
+   "PRESENT": 35,
+   "PARTIAL": 52,
+   "N/A": 27,
+   "REFUSED": 5
   },
   "dart2wasm": {
-   "ABSENT": 60,
-   "PRESENT": 36,
-   "PARTIAL": 56,
-   "REFUSED": 6,
-   "N/A": 27
+   "ABSENT": 66,
+   "PRESENT": 35,
+   "PARTIAL": 52,
+   "N/A": 27,
+   "REFUSED": 5
   }
  },
  "platforms": {
@@ -34,9 +34,9 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 37,
-    "dart2js": 36,
-    "dart2wasm": 36
+    "vm": 36,
+    "dart2js": 35,
+    "dart2wasm": 35
    }
   },
   "x86_64": {
@@ -48,9 +48,9 @@
     }
    },
    "present": {
-    "vm": 36,
-    "dart2js": 36,
-    "dart2wasm": 35
+    "vm": 35,
+    "dart2js": 35,
+    "dart2wasm": 34
    },
    "cause": {
     "float_values": "float(\"nan\") reaches the host with the sign bit set on x86_64 (fff8000000000000; upstream 7ff8000000000000): a core defect, recorded as measured"
@@ -78,6 +78,88 @@
    "commit": "9bd7bbc",
    "pr": 173,
    "why": "refactor(api)!: remove the precompile API (core#152). At 5873ec5 compiling threw StateError (a runtime refusal); the API no longer exists."
+  },
+  {
+   "row": "lossy_output_placeholders",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "placeholder-type dropped: core types the placeholders as opaque, upstream returns str; no case matches in full"
+  },
+  {
+   "row": "boundary_value_graph",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "identity-only dropped: core repeats shared sub-objects as equal copies; no case matches in full"
+  },
+  {
+   "row": "host_eager_attributes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PRESENT",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "host-calls-not-compared dropped: every case differs in its host-call transcript"
+  },
+  {
+   "row": "host_class_type_proxy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "REFUSED",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "h_b08 is recorded ABSENT (core cannot build a class value), not REFUSED; REFUSED plus ABSENT is ABSENT"
+  },
+  {
+   "row": "os_calendar_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "call-host-is-core-default dropped: b14_date_callhost records os_policy as unsupported; no case matches in full"
+  },
+  {
+   "row": "clock_source",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "call-host-is-core-default dropped: b14_date_callhost records os_policy as unsupported; no case matches in full"
+  },
+  {
+   "row": "feed_execution_limit",
+   "backends": [
+    "vm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "rule": "scoring",
+   "why": "limit-wording dropped: l06_feed_timeout words the timeout differently; no case matches in full on the VM"
   }
  ],
  "rows": {
@@ -157,19 +239,19 @@
    "dart2wasm": "PARTIAL"
   },
   "lossy_output_placeholders": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "boundary_value_graph": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "host_eager_attributes": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "host_instance_value": {
    "vm": "PARTIAL",
@@ -177,9 +259,9 @@
    "dart2wasm": "PARTIAL"
   },
   "host_class_type_proxy": {
-   "vm": "REFUSED",
-   "dart2js": "REFUSED",
-   "dart2wasm": "REFUSED"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "host_lazy_attributes": {
    "vm": "ABSENT",
@@ -292,9 +374,9 @@
    "dart2wasm": "ABSENT"
   },
   "os_calendar_calls": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "os_entropy": {
    "vm": "ABSENT",
@@ -317,9 +399,9 @@
    "dart2wasm": "ABSENT"
   },
   "clock_source": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "sleep_policy": {
    "vm": "ABSENT",
@@ -367,7 +449,7 @@
    "dart2wasm": "REFUSED"
   },
   "feed_execution_limit": {
-   "vm": "PARTIAL",
+   "vm": "ABSENT",
    "dart2js": "REFUSED",
    "dart2wasm": "REFUSED"
   },
@@ -835,14 +917,14 @@
   },
   "lossy_output_placeholders": {
    "v_cycle_list": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "v_cycle_dict": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "r_cycle": {
     "vm": "DIVERGE",
@@ -850,9 +932,9 @@
     "dart2wasm": "DIVERGE"
    },
    "v_function": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "r_function": {
     "vm": "DIVERGE",
@@ -860,26 +942,26 @@
     "dart2wasm": "DIVERGE"
    },
    "v_repr": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "boundary_value_graph": {
    "v_alias": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "v_alias_nested": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "i_alias": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "i_alias_is": {
     "vm": "DIVERGE",
@@ -894,19 +976,19 @@
   },
   "host_eager_attributes": {
    "h_x01_eager_all": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_x02_eager_list": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_x03_eager_none": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "host_instance_value": {
@@ -938,9 +1020,9 @@
     "dart2wasm": "REFUSED"
    },
    "h_b08_restore_class_eager": {
-    "vm": "REFUSED",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "host_lazy_attributes": {
@@ -1714,9 +1796,9 @@
   },
   "os_calendar_calls": {
    "b14_date_callhost": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "b14_date_callhost_tz": {
     "vm": "DIVERGE",
@@ -1814,9 +1896,9 @@
     "dart2wasm": "DIVERGE"
    },
    "b14_date_callhost": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "sleep_policy": {
@@ -4939,7 +5021,7 @@
   },
   "feed_execution_limit": {
    "l06_feed_timeout": {
-    "vm": "MATCH",
+    "vm": "DIVERGE",
     "dart2js": "REFUSED",
     "dart2wasm": "REFUSED"
    },

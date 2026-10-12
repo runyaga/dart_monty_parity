@@ -120,9 +120,10 @@ jobs:
   # The instrument check: reproduce the measured baseline
   # ---------------------------------------------------------------------------
   # Core 5873ec5 is the commit the capability manifest's baseline was measured
-  # on (arm64: FFI PRESENT 37/185). On this x86_64 runner float_values is
-  # PARTIAL on vm and dart2wasm (core's NaN sign bit), so FFI PRESENT is
-  # 36/185, dart2js 36, dart2wasm 35 (tool/parity/rows.json `platforms`). An
+  # on (arm64 under this suite's rules: FFI PRESENT 36/185, the manifest's 37
+  # less the rows in rows.json `rescored`). On this x86_64 runner float_values
+  # is PARTIAL on vm and dart2wasm (core's NaN sign bit), so FFI PRESENT is
+  # 35/185, dart2js 35, dart2wasm 34 (tool/parity/rows.json `platforms`). An
   # instrument that cannot reproduce a known measurement is not trusted with a
   # new one.
   #

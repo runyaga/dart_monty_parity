@@ -55,9 +55,10 @@ run and removed afterwards. `--cases GLOB ...` limits a run to some cases. One o
 architecture's outcomes; `score.py` reads the architecture from `platform.json` in it.
 
 To reproduce the measured baseline instead, check out core `5873ec5` (where the capability manifest's
-baseline was measured) and assert `--assert-rows --assert-baseline`. Expected: on arm64 FFI PRESENT
-37/185, dart2js 36, dart2wasm 36; on x86_64 36/36/35 (see per-architecture expectations in
-`EXCEPTIONS.md`). That core needs `npm ci` in its `js/` for the browser WASI worker, and on a toolchain
+baseline was measured) and assert `--assert-rows --assert-baseline`. Expected under this suite's
+rules: on arm64 FFI PRESENT 36/185, dart2js 35, dart2wasm 35; on x86_64 35/35/34 (see per-architecture
+expectations in `EXCEPTIONS.md`). The manifest's frozen FFI number, 37, was scored more leniently;
+`rows.json` `rescored` lists the rows that account for the difference. That core needs `npm ci` in its `js/` for the browser WASI worker, and on a toolchain
 without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 
 ## Checks (CI)
