@@ -116,6 +116,28 @@ class Constructed(unittest.TestCase):
         other['items'][1] = {'t': 'tuple', 'items': [f('7ff8000000000000')]}
         self.assertEqual(wc.compare(outcome(self.nan_graph), outcome(other)), ['V'])
 
+    def test_a_wide_symmetric_set_matches_without_exhausting_the_search(self):
+        # [{a0..a8}, a0..a8], each ai a distinct tuple holding the same NaN bits, against the same
+        # graph with the set's members reversed: every member ties with every other.
+        members = [{'id': i, 't': 'tuple', 'items': [f('7ff8000000000000')]} for i in range(1, 10)]
+        ref = {'t': 'list', 'items': [{'t': 'set', 'items': members}]
+               + [{'t': 'ref', 'id': i} for i in range(1, 10)]}
+        got = copy.deepcopy(ref)
+        got['items'][0]['items'].reverse()
+        self.assertEqual(wc.compare(outcome(ref), outcome(got)), [])
+        got['items'][1], got['items'][2] = got['items'][2], got['items'][1]
+        self.assertEqual(wc.compare(outcome(ref), outcome(got)), [])  # still one relabelling
+        got['items'][2] = {'t': 'ref', 'id': 9}
+        self.assertEqual(wc.compare(outcome(ref), outcome(got)), ['V'])
+
+    def test_core_scoring_keeps_ordinary_keys_named_like_id_fields(self):
+        import score  # noqa: PLC0415 (local module, same dir)
+        call = {'t': 'dict', 'items': [], 'instance_id': 'x'}
+        self.assertIn('instance_id', score.norm(call))
+        self.assertEqual(score.norm({'kwargs': {'instance_id': {'t': 'int', 'v': '1'}}}),
+                         {'kwargs': {'instance_id': {'t': 'int', 'v': '1'}}})
+        self.assertNotIn('instance_id', score.norm({'t': 'proxy', 'instance_id': 'u'}))
+
     def test_uuid_text_in_a_string_is_compared(self):
         s = '12345678-1234-4234-8234-123456789abc'
         ref = outcome({'t': 'str', 'v': s})

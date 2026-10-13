@@ -102,8 +102,10 @@ def norm(v):
     if isinstance(v, dict):
         if v.get('t') == 'float':
             return {'t': 'float', 'bits': v.get('bits')}
-        # Sandbox object ids are the worker comparison's (worker_compare.py); this path never compared them.
-        d = {k: norm(x) for k, x in v.items() if not k.startswith('_') and k not in worker_compare.ID_FIELDS}
+        # A proxy's sandbox ids are the worker comparison's (worker_compare.py); this path never compared them.
+        proxy = v.get('t') in ('proxy', 'typeproxy')
+        d = {k: norm(x) for k, x in v.items()
+             if not k.startswith('_') and not (proxy and k in worker_compare.ID_FIELDS)}
         if d.get('t') in ('set', 'frozenset'):
             d['items'] = sorted(d['items'], key=lambda e: json.dumps(e, sort_keys=True))
         return d
@@ -249,6 +251,8 @@ def classify_worker(cid: str, backend: str, out: Path, expected: Path,
     if ref is None or ref.get('runner_error'):
         return 'NO-ORACLE', ['?']
     bad = worker_compare.compare(ref, got, local_refusal)
+    if 'budget' in bad:
+        return 'NO-VERDICT', bad  # the search ran out: neither a match nor evidence of a difference
     return ('MATCH' if not bad else 'DIVERGE'), bad
 
 

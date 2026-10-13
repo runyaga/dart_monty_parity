@@ -140,7 +140,7 @@ def canon_batch(values: list[Any]) -> list[Any]:
             out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
         elif isinstance(v, (set, frozenset)):
             out['t'] = 'set' if isinstance(v, set) else 'frozenset'
-            out['items'] = sorted((enc(x) for x in v), key=lambda e: json.dumps(e, sort_keys=True))
+            out['items'] = sorted((enc(x) for x in v), key=_set_order)
         elif isinstance(v, tuple) and hasattr(v, '_fields'):
             out['t'] = 'namedtuple'
             m = type(v).__module__
@@ -153,6 +153,18 @@ def canon_batch(values: list[Any]) -> list[Any]:
         return out
 
     return [enc(v) for v in values]
+
+
+def _set_order(e: Any) -> str:
+    """A set member's sort key: its JSON text without sandbox ids, which differ from run to run."""
+    def strip(x: Any) -> Any:
+        if isinstance(x, dict):
+            return {k: strip(y) for k, y in x.items() if k not in ID_FIELDS}
+        if isinstance(x, list):
+            return [strip(y) for y in x]
+        return x
+
+    return json.dumps(strip(e), sort_keys=True)
 
 
 def canon_call(args: Any, kwargs: Any) -> tuple[list[Any], dict[str, Any]]:

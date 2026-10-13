@@ -125,27 +125,43 @@ def _step(g: Graphs, x: Any, y: Any, key: Any, st: State) -> tuple[State, list[t
     return (st, []) if type(x) is type(y) and x == y else None
 
 
+def _cons_all(items: Any, tail: Any) -> Any:
+    """The linked list [items] (itself a linked list) followed by [tail]."""
+    out = []
+    while items is not None:
+        item, items = items
+        out.append(item)
+    for item in reversed(out):
+        tail = (item, tail)
+    return tail
+
+
 def _solve(tasks: list[tuple[str, list, list]], st: State) -> State | None:
     """A state under which every root batch matches, or None.
 
-    A depth-first search with an explicit stack: the pairs left to match are a linked list, so a
+    A depth-first search with an explicit stack. The pairs left to match are linked lists, so a
     choice point (which member of a set pairs with which) saves them in O(1), and a later
     contradiction, in this batch or a later one, goes back to the last choice and tries the next.
-    Set members are matched as multisets. Reference ids are bound afresh for each root batch;
-    sandbox ids carry over between them.
+    Set members are matched as multisets, and only after everything else in their root batch:
+    by then the ordered parts have bound most reference ids, so a wrong pairing fails at once
+    instead of being tried in every permutation. Reference ids are bound afresh for each root
+    batch; sandbox ids carry over between them.
     """
     work = None
     for _, a, b in reversed(tasks):
         work = (('task', a, b), work)
-    stack = [(st, work)]
+    stack = [(st, work, None)]
     steps = 0
     while stack:
-        st, work = stack.pop()
+        st, work, deferred = stack.pop()
         failed = False
-        while work is not None:
+        while work is not None or deferred is not None:
             steps += 1
             if steps > BUDGET:
                 raise Budget
+            if work is None or (work[0][0] == 'task' and deferred is not None):
+                work, deferred = _cons_all(deferred, work), None  # the batch's sets, before the next batch
+                continue
             item, work = work
             if item[0] == 'task':
                 g = Graphs(item[1], item[2])
@@ -158,18 +174,21 @@ def _solve(tasks: list[tuple[str, list, list]], st: State) -> State | None:
                     break
                 st, children = r
                 for c in reversed(children):
-                    work = (c, work)
-            else:  # 'ms': set members as a multiset
+                    if c[0] == 'ms':
+                        deferred = (('msgo',) + c[1:], deferred)
+                    else:
+                        work = (c, work)
+            else:  # 'msgo': set members as a multiset
                 _, g, xs, ys = item
                 if len(xs) != len(ys):
                     failed = True
                     break
                 if not xs:
                     continue
-                alts = [(('m', g, xs[0], y, None), (('ms', g, xs[1:], ys[:j] + ys[j + 1:]), work))
+                alts = [(('m', g, xs[0], y, None), (('msgo', g, xs[1:], ys[:j] + ys[j + 1:]), work))
                         for j, y in enumerate(ys)]
                 for alt in reversed(alts[1:]):
-                    stack.append((st, alt))
+                    stack.append((st, alt, deferred))
                 work = alts[0]
         if not failed:
             return st
