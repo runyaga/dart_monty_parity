@@ -1,0 +1,39 @@
+{
+ "id": "ss_os_calls_as_values",
+ "code": "from pathlib import Path\nimport os\nn = Path('/a.txt').write_text('hi')\nPath('/d/e').mkdir(parents=True, exist_ok=True)\nb = Path('/a.txt').rename('/b.txt')\nh = os.getenv('HOME', 'none')\n(n, str(b), h)",
+ "os": {
+  "Path.write_text": [
+   {
+    "return": {
+     "t": "int",
+     "v": "2"
+    }
+   }
+  ],
+  "Path.mkdir": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ],
+  "Path.rename": [
+   {
+    "return": {
+     "t": "path",
+     "v": "/b.txt"
+    }
+   }
+  ],
+  "os.getenv": [
+   {
+    "return": {
+     "t": "str",
+     "v": "/home/u"
+    }
+   }
+  ]
+ },
+ "note": "OS calls beyond a lone path, answered by the host's OS handler with values: arguments, keyword arguments and names as upstream's OsFunction",
+ "exact_strings": true
+}

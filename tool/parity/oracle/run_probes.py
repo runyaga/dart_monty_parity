@@ -12,7 +12,8 @@ dart_monty_core, and tool/parity/probes_compare.py compares the two.
 
 Event vocabulary: suspend{kind,name,args,kwargs,position,pending},
 complete{value}, error{type,message,tb_last}, refused{}, handler{who,args},
-unsupported{what}, plus probe-specific observation events.
+unsupported{what}, plus probe-specific observation events; the pool and print
+probes (`sp_*`) add print{stream,text}, checkout{} and failed{callback_error}.
 """
 
 from __future__ import annotations
@@ -228,6 +229,129 @@ def abandon(pool: pm.Monty, t: T) -> None:
         t.step(lambda: s.feed_start('g'))  # feed while suspended
         t.step(lambda: x.resume({'return_value': 5}))  # the suspension survived
         t.step(lambda: s.feed_start('g'))
+
+
+# ------------------------------------------------------- pool and print (the session engine's rows)
+# Each `sp_*` probe starts the pools it needs, so pool settings and the reuse of
+# one worker are part of what it measures. A feed's outcome is `complete` or an
+# error event; an error that is not a sandbox exception (a timeout, a crash, a
+# finished session) is `refused`, compared as a refusal.
+def run(t: T, fn: Any) -> None:
+    """Records a `feed_run`'s value as `complete`, or its error."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+
+
+def enter(t: T, pool: pm.Monty) -> None:
+    """Records whether a checkout is granted (`checkout`, then returned at once) or refused."""
+    try:
+        cm = pool.checkout()
+        cm.__enter__()
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+        return
+    t.add({'ev': 'checkout'})
+    cm.__exit__(None, None, None)
+
+
+@probe
+def sp_checkout_script_name(pool: pm.Monty, t: T) -> None:
+    with pool.checkout(script_name='job.py') as s:
+        run(t, lambda: s.feed_run('__file__'))
+        run(t, lambda: s.feed_run('def f():\n    return 1 / 0\nf()'))
+
+
+@probe
+def sp_finish_reset(pool: pm.Monty, t: T) -> None:
+    """One worker: the second checkout gets it back Reset, without the first one's globals."""
+    with pm.Monty(max_processes=1) as p:
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('x = 1\nx'))
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('x'))
+
+
+@probe
+def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
+    """One worker, held: a second checkout times out; once it is returned, a checkout gets it."""
+    with pm.Monty(max_processes=1, checkout_timeout=0.2) as p:
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('1'))
+            enter(t, p)
+        enter(t, p)
+
+
+@probe
+def sp_pool_close(pool: pm.Monty, t: T) -> None:
+    """A session outlives its pool's close; the closed pool refuses a checkout."""
+    p = pm.Monty(max_processes=2)
+    p.__enter__()
+    cm = p.checkout()
+    s = cm.__enter__()
+    try:
+        run(t, lambda: s.feed_run('x = 1'))
+    finally:
+        p.__exit__(None, None, None)
+    run(t, lambda: s.feed_run('x + 1'))
+    enter(t, p)
+    cm.__exit__(None, None, None)
+
+
+@probe
+def sp_request_timeout(pool: pm.Monty, t: T) -> None:
+    """A turn past `request_timeout` kills the worker and finishes the session; the next checkout runs."""
+    with pm.Monty(request_timeout=0.5) as p:
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('while True:\n    pass'))
+            run(t, lambda: s.feed_run('1'))
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('1 + 1'))
+
+
+@probe
+def sp_print_lines(pool: pm.Monty, t: T) -> None:
+    """With no flush interval each line arrives on its own, in order, on its stream."""
+    with pool.checkout(print_flush_interval=0) as s:
+        def cb(stream: str, text: str) -> None:
+            t.add({'ev': 'print', 'stream': stream, 'text': text})
+
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b', file=sys.stderr)\nprint('c', end='')\n5",
+                                  print_callback=cb))
+
+
+def _print_failure(t: T, code: str, **kw: Any) -> Any:
+    """Feeds [code] with a print callback that raises `cb boom` at once; records the failure, not its type."""
+    def bad(stream: str, text: str) -> None:
+        t.add({'ev': 'print', 'stream': stream, 'text': text})
+        raise ValueError('cb boom')
+
+    return lambda s: _failed(t, lambda: s.feed_run(code, print_callback=bad, **kw))
+
+
+def _failed(t: T, fn: Any) -> None:
+    """A feed whose print callback raised: `failed` with whether its error carries the callback's text."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add({'ev': 'failed', 'callback_error': 'cb boom' in str(e)})
+
+
+@probe
+def sp_print_raise(pool: pm.Monty, t: T) -> None:
+    """A raising print callback fails the feed after its turn completes; the session stays usable."""
+    with pool.checkout(print_flush_interval=0) as s:
+        _print_failure(t, "print('a')\nprint('b')\n7")(s)
+        run(t, lambda: s.feed_run('8'))
+
+
+@probe
+def sp_print_raise_suspended(pool: pm.Monty, t: T) -> None:
+    """A raising print callback in a feed that then suspends: the feed fails and the session is finished."""
+    with pool.checkout(print_flush_interval=0) as s:
+        _print_failure(t, "print('a')\nf(1)", external_lookup={'f': lambda x: x})(s)
+        run(t, lambda: s.feed_run('8'))
 
 
 # ------------------------------------------------------- API surface

@@ -1,0 +1,50 @@
+{
+ "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session).",
+ "engine": "session",
+ "stages": [
+  "C1-3a",
+  "C1-3b",
+  "C1-4",
+  "C1-5",
+  "C1-6",
+  "cutover"
+ ],
+ "landed": [
+  "C1-3a"
+ ],
+ "rows": {
+  "checkout_worker": "C1-3a",
+  "finish_checkout": "C1-3a",
+  "close_worker_pool": "C1-3a",
+  "pool_capacity": "C1-3a",
+  "checkout_acquisition_timeout": "C1-3a",
+  "request_deadline": "C1-3a",
+  "print_flush_interval": "C1-3a",
+  "os_sync_sleep": "C1-3a",
+  "host_suspension_budget": "C1-3a",
+  "print_callback": "C1-3b",
+  "run_progress_variants": "C1-4",
+  "resume_os_call": "C1-4",
+  "resolve_pending_futures": "C1-4",
+  "feed_repl_suspendable": "C1-4",
+  "suspension_source_position": "C1-4",
+  "register_pending_future": "C1-4",
+  "external_call_result": "C1-4",
+  "external_call_arguments": "C1-4",
+  "async_host_driver": "C1-4",
+  "snapshot_auto_resume": "C1-4",
+  "abandon_suspended_feed": "C1-4",
+  "eager_coroutine_completion": "C1-4",
+  "async_os_sleep": "C1-4",
+  "host_sleep_budget": "C1-4",
+  "os_callback_adapter": "C1-4",
+  "fork_session": "C1-5",
+  "host_eager_attributes": "cutover",
+  "host_instance_value": "cutover",
+  "host_class_type_proxy": "cutover",
+  "host_lazy_attributes": "cutover",
+  "host_class_value": "cutover",
+  "host_constructor_policy": "cutover",
+  "host_value_conversion_hook": "cutover"
+ }
+}

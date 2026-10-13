@@ -1,0 +1,22 @@
+{
+ "probe": "sp_print_raise_suspended",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "a\n"
+  },
+  {
+   "ev": "failed",
+   "callback_error": true
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  }
+ ],
+ "runner_error": null
+}

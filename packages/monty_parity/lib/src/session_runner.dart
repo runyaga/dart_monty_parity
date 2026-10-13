@@ -29,11 +29,35 @@ Future<Map<String, Object?>> runSessionCase(
   engine: 'session',
   engineVersion: 'dart_monty_core (internal: MontyPool session)',
   open: (config) async => _PoolCaseSession(
-    // The worker engine's settings, as they are: the session takes the same
-    // record.
     await pool.checkout(options: config),
   ),
+  configure: sessionConfig,
 );
+
+/// Case limits -> the session's [SessionConfig]: the worker engine's, plus
+/// the suspension budget the session enforces. A limit the session has no
+/// field for is recorded under `unsupported`.
+SessionConfig sessionConfig(
+  Map<String, Object?> c,
+  Map<String, Object?> unsupported,
+) {
+  final limits = ((c['limits'] as Map?) ?? const {}).cast<String, Object?>();
+  final suspensions = limits['max_suspensions'] as int?;
+  final worker = workerConfig({
+    ...c,
+    'limits': {
+      for (final MapEntry(:key, :value) in limits.entries)
+        if (key != 'max_suspensions') key: value,
+    },
+  }, unsupported);
+
+  return SessionConfig(
+    maxMemoryBytes: worker.maxMemoryBytes,
+    maxRecursionDepth: worker.maxRecursionDepth,
+    maxFeedDuration: worker.maxFeedDuration,
+    maxSuspensions: suspensions,
+  );
+}
 
 final class _PoolCaseSession implements CaseSession {
   _PoolCaseSession(this._session);

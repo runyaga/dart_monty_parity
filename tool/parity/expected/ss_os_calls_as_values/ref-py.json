@@ -1,0 +1,103 @@
+{
+ "case": "ss_os_calls_as_values",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "int",
+      "v": "2"
+     },
+     {
+      "t": "str",
+      "v": "/b.txt"
+     },
+     {
+      "t": "str",
+      "v": "/home/u"
+     }
+    ]
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [
+    {
+     "name": "Path.write_text",
+     "args": [
+      {
+       "t": "path",
+       "v": "/a.txt"
+      },
+      {
+       "t": "str",
+       "v": "hi"
+      }
+     ],
+     "kwargs": {}
+    },
+    {
+     "name": "Path.mkdir",
+     "args": [
+      {
+       "t": "path",
+       "v": "/d/e"
+      }
+     ],
+     "kwargs": {
+      "parents": {
+       "t": "bool",
+       "v": true
+      },
+      "exist_ok": {
+       "t": "bool",
+       "v": true
+      }
+     }
+    },
+    {
+     "name": "Path.rename",
+     "args": [
+      {
+       "t": "path",
+       "v": "/a.txt"
+      },
+      {
+       "t": "path",
+       "v": "/b.txt"
+      }
+     ],
+     "kwargs": {}
+    },
+    {
+     "name": "os.getenv",
+     "args": [
+      {
+       "t": "str",
+       "v": "HOME"
+      },
+      {
+       "t": "str",
+       "v": "none"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

@@ -1,0 +1,24 @@
+{
+ "probe": "sp_finish_reset",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "error",
+   "type": "NameError",
+   "message": "name 'x' is not defined",
+   "tb_last": {
+    "line": 1,
+    "function": "<module>"
+   }
+  }
+ ],
+ "runner_error": null
+}

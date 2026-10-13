@@ -1,0 +1,23 @@
+{
+ "probe": "sp_checkout_timeout",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "TimeoutError",
+   "msg": "no monty worker became available within the checkout timeout"
+  },
+  {
+   "ev": "checkout"
+  }
+ ],
+ "runner_error": null
+}

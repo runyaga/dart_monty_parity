@@ -343,6 +343,13 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_x01_eager_all",
+     "h_x02_eager_list",
+     "h_x03_eager_none"
+    ]
    }
   },
   "host_instance_value": {
@@ -355,6 +362,14 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "cases": [
+     "h_b01_proxy_roundtrip",
+     "h_b02_proxy_nested",
+     "h_b03_dataclass_proxy",
+     "h_x17_return_original"
+    ]
    }
   },
   "host_class_type_proxy": {
@@ -370,6 +385,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_b07_restore_type_proxy",
+     "h_b08_restore_class_eager"
+    ]
    }
   },
   "host_lazy_attributes": {
@@ -379,6 +400,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_x07_lazy"
+    ]
    }
   },
   "host_class_value": {
@@ -388,6 +414,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_x09_class_init"
+    ]
    }
   },
   "host_constructor_policy": {
@@ -398,6 +429,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_x09_class_init",
+     "h_x11_class_methods"
+    ]
    }
   },
   "host_value_conversion_hook": {
@@ -409,6 +446,13 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "h_x13_convert_upper",
+     "h_x14_convert_redact",
+     "h_x15_convert_wrap"
+    ]
    }
   },
   "os_path_predicates": {
@@ -707,6 +751,15 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "b14_async_sleep_default",
+     "ss_async_sleep_gather"
+    ],
+    "not_run": {
+     "b14_async_sleep_callhost": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy"
+    }
    }
   },
   "os_calendar_calls": {
@@ -750,6 +803,17 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "b14_sleep_default",
+     "b14_sleep_negative",
+     "l16_sync_sleep"
+    ],
+    "not_run": {
+     "b14_sleep_callhost": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy",
+     "b14_sleep_zero": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy"
+    }
    }
   },
   "working_directory": {
@@ -1527,6 +1591,13 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "l12_suspensions",
+     "l13_suspension_default",
+     "ss_suspension_budget"
+    ]
    }
   },
   "host_sleep_budget": {
@@ -1540,6 +1611,15 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "ss_sleep_budget"
+    ],
+    "not_run": {
+     "l14_total_sleep": "its expected message has the amounts rewritten (strings_rewritten), which the session comparison refuses; ss_sleep_budget measures the same budget with exact strings",
+     "l15_total_sleep_catch": "its expected message has the amounts rewritten (strings_rewritten), which the session comparison refuses; ss_sleep_budget measures the same uncatchable failure with exact strings"
+    }
    }
   },
   "source_nesting_guard": {
@@ -1653,6 +1733,12 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "api_ext_result_resume",
+     "api_ext_result_callback"
+    ]
    }
   },
   "external_call_arguments": {
@@ -1663,6 +1749,12 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "api_ext_args_values",
+     "api_ext_args_identity"
+    ]
    }
   },
   "register_pending_future": {
@@ -1673,6 +1765,12 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "api_futures_gather",
+     "api_futures_error"
+    ]
    }
   },
   "mount_write_budget": {
@@ -1728,6 +1826,11 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "session": {
+    "probes": [
+     "api_fork_session"
+    ]
    }
   },
   "reset_type_checker": {
@@ -1767,6 +1870,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "probes": [
+     "api_eager_coroutine"
+    ]
    }
   },
   "run_progress_variants": {
@@ -1788,6 +1896,14 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "k_function",
+     "k_os",
+     "k_future",
+     "k_name"
+    ]
    }
   },
   "resume_os_call": {
@@ -1807,6 +1923,12 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "k_os",
+     "k_os_not_handled"
+    ]
    }
   },
   "resolve_pending_futures": {
@@ -1826,6 +1948,12 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "session": {
+    "probes": [
+     "k_future",
+     "abortctl_future"
+    ]
    }
   },
   "async_host_driver": {
@@ -1835,6 +1963,11 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "session": {
+    "probes": [
+     "async_gather"
+    ]
    }
   },
   "snapshot_auto_resume": {
@@ -1844,6 +1977,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "probes": [
+     "auto_interleave"
+    ]
    }
   },
   "feed_repl_suspendable": {
@@ -1863,6 +2001,12 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "session": {
+    "probes": [
+     "k_function",
+     "inputs_typed"
+    ]
    }
   },
   "suspension_source_position": {
@@ -1874,6 +2018,13 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "probes": [
+     "pos_utf8",
+     "pos_earlier_feed",
+     "pos_eval"
+    ]
    }
   },
   "abandon_suspended_feed": {
@@ -1883,6 +2034,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "probes": [
+     "abandon"
+    ]
    }
   },
   "shared_value_batches": {
@@ -1893,6 +2049,71 @@
      "w_batch_proxy_args",
      "w_batch_instance_ids",
      "w_refuse_uuid"
+    ]
+   }
+  },
+  "checkout_worker": {
+   "session": {
+    "probes": [
+     "sp_checkout_script_name"
+    ]
+   }
+  },
+  "finish_checkout": {
+   "session": {
+    "probes": [
+     "sp_finish_reset"
+    ]
+   }
+  },
+  "close_worker_pool": {
+   "session": {
+    "probes": [
+     "sp_pool_close"
+    ]
+   }
+  },
+  "pool_capacity": {
+   "session": {
+    "probes": [
+     "sp_checkout_timeout"
+    ]
+   }
+  },
+  "checkout_acquisition_timeout": {
+   "session": {
+    "probes": [
+     "sp_checkout_timeout"
+    ]
+   }
+  },
+  "request_deadline": {
+   "session": {
+    "probes": [
+     "sp_request_timeout"
+    ]
+   }
+  },
+  "print_flush_interval": {
+   "session": {
+    "probes": [
+     "sp_print_lines"
+    ]
+   }
+  },
+  "print_callback": {
+   "session": {
+    "probes": [
+     "sp_print_lines",
+     "sp_print_raise",
+     "sp_print_raise_suspended"
+    ]
+   }
+  },
+  "os_callback_adapter": {
+   "session": {
+    "cases": [
+     "ss_os_calls_as_values"
     ]
    }
   }

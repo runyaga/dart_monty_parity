@@ -27,10 +27,11 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/rows.json` | per capability row: its cases or probes, the status recorded at core 5873ec5 per backend, per-architecture expectations, and the named exceptions |
 | `tool/parity/baseline-current.json` | the current baseline: every case's result within every re-measured row, every row's status, per backend, the PRESENT totals, per-architecture differences and the list of intentional moves (`deltas`) |
 | `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
+| `tool/parity/c1-gate.json`, `test_gate.py` | the C1 gate: per capability row, the PR whose landing makes the row's `session` rule (in `rows.json`) gated through the session engine, and which of those PRs have landed; and its offline self-test |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
-| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API), the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`) and the `session` engine (core's internal pool session, `lib/src/session_runner.dart`), VM and browser, plus the worker crash tests |
+| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API), the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`) and the `session` engine (core's internal pool session, `lib/src/session_runner.dart` and its probes, `lib/src/session_probes.dart`), VM and browser, plus the worker crash tests |
 | `tool/upstream/` | copies of dart_monty_core's `tool/upstream`: the hash-pinned pydantic-monty lock, the upstream pin and the frozen capability manifest |
 | `tool/check_parity_manifest.py` | offline check that `manifest.json` binds every case to its expected outcomes |
 | `tool/check_core_upstream.py` | checks that a core checkout's `tool/upstream` equals the copies here |
@@ -94,6 +95,27 @@ and each negative control under `worker.controls` must turn a matching outcome i
 under `deferred` is run and shown as DEFERRED but not counted; once it matches everywhere, the assertion
 fails until it leaves `deferred`. The `core` engine leaves the `e0` suite out by default.
 
+### The C1 gate through the session
+
+The same session runs carry the C1 gate (`tool/parity/c1-gate.json`): the capability rows whose `session`
+rule in `rows.json` names the cases and probes core's pool session must match upstream on. Each row is
+assigned the C1 pull request that makes it pass (`stages`); a row is asserted once its stage is listed under
+`landed`. Its cases are compared as E0's are; its probes (`lib/src/session_probes.dart` against
+`oracle/run_probes.py`) as the core engine's are, but with no named exception, so a suspension's position is
+compared. The pool and print rows' probes (`sp_*`) and the `session` suite's cases (`ss_*`, exact strings)
+were added for this gate.
+
+```sh
+python3 -I tool/parity/score.py /tmp/e0 --assert-gate
+```
+
+`--assert-gate` fails unless every case and probe of a landed row MATCHES on every backend. A row of a later
+stage is run and shown, not asserted; a probe the session cannot run yet records `unimplemented` (PENDING).
+Whatever its stage, every case and probe must have an outcome on every backend and an oracle, and the rules
+must be complete: a `session` rule covers each of its row's core cases and probes or says why not
+(`not_run`), names only cases and probes that exist, carries no named exception, and is gated by the
+manifest. A core change that makes a stage pass moves it to `landed` here, with `CORE_REF`.
+
 To reproduce the measured baseline instead, check out core `5873ec5` (where the capability manifest's
 baseline was measured) and assert `--assert-rows --assert-baseline`. Expected under this suite's
 rules: on arm64 FFI PRESENT 36/185, dart2js 35, dart2wasm 35; on x86_64 35/35/34 (see per-architecture
@@ -106,13 +128,15 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 - **`manifest`** (`ci.yaml`, every change): `tool/check_parity_manifest.py` fails if a case changed
   without its expected outcome being regenerated (or the reverse), an expected outcome changed outside a
   regeneration, or the oracle's code or the upstream pins changed since the outcomes were generated;
-  then `tool/parity/test_worker_compare.py`, the worker comparison's self-test.
+  then `tool/parity/test_worker_compare.py`, the worker comparison's self-test, and
+  `tool/parity/test_gate.py`, the C1 gate's.
 - **`current`** (`ci.yaml`): core at `CORE_REF`, all three backends, `--assert-current`; also analyses
   the runner and checks the upstream copies against that core.
 - **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.
 - **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite and the worker value rows' cases through the
   worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`; then the
-  `e0` suite through the session engine on all three, `--assert-e0 --engine session`.
+  `e0` suite and the C1 gate's cases and probes through the session engine on all three,
+  `--assert-e0 --engine session` and `--assert-gate`.
 - **`Parity oracle`** (`parity-oracle.yaml`): regenerates every expected outcome from the hash-pinned
   oracle and fails on any byte of difference; then `tool/parity/oracle/test_display.py` checks that every
   display case carries its renderings and that a deliberately wrong expected rendering fails the

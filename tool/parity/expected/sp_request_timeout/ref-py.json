@@ -1,0 +1,25 @@
+{
+ "probe": "sp_request_timeout",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "refused",
+   "cls": "MontyCrashedError",
+   "msg": "monty worker killed after exceeding request timeout of 500ms"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  }
+ ],
+ "runner_error": null
+}

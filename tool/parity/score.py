@@ -4,7 +4,8 @@
 usage:
   python3 -I tool/parity/score.py OUTCOMES [--backends vm,dart2js,dart2wasm]
          [--expected DIR] [--json FILE] [--markdown FILE]
-         [--assert-baseline] [--assert-rows]
+         [--assert-baseline] [--assert-rows] [--assert-current FILE]
+         [--assert-e0 [FILE] [--engine worker|session]] [--assert-worker] [--assert-gate [FILE]]
 
 OUTCOMES holds core-<backend>.json per case (tool/parity/run.py) and, for the
 probe suites, per probe. EXPECTED (default tool/parity/expected) holds the
@@ -78,6 +79,20 @@ equal the files in tool/parity/cases/<suite>.
 Every case file in the worker suite must be in exactly one set. Each negative
 control in `worker.controls` mutates a pre-cutover case's real worker outcome
 on every backend and must turn its MATCH into DIVERGE.
+
+--assert-gate [FILE] (default tool/parity/c1-gate.json) scores the C1 gate:
+the session engine's outcomes (`session-<backend>.json`, run.py --engine
+session) for every case and probe of each gated row's `session` rule in
+rows.json. Cases are compared as --assert-e0 compares them; probes as the
+core engine's are (probes_compare.py), but with no named exception: a
+suspension's position is compared. A row is gated once its stage is
+`landed`: then every case and probe of it must MATCH on every backend. A row
+of a later stage is shown, not asserted. Whatever its stage, every case and
+probe must have an outcome on every backend (a probe the session cannot run
+yet records `unimplemented`, shown as PENDING) and an oracle, and the rules
+must be complete: a `session` rule covers each of its row's core cases and
+probes or names why not (`not_run`), names only cases and probes that exist,
+and carries no named exception; the manifest gates every `session` rule.
 """
 
 from __future__ import annotations
@@ -412,6 +427,122 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
     return rc
 
 
+# ------------------------------------------------------------------ the C1 gate
+GATE = ROOT / 'tool/parity/c1-gate.json'
+
+
+def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path) -> list[str]:
+    """What makes the gate manifest or the rows' `session` rules incomplete."""
+    problems = []
+    stages = gate['stages']
+    if set(gate['landed']) - set(stages):
+        problems.append(f"landed stages {sorted(set(gate['landed']) - set(stages))} are not in `stages`")
+    for row, stage in gate['rows'].items():
+        if stage not in stages:
+            problems.append(f'{row}: stage {stage!r} is not in `stages`')
+        rule = rows.get(row)
+        if rule is None or 'session' not in rule:
+            problems.append(f'{row}: gated, but rows.json has no `session` rule for it')
+            continue
+        sess = rule['session']
+        if set(sess) - {'cases', 'probes', 'not_run'}:
+            problems.append(f'{row}: the session rule has {sorted(set(sess) - {"cases", "probes", "not_run"})}; '
+                            'the session engine tolerates no named exception')
+        listed = set(sess.get('cases', [])) | set(sess.get('probes', []))
+        if not listed:
+            problems.append(f'{row}: the session rule names no case or probe')
+        for cid in rule.get('cases', []) + rule.get('probes', []):
+            if cid not in listed and cid not in sess.get('not_run', {}):
+                problems.append(f'{row}: {cid} is a case of the row but neither in its session rule nor in `not_run`')
+        for cid in sess.get('not_run', {}):
+            if cid in listed or cid not in rule.get('cases', []) + rule.get('probes', []):
+                problems.append(f'{row}: `not_run` {cid} must be a core case of the row that the session rule omits')
+        for cid in sess.get('cases', []):
+            if cid not in cases:
+                problems.append(f'{row}: no case file for {cid}')
+        for pid in sess.get('probes', []):
+            if pid in cases or not (expected / pid / 'ref-py.json').exists():
+                problems.append(f'{row}: no oracle probe {pid}')
+    for row, rule in rows.items():
+        if 'session' in rule and row not in gate['rows']:
+            problems.append(f'{row}: has a session rule but no stage in the gate manifest')
+    suite = 'session'
+    used = {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get('cases', [])}
+    for cid, c in cases.items():
+        if c['_suite'] == suite and cid not in used:
+            problems.append(f'{cid}: in tool/parity/cases/{suite} but in no gated session rule')
+    return problems
+
+
+def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) -> tuple[str, list[str]]:
+    """A session-engine probe on [backend], judged with no named exception."""
+    from probes_compare import judge  # noqa: PLC0415 (local module, same dir)
+
+    got = load(out / pid / f'session-{backend}.json')
+    if got is not None and got.get('unimplemented'):
+        return 'PENDING', [str(got['unimplemented'])]
+    cls, why, _ = judge(pid, load(expected / pid / 'ref-py.json'), got, {})
+    return cls, why
+
+
+def assert_gate(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
+                markdown: Path | None, json_out: Path | None) -> int:
+    """The C1 gate: every case and probe of a landed row MATCH on every backend."""
+    gate = json.loads(spec_path.read_text())
+    rows = json.loads(RULES.read_text())['rows']
+    cases = case_index()
+    problems = gate_problems(gate, rows, cases, expected)
+    if problems:
+        sys.exit(f'{spec_path}: ' + '; '.join(problems))
+    landed = set(gate['landed'])
+    table: dict[str, dict[str, tuple[str, list[str]]]] = {}
+    lines = [f"The C1 gate through the `{gate['engine']}` engine; landed: "
+             f"{', '.join(st for st in gate['stages'] if st in landed)}", '', '| row | stage | case or probe | ' + ' | '.join(backends) + ' |',
+             '|---|---|---|' + '---|' * len(backends)]
+    rc = 0
+    for stage in gate['stages']:
+        for row, row_stage in gate['rows'].items():
+            if row_stage != stage:
+                continue
+            sess = rows[row]['session']
+            for kind in ('cases', 'probes'):
+                for cid in sess.get(kind, []):
+                    if cid not in table:
+                        table[cid] = {b: (classify_worker(cid, b, outcomes, expected,
+                                                          bool(cases[cid].get('local_refusal')), engine='session')
+                                          if kind == 'cases' else classify_session_probe(cid, b, outcomes, expected))
+                                      for b in backends}
+                    cells = [table[cid][b][0] + (f' `{"; ".join(table[cid][b][1])}`' if table[cid][b][1] else '')
+                             for b in backends]
+                    gated = stage in landed
+                    lines.append(f'| {row} | {stage}{"" if gated else " (pending)"} | {cid} | ' + ' | '.join(cells) + ' |')
+                    for b in backends:
+                        cls = table[cid][b][0]
+                        if gated and cls != 'MATCH':
+                            rc = 1
+                            lines.append(f'FAIL gate: {cid} ({row}, {stage}) is {cls} on {b}')
+                        elif cls in ('NO-OUTCOME', 'NO-ORACLE'):
+                            rc = 1
+                            lines.append(f'FAIL gate: {cid} ({row}, {stage}) has {cls} on {b}; every case and probe must run')
+            for cid, why in sess.get('not_run', {}).items():
+                lines.append(f'| {row} | {stage} | {cid} | not run: {why} |' + ' |' * (len(backends) - 1))
+    lines.append('')
+    for b in backends:
+        gated = [(cid, row) for row, st in gate['rows'].items() if st in landed
+                 for kind in ('cases', 'probes') for cid in rows[row]['session'].get(kind, [])]
+        n = sum(table[cid][b][0] == 'MATCH' for cid, _ in gated)
+        lines.append(f'{"PASS" if n == len(gated) else "FAIL"} gate on {b}: {n}/{len(gated)} gated cases and probes MATCH')
+    text = '\n'.join(lines) + '\n'
+    print(text)
+    if markdown:
+        markdown.write_text(text)
+    if json_out:
+        json_out.write_text(json.dumps({'landed': sorted(landed), 'rows': gate['rows'], 'cases': {
+            cid: {b: {'class': c, 'differs': d} for b, (c, d) in by_b.items()} for cid, by_b in table.items()}},
+            indent=1) + '\n')
+    return rc
+
+
 # ------------------------------------------------------------------ main
 def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
               markdown: Path | None, json_out: Path | None, engine: str | None = None) -> int:
@@ -489,6 +620,8 @@ def main() -> int:
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     ap.add_argument('--assert-worker', action='store_true',
                     help="score the worker engine's value rows instead (rows.json `worker`)")
+    ap.add_argument('--assert-gate', type=Path, nargs='?', const=GATE,
+                    help="score the C1 gate through the session engine instead (default tool/parity/c1-gate.json)")
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
@@ -497,6 +630,8 @@ def main() -> int:
     if a.assert_e0:
         return assert_e0(a.assert_e0, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json,
                          a.engine)
+    if a.assert_gate:
+        return assert_gate(a.assert_gate, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
     if a.assert_worker:
         return assert_worker(a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
