@@ -4101,6 +4101,13 @@
     "ref-py": "0f13edb6339c77140bc3b900a4879918da5f45a185ffcd8494ad47a8ea8e970b"
    }
   },
+  "w_exc_unicode_version_in": {
+   "suite": "worker_values",
+   "case": "85ef226948b2b9d62ec232e71536d6f4ef6f56a5c02e7b270e8be7bdb7c164cd",
+   "outcomes": {
+    "ref-py": "52c1c7076399abb2b65e6720ceef2a6b299ffb9741cb6c2b20bd77f27b76e596"
+   }
+  },
   "w_fh_in": {
    "suite": "worker_values",
    "case": "492a0645491dd5b709b4d3c00e4dd2e8cd8205b5261d25bfc35b633b06ef584e",

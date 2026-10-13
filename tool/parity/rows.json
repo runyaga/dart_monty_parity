@@ -251,7 +251,8 @@
      "w_refuse_exc_name"
     ],
     "diverge": [
-     "i_exception"
+     "i_exception",
+     "w_exc_unicode_version_in"
     ]
    }
   },
@@ -2046,10 +2047,11 @@
    {
     "name": "unicode-version",
     "rows": [
+     "exception_value_conversion",
      "named_tuple_values",
      "text_and_bytes"
     ],
-    "what": "core's validation uses the platform's Unicode tables for Rust {:?} escaping in error messages, str.isidentifier() and repr() printability; measured against upstream over every code point, the only differences are characters that one side's Unicode version assigns and the other's does not. Reachable only through names and malformed arenas no case can produce"
+    "what": "core's validation and conversion use the platform's Unicode tables for Rust {:?} escaping in error messages, str.isidentifier() and repr() printability; measured against upstream over every code point, the only differences are characters that one side's Unicode version assigns and the other's does not (CPython 3.12 has Unicode 15.0). Reachable through a KeyError argument with an unpaired surrogate, which goes out as its repr (w_exc_unicode_version_in), and otherwise only through names and malformed arenas"
    }
   ],
   "diverge": {
@@ -2083,6 +2085,30 @@
          "arg": ""
         }
        ]
+      }
+     ]
+    }
+   },
+   "w_exc_unicode_version_in": {
+    "why": "unicode-version: a KeyError argument with an unpaired surrogate goes out as its repr, and core's repr keeps U+1FAE9 (assigned in its Unicode tables) where CPython 3.12 (Unicode 15.0) escapes it as \\U0001fae9",
+    "differs": [
+     "V"
+    ],
+    "worker_value": {
+     "t": "tuple",
+     "items": [
+      {
+       "t": "str",
+       "v": "KeyError(\"'🫩\\\\ud800'\")"
+      },
+      {
+       "t": "str",
+       "v": "\"'🫩\\\\ud800'\""
+      },
+      {
+       "t": "exception",
+       "type": "KeyError",
+       "arg": "'🫩\\ud800'"
       }
      ]
     }
