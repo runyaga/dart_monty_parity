@@ -1,0 +1,28 @@
+{
+ "id": "w_exc_noarg_in",
+ "code": "(repr(a), repr(b), repr(c), repr(d), a, b, c, d)",
+ "inputs": {
+  "a": {
+   "t": "exception",
+   "type": "RuntimeError",
+   "arg": null
+  },
+  "b": {
+   "t": "exception",
+   "type": "KeyError",
+   "arg": null
+  },
+  "c": {
+   "t": "exception",
+   "type": "SyntaxError",
+   "arg": null
+  },
+  "d": {
+   "t": "exception",
+   "type": "SyntaxError",
+   "arg": ""
+  }
+ },
+ "note": "exception_value_conversion: a host exception value without an argument goes out as str(exc): '' (RuntimeError(''), KeyError('')), and 'None' for SyntaxError (CPython 3.12); an explicit '' stays ''",
+ "exact_strings": true
+}
