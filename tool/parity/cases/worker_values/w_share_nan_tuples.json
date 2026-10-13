@@ -1,0 +1,6 @@
+{
+ "id": "w_share_nan_tuples",
+ "code": "a = (float('nan'),)\nb = (float('nan'),)\n[{a, b}, a, b]",
+ "note": "boundary_value_graph: tuples of distinct NaNs: sharing is matched up to relabelling, not by order",
+ "exact_strings": true
+}

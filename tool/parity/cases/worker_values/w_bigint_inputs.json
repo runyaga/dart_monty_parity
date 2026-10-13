@@ -1,0 +1,20 @@
+{
+ "id": "w_bigint_inputs",
+ "code": "(type(a).__name__, a, b, c, a - 1)",
+ "inputs": {
+  "a": {
+   "t": "int",
+   "v": "18446744073709551616"
+  },
+  "b": {
+   "t": "int",
+   "v": "-9223372036854775809"
+  },
+  "c": {
+   "t": "int",
+   "v": "9223372036854775808"
+  }
+ },
+ "note": "big_integer_values: integers outside i64 as feed inputs (the writer chooses int or bigint by range)",
+ "exact_strings": true
+}

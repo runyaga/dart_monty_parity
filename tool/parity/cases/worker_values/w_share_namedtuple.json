@@ -1,0 +1,6 @@
+{
+ "id": "w_share_namedtuple",
+ "code": "import sys\nv = sys.version_info\n[v, (v, v)]",
+ "note": "boundary_value_graph: one named tuple reached three times",
+ "exact_strings": true
+}

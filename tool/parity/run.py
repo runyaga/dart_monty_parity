@@ -17,11 +17,12 @@ OUTDIR/<case>/core-<backend>.json (and core1-<backend>.json for one-shot
 cases). A case marked "isolate" runs in its own VM process under a 60 s cap,
 because an FFI run that core cannot interrupt would otherwise hang the batch;
 a case that hits the cap records `runner_error`. Its default cases are every
-suite except e0.
+suite except the worker engine's own (e0 and worker_values).
 
 --engine worker drives core's internal monty-proto worker (each case on a
 fresh worker: a process on the VM, a Web Worker in the browser) and writes
-OUTDIR/<case>/worker-<backend>.json. Its default cases are the e0 suite. The
+OUTDIR/<case>/worker-<backend>.json. Its default cases are the e0 suite and
+every case of a row's `worker` sets in rows.json (score.py --assert-worker). The
 VM needs the worker executable that core's tool/build_worker.sh writes into
 the core checkout. It exits 1 if the runner fails (its earlier outcomes for
 the backend are removed first, so a failed run cannot reuse them). It then runs the worker crash tests on the same backend
@@ -50,8 +51,10 @@ MARKER = 'PARITY_OUTCOME '
 PROBE_MARKER = 'PARITY_PROBE '
 ISOLATE_SECS = 60
 ENGINES = ('core', 'worker')
-# The worker engine's own suite; the core engine leaves it out by default.
+# The worker engine's own suites; the core engine leaves them out by default.
 WORKER_SUITE = 'e0'
+WORKER_SUITES = (WORKER_SUITE, 'worker_values')
+RULES = ROOT / 'tool/parity/rows.json'
 # Tests per backend in the worker crash test files (a floor: a filter or a
 # load failure that runs fewer is a failure, not a pass).
 CRASH_TESTS = {'vm': ('test/worker_crash_vm_test.dart', 2),
@@ -66,9 +69,11 @@ def case_files(globs: list[str], engine: str) -> list[Path]:
     if globs:
         pats = globs
     elif engine == 'worker':
-        pats = [str(CASES / WORKER_SUITE / '*.json')]
+        listed = {cid for rule in json.loads(RULES.read_text())['rows'].values()
+                  for cases in (rule.get('worker') or {}).values() for cid in cases}
+        pats = [str(CASES / WORKER_SUITE / '*.json'), *(str(CASES / '*' / f'{cid}.json') for cid in sorted(listed))]
     else:
-        pats = [str(p) for p in sorted(CASES.glob('*/*.json')) if p.parent.name != WORKER_SUITE]
+        pats = [str(p) for p in sorted(CASES.glob('*/*.json')) if p.parent.name not in WORKER_SUITES]
     files = sorted({Path(p).resolve() for g in pats for p in glob.glob(g)})
     if not files:
         sys.exit(f'no cases match {pats}')

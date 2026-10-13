@@ -73,7 +73,11 @@ done
 python3 -I tool/parity/score.py /tmp/e0 --assert-e0
 ```
 
-`--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend. A case
+`--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend.
+The same runs also carry the worker value rows' cases (each row's `worker` sets in `rows.json`; new cases
+in `tool/parity/cases/worker_values`), asserted with `score.py /tmp/e0 --assert-worker`: every
+`pre_cutover` case MATCHES, every recorded `diverge` case DIVERGES, the `cutover` cases are shown only,
+and each negative control under `worker.controls` must turn a matching outcome into a difference. A case
 under `deferred` is run and shown as DEFERRED but not counted; once it matches everywhere, the assertion
 fails until it leaves `deferred`. The `core` engine leaves the `e0` suite out by default.
 
@@ -93,8 +97,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 - **`current`** (`ci.yaml`): core at `CORE_REF`, all three backends, `--assert-current`; also analyses
   the runner and checks the upstream copies against that core.
 - **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.
-- **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite through the worker engine on all three
-  backends with the crash tests, `--assert-e0`.
+- **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite and the worker value rows' cases through the
+  worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`.
 - **`Parity oracle`** (`parity-oracle.yaml`): regenerates every expected outcome from the hash-pinned
   oracle and fails on any byte of difference. Runs when a parity input changes (cases, expected outcomes,
   manifest, oracle code, upstream pins, the workflow), weekly, and on demand.

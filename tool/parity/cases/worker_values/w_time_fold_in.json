@@ -1,0 +1,22 @@
+{
+ "id": "w_time_fold_in",
+ "code": "(repr(a), a.fold, a, b.fold, b)",
+ "inputs": {
+  "a": {
+   "t": "time",
+   "v": "01:30:00.000005",
+   "offset": null,
+   "tzname": null,
+   "fold": 1
+  },
+  "b": {
+   "t": "time",
+   "v": "01:30:00.000000",
+   "offset": 3600,
+   "tzname": "CET",
+   "fold": 1
+  }
+ },
+ "note": "time_duration_zone_values: fold on naive and aware times, as feed inputs",
+ "exact_strings": true
+}

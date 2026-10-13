@@ -1,0 +1,6 @@
+{
+ "id": "w_share_proxy",
+ "code": "from dataclasses import dataclass\n@dataclass\nclass P:\n    x: object\np = P([1])\nq = P(p.x)\n[p, p, q]",
+ "note": "boundary_value_graph: one instance reached twice, and an attribute shared by two instances",
+ "exact_strings": true
+}

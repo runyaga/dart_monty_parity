@@ -1,0 +1,17 @@
+{
+ "id": "w_refuse_uuid",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "proxy",
+   "class": "P",
+   "dataclass": true,
+   "instance_id": "NOT-A-UUID",
+   "class_id": "6f1f2c1e-9a39-4c0b-8d2f-0d5b8f6a1c11",
+   "attrs": []
+  }
+ },
+ "note": "shared_value_batches: an instance id that is not a canonical uuid is refused on the host (upstream's host cannot build an instance proxy at all)",
+ "exact_strings": true
+}

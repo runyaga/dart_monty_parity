@@ -1,0 +1,13 @@
+{
+ "id": "w_refuse_type_name",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "type",
+   "name": "NoSuchType"
+  }
+ },
+ "note": "builtin_type_function_handles: a type name upstream does not know is refused on the host",
+ "exact_strings": true
+}

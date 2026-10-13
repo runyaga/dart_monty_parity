@@ -1,0 +1,6 @@
+{
+ "id": "w_tz_default_name_out",
+ "code": "import datetime\nh = datetime.timedelta(hours=1)\nz = datetime.timedelta(0)\n(datetime.timezone(h), datetime.timezone(h, 'UTC+01:00'), datetime.timezone.utc, datetime.timezone(z, 'UTC'), datetime.time(1, tzinfo=datetime.timezone(h)), datetime.time(1, tzinfo=datetime.timezone(h, 'UTC+01:00')), datetime.datetime(2020, 1, 2, 3, tzinfo=datetime.timezone(h)), datetime.datetime(2020, 1, 2, 3, tzinfo=datetime.timezone(h, 'UTC+01:00')))",
+ "note": "time_duration_zone_values: an unnamed zone and one named explicitly with its default name differ, for timezone, time and datetime (upstream reads the name from __getinitargs__)",
+ "exact_strings": true
+}

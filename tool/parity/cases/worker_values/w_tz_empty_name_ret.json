@@ -1,0 +1,35 @@
+{
+ "id": "w_tz_empty_name_ret",
+ "code": "x = get()\n(repr(x), x)",
+ "externals": {
+  "get": [
+   {
+    "return": {
+     "t": "tuple",
+     "items": [
+      {
+       "t": "timezone",
+       "offset": 3600,
+       "name": ""
+      },
+      {
+       "t": "time",
+       "v": "01:00:00.000000",
+       "offset": 3600,
+       "tzname": "",
+       "fold": 0
+      },
+      {
+       "t": "datetime",
+       "v": "2020-01-02T03:00:00.000000",
+       "offset": 3600,
+       "tzname": ""
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "note": "time_duration_zone_values: an explicit empty zone name ('') is a name, as a callback return",
+ "exact_strings": true
+}

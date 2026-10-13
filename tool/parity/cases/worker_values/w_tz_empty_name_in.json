@@ -1,0 +1,26 @@
+{
+ "id": "w_tz_empty_name_in",
+ "code": "(repr(a), repr(b), repr(c), a, b, c)",
+ "inputs": {
+  "a": {
+   "t": "timezone",
+   "offset": 3600,
+   "name": ""
+  },
+  "b": {
+   "t": "time",
+   "v": "01:00:00.000000",
+   "offset": 3600,
+   "tzname": "",
+   "fold": 0
+  },
+  "c": {
+   "t": "datetime",
+   "v": "2020-01-02T03:00:00.000000",
+   "offset": 3600,
+   "tzname": ""
+  }
+ },
+ "note": "time_duration_zone_values: an explicit empty zone name ('') is a name, as feed inputs",
+ "exact_strings": true
+}

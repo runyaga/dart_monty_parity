@@ -1,0 +1,52 @@
+{
+ "case": "w_exc_payloadless_out",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "list",
+      "items": [
+       {
+        "t": "exception",
+        "type": "ValueError",
+        "arg": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+       },
+       {
+        "t": "exception",
+        "type": "ValueError",
+        "arg": "Expecting ',' delimiter: line 1 column 2 (char 1)"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "UnicodeDecodeError"
+     },
+     {
+      "t": "str",
+      "v": "JSONDecodeError"
+     }
+    ]
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

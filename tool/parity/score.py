@@ -63,11 +63,24 @@ under `deferred` is shown as DEFERRED and not counted, and fails once it
 matches on every backend (it then leaves `deferred`); it must still have
 an outcome and an oracle on every backend. The case list must
 equal the files in tool/parity/cases/<suite>.
+
+--assert-worker scores the worker engine's value cases (rows.json: each row's
+`worker` sets; the top-level `worker` block), compared as --assert-e0 compares:
+
+  pre_cutover  must MATCH on every backend; a missing outcome or oracle fails
+  diverge      a recorded divergence: must DIVERGE on every backend, and fails
+               once it matches (it then moves to pre_cutover)
+  cutover      run and shown, not asserted: measured on the cutover candidate
+
+Every case file in the worker suite must be in exactly one set. Each negative
+control in `worker.controls` mutates a pre-cutover case's real worker outcome
+on every backend and must turn its MATCH into DIVERGE.
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import csv
 import json
 import re
@@ -258,6 +271,119 @@ def classify_worker(cid: str, backend: str, out: Path, expected: Path,
     return ('MATCH' if not bad else 'DIVERGE'), bad
 
 
+def case_index() -> dict[str, dict]:
+    """Every case file, by id."""
+    out = {}
+    for p in sorted(CASES.glob('*/*.json')):
+        c = json.loads(p.read_text())
+        out[c['id']] = {**c, '_suite': p.parent.name}
+    return out
+
+
+def worker_sets(rules_doc: dict) -> tuple[dict[str, tuple[str, str]], list[str]]:
+    """case -> (row, set) over every row's `worker` block, and the problems found building it."""
+    where: dict[str, tuple[str, str]] = {}
+    problems = []
+    for row, rule in rules_doc['rows'].items():
+        for kind, cases in (rule.get('worker') or {}).items():
+            if kind not in ('pre_cutover', 'diverge', 'cutover'):
+                problems.append(f'{row}: unknown worker set {kind!r}')
+                continue
+            for cid in cases:
+                if cid in where:
+                    problems.append(f'{cid} is in {where[cid]} and in {(row, kind)}')
+                where[cid] = (row, kind)
+    return where, problems
+
+
+def assert_worker(outcomes: Path, expected: Path, backends: list[str],
+                  markdown: Path | None, json_out: Path | None) -> int:
+    """The worker engine's value rows: every pre-cutover case MATCH, every recorded divergence DIVERGE."""
+    doc = json.loads(RULES.read_text())
+    spec = doc['worker']
+    where, problems = worker_sets(doc)
+    cases = case_index()
+    for cid in where:
+        if cid not in cases:
+            problems.append(f'{cid}: listed, but no tool/parity/cases/*/{cid}.json')
+    for cid, c in cases.items():
+        if c['_suite'] == spec['suite'] and cid not in where:
+            problems.append(f'{cid}: in tool/parity/cases/{spec["suite"]} but in no worker set')
+    for cid in spec.get('not_run', {}):
+        if cid not in cases or cid in where:
+            problems.append(f'{cid}: under worker.not_run, but {"in a worker set" if cid in where else "no such case"}')
+    for cid, (row, kind) in where.items():
+        if (kind == 'diverge') != (cid in spec.get('diverge_why', {})):
+            problems.append(f'{cid}: a `diverge` case needs a reason in worker.diverge_why, and only one does')
+    if problems:
+        sys.exit('rows.json worker sets: ' + '; '.join(problems))
+    table = {cid: {b: classify_worker(cid, b, outcomes, expected, bool(cases[cid].get('local_refusal')))
+                   for b in backends} for cid in where}
+    lines = ['Worker engine, value rows (rows.json `worker`)', '',
+             '| row | case | set | ' + ' | '.join(backends) + ' |', '|---|---|---|' + '---|' * len(backends)]
+    for row, rule in doc['rows'].items():
+        for kind in ('pre_cutover', 'diverge', 'cutover'):
+            for cid in (rule.get('worker') or {}).get(kind, []):
+                cells = [table[cid][b][0] + (f' `{"".join(table[cid][b][1])}`' if table[cid][b][1] else '')
+                         for b in backends]
+                lines.append(f'| {row} | {cid} | {kind} | ' + ' | '.join(cells) + ' |')
+    lines.append('')
+    rc = 0
+    for b in backends:
+        pre = [c for c, (_, k) in where.items() if k == 'pre_cutover']
+        div = [c for c, (_, k) in where.items() if k == 'diverge']
+        n = sum(table[c][b][0] == 'MATCH' for c in pre)
+        nd = sum(table[c][b][0] == 'DIVERGE' for c in div)
+        ok = n == len(pre) and nd == len(div)
+        rc |= not ok
+        lines.append(f'{"PASS" if ok else "FAIL"} worker values on {b}: {n}/{len(pre)} pre-cutover cases MATCH, '
+                     f'{nd}/{len(div)} recorded divergences DIVERGE')
+    for cid, (row, kind) in where.items():
+        if kind == 'diverge' and all(table[cid][b][0] == 'MATCH' for b in backends):
+            rc = 1
+            lines.append(f'FAIL worker: {cid} ({row}) now MATCHES on every backend; move it to pre_cutover')
+    lines.append('')
+    controls = []
+    for ctl in spec.get('controls', []):
+        cid, mutation = ctl['case'], ctl['mutation']
+        if where.get(cid, ('', ''))[1] != 'pre_cutover':
+            rc = 1
+            lines.append(f'FAIL control {mutation} on {cid}: not a pre-cutover case')
+            continue
+        for b in backends:
+            got = load(outcomes / cid / f'worker-{b}.json')
+            if got is None or table[cid][b][0] != 'MATCH':
+                verdict, why = 'FAIL', f'the unmutated case is {table[cid][b][0]}'
+            else:
+                got = copy.deepcopy(got)
+                if not worker_compare.mutate(got, mutation):
+                    verdict, why = 'FAIL', 'nothing to mutate'
+                else:
+                    cls, bad = classify_worker(cid, b, outcomes, expected, bool(cases[cid].get('local_refusal')), got)
+                    verdict, why = ('PASS', f'mutated: DIVERGE {"".join(bad)}') if cls == 'DIVERGE' else (
+                        'FAIL', f'mutated: {cls}')
+            rc |= verdict != 'PASS'
+            controls.append({'case': cid, 'mutation': mutation, 'backend': b, 'verdict': verdict, 'why': why})
+            lines.append(f'{verdict} control {mutation} on {cid} ({b}): {why}')
+    lines.append('')
+    for cid, why in spec.get('diverge_why', {}).items():
+        lines.append(f'recorded divergence {cid} ({where[cid][0]}): {why}')
+    for cid, why in spec.get('not_run', {}).items():
+        lines.append(f'not run through the worker: {cid}: {why}')
+    for d in spec.get('divergences', []):
+        lines.append(f'recorded divergence {d["name"]} ({", ".join(d["rows"])}): {d["what"]}')
+    text = '\n'.join(lines) + '\n'
+    print(text)
+    if markdown:
+        markdown.write_text(text)
+    if json_out:
+        json_out.write_text(json.dumps({'cases': {
+            cid: {'row': where[cid][0], 'set': where[cid][1],
+                  **{b: {'class': c, 'differs': d} for b, (c, d) in by_b.items()}}
+            for cid, by_b in table.items()}, 'controls': controls}, indent=1) + '\n')
+    return rc
+
+
 # ------------------------------------------------------------------ main
 def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
               markdown: Path | None, json_out: Path | None) -> int:
@@ -329,16 +455,22 @@ def main() -> int:
     ap.add_argument('--write-current', type=Path, help='write the measured rows and totals (keeps `deltas`)')
     ap.add_argument('--assert-e0', type=Path, nargs='?', const=ROOT / 'tool/parity/e0.json',
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
+    ap.add_argument('--assert-worker', action='store_true',
+                    help="score the worker engine's value rows instead (rows.json `worker`)")
     a = ap.parse_args()
     if a.assert_e0:
         return assert_e0(a.assert_e0, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
+    if a.assert_worker:
+        return assert_worker(a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    rules = json.loads(RULES.read_text())['rows']
-    check_exceptions(rules)
+    all_rules = json.loads(RULES.read_text())['rows']
+    check_exceptions(all_rules)
+    # A row with only a `worker` block has no core-engine cases: its recorded status stands.
+    rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule}
     backends = a.backends.split(',')
     manifest = list(csv.DictReader(MANIFEST.open(), delimiter='\t'))
     in_scope = {r['cap_id']: r for r in manifest if r['in_scope'] == 'yes'}
-    unknown = sorted(set(rules) - set(in_scope))
+    unknown = sorted(set(all_rules) - set(in_scope))
     if unknown:
         sys.exit(f'rows.json names rows not in scope in the manifest: {unknown}')
 

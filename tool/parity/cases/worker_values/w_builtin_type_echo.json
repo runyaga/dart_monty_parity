@@ -1,0 +1,16 @@
+{
+ "id": "w_builtin_type_echo",
+ "feeds": [
+  "orig = (type, len, int, ValueError)\norig",
+  "x = echo()\n(x[0] is type, x[1] is len, x[2] is int, x[3] is ValueError, x[1]([1, 2]), x)"
+ ],
+ "externals": {
+  "echo": [
+   {
+    "echo": 0
+   }
+  ]
+ },
+ "note": "builtin_type_function_handles: the builtin function `type` comes back as the type `type`; builtins go back by name",
+ "exact_strings": true
+}

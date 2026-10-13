@@ -1,0 +1,27 @@
+{
+ "id": "w_exc_lossy_ret",
+ "code": "x = get()\n(repr(x), x)",
+ "externals": {
+  "get": [
+   {
+    "return": {
+     "t": "tuple",
+     "items": [
+      {
+       "t": "exception",
+       "type": "ValueError",
+       "arg": "x\ud800y"
+      },
+      {
+       "t": "exception",
+       "type": "KeyError",
+       "arg": "x\ud800y"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "note": "exception_value_conversion: the same, as a callback return",
+ "exact_strings": true
+}

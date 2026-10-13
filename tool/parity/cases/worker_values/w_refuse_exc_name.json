@@ -1,0 +1,14 @@
+{
+ "id": "w_refuse_exc_name",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "exception",
+   "type": "NoSuchError",
+   "arg": "boom"
+  }
+ },
+ "note": "exception_value_conversion: an exception type upstream does not know is refused on the host",
+ "exact_strings": true
+}

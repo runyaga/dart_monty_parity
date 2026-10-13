@@ -1,0 +1,47 @@
+{
+ "case": "w_fh_large_in",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "filehandle",
+      "path": "/d/a.bin",
+      "mode": "rb",
+      "position": "9007199254740993"
+     },
+     {
+      "t": "filehandle",
+      "path": "/d/b.bin",
+      "mode": "rb",
+      "position": "9223372036854775807"
+     },
+     {
+      "t": "filehandle",
+      "path": "/d/c.bin",
+      "mode": "rb",
+      "position": "18446744073709551615"
+     }
+    ]
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

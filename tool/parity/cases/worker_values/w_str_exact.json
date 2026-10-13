@@ -1,0 +1,6 @@
+{
+ "id": "w_str_exact",
+ "code": "('limit exceeded: 123', '12345678-1234-4234-8234-123456789abc', 'abc 42')",
+ "note": "text_and_bytes: strings compare exactly, digits and uuid text included",
+ "exact_strings": true
+}

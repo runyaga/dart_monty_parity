@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_noarg_out",
+ "code": "(ValueError(), KeyError(), StopIteration())",
+ "note": "exception_value_conversion: an exception value without an argument arrives with message ''",
+ "exact_strings": true
+}

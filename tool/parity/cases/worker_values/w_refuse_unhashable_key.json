@@ -1,0 +1,29 @@
+{
+ "id": "w_refuse_unhashable_key",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "dict",
+   "items": [
+    [
+     {
+      "t": "list",
+      "items": [
+       {
+        "t": "int",
+        "v": "1"
+       }
+      ]
+     },
+     {
+      "t": "int",
+      "v": "2"
+     }
+    ]
+   ]
+  }
+ },
+ "note": "dictionary_values: a key Python cannot hash is refused on the host",
+ "exact_strings": true
+}

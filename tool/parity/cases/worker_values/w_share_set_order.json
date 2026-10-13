@@ -1,0 +1,6 @@
+{
+ "id": "w_share_set_order",
+ "code": "a = (1,)\nb = (2,)\ns1 = {a, b}\ns2 = {b, a}\n[s1, s2, a, b, a]",
+ "note": "boundary_value_graph: equal sets built in opposite orders; their members shared outside them",
+ "exact_strings": true
+}

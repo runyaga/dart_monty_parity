@@ -1,0 +1,29 @@
+{
+ "id": "w_fh_ret",
+ "code": "x = get()\n(repr(x[0]), x)",
+ "externals": {
+  "get": [
+   {
+    "return": {
+     "t": "tuple",
+     "items": [
+      {
+       "t": "filehandle",
+       "path": "/d/a.txt",
+       "mode": "r",
+       "position": "7"
+      },
+      {
+       "t": "filehandle",
+       "path": "/d/b.bin",
+       "mode": "ab",
+       "position": "0"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "note": "file_handle_value_conversion: file handles as a callback return",
+ "exact_strings": true
+}

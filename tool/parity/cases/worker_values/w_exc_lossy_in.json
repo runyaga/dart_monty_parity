@@ -1,0 +1,18 @@
+{
+ "id": "w_exc_lossy_in",
+ "code": "(repr(a), str(a), repr(b), str(b), a, b)",
+ "inputs": {
+  "a": {
+   "t": "exception",
+   "type": "ValueError",
+   "arg": "x\ud800y"
+  },
+  "b": {
+   "t": "exception",
+   "type": "KeyError",
+   "arg": "x\ud800y"
+  }
+ },
+ "note": "exception_value_conversion: an argument with an unpaired surrogate: ValueError's str(exc) converted lossily, KeyError's quoted repr kept",
+ "exact_strings": true
+}

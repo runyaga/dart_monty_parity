@@ -1,0 +1,15 @@
+{
+ "id": "w_batch_proxy_args",
+ "code": "from dataclasses import dataclass\n@dataclass\nclass P:\n    x: object\np = P([2])\nf(p, [p.x], k=p)\n",
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "note": "shared_value_batches: one instance, and its attribute, across a call's arguments",
+ "exact_strings": true
+}

@@ -1,0 +1,6 @@
+{
+ "id": "w_classtype_out",
+ "code": "from dataclasses import dataclass\n@dataclass\nclass P:\n    x: object\nP",
+ "note": "lossy_output_placeholders: a sandbox class reached as a value (staged until the cutover)",
+ "exact_strings": true
+}

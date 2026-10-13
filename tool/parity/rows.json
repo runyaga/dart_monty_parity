@@ -58,6 +58,14 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_bigint",
+     "i_bigint",
+     "r_bigint",
+     "w_bigint_inputs"
+    ]
    }
   },
   "float_values": {
@@ -70,6 +78,15 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_float",
+     "v_nan",
+     "i_float",
+     "r_float",
+     "w_float_nan_neg"
+    ]
    }
   },
   "complex_values": {
@@ -81,6 +98,14 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "cutover": [
+     "v_complex",
+     "i_complex",
+     "r_complex",
+     "s07_complex"
+    ]
    }
   },
   "text_and_bytes": {
@@ -91,6 +116,11 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "w_str_exact"
+    ]
    }
   },
   "sequence_values": {
@@ -123,6 +153,11 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "w_refuse_unhashable_key"
+    ]
    }
   },
   "named_tuple_values": {
@@ -163,6 +198,25 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_time",
+     "v_timedelta",
+     "v_timezone",
+     "i_time",
+     "i_timedelta",
+     "i_timezone",
+     "r_time_td_tz",
+     "w_tz_default_name_out",
+     "w_tz_default_name_in",
+     "w_tz_empty_name_in",
+     "w_tz_empty_name_ret",
+     "w_tz_unencodable_name_in",
+     "w_time_fold_in",
+     "w_refuse_time_range",
+     "w_refuse_date_range"
+    ]
    }
   },
   "path_value_conversion": {
@@ -185,6 +239,20 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_exception",
+     "r_exception",
+     "w_exc_payloadless_out",
+     "w_exc_noarg_out",
+     "w_exc_lossy_in",
+     "w_exc_lossy_ret",
+     "w_refuse_exc_name"
+    ],
+    "diverge": [
+     "i_exception"
+    ]
    }
   },
   "builtin_type_function_handles": {
@@ -199,6 +267,17 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_builtin",
+     "r_builtin",
+     "v_type",
+     "i_type",
+     "r_type",
+     "w_builtin_type_echo",
+     "w_refuse_type_name"
+    ]
    }
   },
   "lossy_output_placeholders": {
@@ -213,6 +292,20 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_cycle_list",
+     "v_cycle_dict",
+     "r_cycle",
+     "v_function",
+     "r_function",
+     "v_repr",
+     "w_lossy_key_collision"
+    ],
+    "cutover": [
+     "w_classtype_out"
+    ]
    }
   },
   "boundary_value_graph": {
@@ -226,6 +319,19 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "v_alias",
+     "v_alias_nested",
+     "i_alias",
+     "i_alias_is",
+     "r_alias",
+     "w_share_set_order",
+     "w_share_nan_tuples",
+     "w_share_namedtuple",
+     "w_share_proxy"
+    ]
    }
   },
   "host_eager_attributes": {
@@ -785,6 +891,16 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "worker": {
+    "pre_cutover": [
+     "w_fh_in",
+     "w_fh_ret",
+     "w_refuse_fh_position"
+    ],
+    "cutover": [
+     "w_fh_large_in"
+    ]
    }
   },
   "raised_exception": {
@@ -1768,6 +1884,17 @@
     "ffi": "ABSENT",
     "web": "ABSENT"
    }
+  },
+  "shared_value_batches": {
+   "worker": {
+    "pre_cutover": [
+     "w_batch_inputs",
+     "w_batch_call_args",
+     "w_batch_proxy_args",
+     "w_batch_instance_ids",
+     "w_refuse_uuid"
+    ]
+   }
   }
  },
  "rescored": {
@@ -1844,5 +1971,91 @@
    },
    "why": "limit-wording dropped: l06_feed_timeout words the timeout differently; no case matches in full on the VM"
   }
+ },
+ "worker": {
+  "about": "The worker engine's value rows (run.py --engine worker; score.py --assert-worker). Each row's `worker` block lists its cases: `pre_cutover` must MATCH on every backend; `diverge` is a recorded divergence that must DIVERGE; `cutover` is run and shown but asserted only on the cutover candidate. Cases are compared by worker_compare.py: shared objects and sandbox ids up to relabelling, strings exactly. A case marked `local_refusal` expects the host to refuse its inputs before anything runs.",
+  "suite": "worker_values",
+  "not_run": {
+   "h_b05_std_type_proxy": "builtin_type_function_handles: needs host classes and objects, which the worker driver has no registry for yet",
+   "x8handle_pos5": "file_handle_value_conversion: returns a handle from open(), an OS call the worker driver declines (it answers only the path-only calls); w_fh_in and w_fh_ret carry handles through inputs and callback returns instead",
+   "x8handle_tell": "file_handle_value_conversion: as x8handle_pos5",
+   "x8handle_pos2p53": "file_handle_value_conversion: as x8handle_pos5 (w_fh_large_in covers the large positions)",
+   "x8handle_pos2p63m1": "file_handle_value_conversion: as x8handle_pos5 (w_fh_large_in covers the large positions)",
+   "x8hostmode_neg": "file_handle_value_conversion: as x8handle_pos5 (w_refuse_fh_position covers a negative position)"
+  },
+  "diverge_why": {
+   "i_exception": "a host exception value with no argument (RuntimeError()): upstream's encoder always sends str(exc), so the sandbox sees RuntimeError(''); core's writer sends the argument absent, so the sandbox sees RuntimeError() and repr differs"
+  },
+  "controls": [
+   {
+    "case": "v_alias",
+    "mutation": "copy-shared-root"
+   },
+   {
+    "case": "w_share_set_order",
+    "mutation": "retarget-ref"
+   },
+   {
+    "case": "w_share_namedtuple",
+    "mutation": "copy-shared-namedtuple"
+   },
+   {
+    "case": "w_share_proxy",
+    "mutation": "copy-shared-proxy"
+   },
+   {
+    "case": "w_share_proxy",
+    "mutation": "copy-shared-attribute-child"
+   },
+   {
+    "case": "w_share_proxy",
+    "mutation": "merge-instance-ids"
+   },
+   {
+    "case": "w_batch_instance_ids",
+    "mutation": "change-instance-id"
+   },
+   {
+    "case": "w_batch_call_args",
+    "mutation": "copy-shared-call-arg"
+   },
+   {
+    "case": "w_batch_proxy_args",
+    "mutation": "copy-shared-call-arg"
+   },
+   {
+    "case": "w_str_exact",
+    "mutation": "string-digits"
+   },
+   {
+    "case": "w_str_exact",
+    "mutation": "string-uuid"
+   },
+   {
+    "case": "w_tz_default_name_out",
+    "mutation": "drop-zone-name"
+   },
+   {
+    "case": "w_tz_empty_name_in",
+    "mutation": "empty-zone-name-to-none"
+   }
+  ],
+  "divergences": [
+   {
+    "name": "unicode-normalization",
+    "rows": [
+     "named_tuple_values"
+    ],
+    "what": "CPython applies NFKC to a named tuple's field names when it builds the type; Dart has no Unicode normalization, so core's reader and writer accept two field names that normalize alike (K and KELVIN SIGN), where CPython 3.12 raises SyntaxError. No sandbox emits such a named tuple and upstream's host cannot build one as an input, so no case reaches it; core's fixtures cover it"
+   },
+   {
+    "name": "unicode-version",
+    "rows": [
+     "named_tuple_values",
+     "text_and_bytes"
+    ],
+    "what": "core's validation uses the platform's Unicode tables for Rust {:?} escaping in error messages, str.isidentifier() and repr() printability; measured against upstream over every code point, the only differences are characters that one side's Unicode version assigns and the other's does not. Reachable only through names and malformed arenas no case can produce"
+   }
+  ]
  }
 }
