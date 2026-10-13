@@ -4087,6 +4087,13 @@
     "ref-py": "1c04a1feb1916d761afe7bbf1e3faa7b74daeb55e83f19ea6801523eec6a8929"
    }
   },
+  "w_exc_noarg_in": {
+   "suite": "worker_values",
+   "case": "bf06069ff6e68a0e2fa48cf07408eb430d7060102e7aad5ae5d51bf326a65925",
+   "outcomes": {
+    "ref-py": "6bb38532376cf5a446d49a9a9779711401c718e5021c015f8cb5c6854f92f33f"
+   }
+  },
   "w_exc_noarg_out": {
    "suite": "worker_values",
    "case": "6378b0f91ca29a0775d54056765c05f57ccc751a5f8f5709541d8b1462ee4ee0",
