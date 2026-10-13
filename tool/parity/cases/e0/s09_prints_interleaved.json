@@ -1,0 +1,5 @@
+{
+ "id": "s09_prints_interleaved",
+ "code": "import sys\nprint('a')\nprint('b', file=sys.stderr)\nprint('c', end='')\nprint('d', file=sys.stderr)\n'done'",
+ "note": "stdout and stderr interleaved"
+}

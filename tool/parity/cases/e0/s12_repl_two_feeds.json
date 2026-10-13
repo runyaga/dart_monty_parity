@@ -1,0 +1,8 @@
+{
+ "id": "s12_repl_two_feeds",
+ "feeds": [
+  "x = [1, 2]\nprint('fed')",
+  "x.append(3)\nx"
+ ],
+ "note": "state persists across two feeds of one session"
+}

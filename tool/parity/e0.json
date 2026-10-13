@@ -1,0 +1,22 @@
+{
+ "about": "E0: the cases dart_monty_core's monty-proto worker must match upstream on, through the worker engine (run.py --engine worker), on every backend. score.py --assert-e0 fails unless every counted case MATCHES on each backend. A deferred case is run and reported but not counted; once it matches, it must leave `deferred`.",
+ "suite": "e0",
+ "engine": "worker",
+ "cases": [
+  "s01_int_bigint_input",
+  "s02_float_neg_zero",
+  "s03_str_bytes_tuple",
+  "s04_shared_list",
+  "s05_dict_int_keys",
+  "s06_set",
+  "s07_complex",
+  "s08_exception",
+  "s09_prints_interleaved",
+  "s10_external_call",
+  "s11_os_call",
+  "s12_repl_two_feeds"
+ ],
+ "deferred": {
+  "s07_complex": "deferred to M3: the worker driver's value subset carries no complex value yet"
+ }
+}
