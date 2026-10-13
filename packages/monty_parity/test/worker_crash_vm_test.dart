@@ -13,7 +13,7 @@ import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/process_channel.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
-import 'package:dart_monty_core/src/worker/session_settings.dart';
+import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_locator.dart';
 import 'package:test/test.dart';
 

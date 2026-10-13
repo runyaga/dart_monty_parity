@@ -20,7 +20,7 @@ import 'dart:collection';
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
-import 'package:dart_monty_core/src/worker/session_settings.dart';
+import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/canon.dart';
 import 'package:monty_parity/src/case_runner.dart';
 
