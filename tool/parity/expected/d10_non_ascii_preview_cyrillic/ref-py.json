@@ -13,11 +13,11 @@
      {
       "filename": "<python-input-0>",
       "line": 1,
-      "column": 5,
+      "column": 17,
       "end_line": 1,
-      "end_column": 30,
+      "end_column": 24,
       "function": "<module>",
-      "source_line": "x = {'ключ': 1}['ключ'] + 'é'"
+      "source_line": "s = 'ключ'; x = 1 + 'é'"
      }
     ]
    },
@@ -35,7 +35,7 @@
     "object"
    ],
    "display": {
-    "traceback": "Traceback (most recent call last):\n  File \"<python-input-0>\", line 1, in <module>\n    x = {'ключ': 1}['ключ'] + 'é'\n        ~~~~~~~~~~~~~~~~~~~~~~~~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+    "traceback": "Traceback (most recent call last):\n  File \"<python-input-0>\", line 1, in <module>\n    s = 'ключ'; x = 1 + 'é'\n                    ~~~~~~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
     "type-msg": "TypeError: unsupported operand type(s) for +: 'int' and 'str'",
     "msg": "unsupported operand type(s) for +: 'int' and 'str'",
     "str": "TypeError: unsupported operand type(s) for +: 'int' and 'str'",

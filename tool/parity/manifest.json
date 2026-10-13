@@ -82,9 +82,9 @@
   },
   "d10_non_ascii_preview_cyrillic": {
    "suite": "display",
-   "case": "99797543eceeb984920875b56db86d1cde0e572ae24fe912e8fbb71e9cbd46ba",
+   "case": "9d315fc3c58fefdcd2bb7f8ed751ee1c020655e4560313ac1d28c421a83d3812",
    "outcomes": {
-    "ref-py": "ecbf3e3a3179ab0397559e9d990b430bc190d0266cf11544ce792836fe115779"
+    "ref-py": "3a6a9b25a3b3e9c81311882aa2ae18426d27e8f6ac14b35e43151ce7e3058eb1"
    }
   },
   "d11_nbsp_leading_bytes": {
