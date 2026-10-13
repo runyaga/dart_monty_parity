@@ -3,6 +3,8 @@ name: CI
 # The suite checks itself against dart_monty_core:
 #   manifest  every case bound to its expected outcome (offline)
 #   pins      every third-party action pinned to a commit SHA (offline)
+#   tokens    every workflow scopes its token: a read-only top-level
+#             `permissions:` and no checkout that keeps credentials (offline)
 #   runner    the Dart runner analyses clean against the core it targets
 #   current   the core commit in CORE_REF reproduces tool/parity/baseline-current.json
 #             case by case on vm, dart2js and dart2wasm (what core's own CI job asserts)
@@ -35,6 +37,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - run: python3 -I tool/check_parity_manifest.py
 
   # Every third-party `uses:` pinned to a 40-hex commit SHA (offline).
@@ -44,7 +48,21 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - run: python3 -I tool/check_action_pins.py
+
+  # A read-only top-level `permissions:` in every workflow, and
+  # `persist-credentials: false` on every checkout (offline).
+  workflow-tokens:
+    name: Workflow tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: python3 -I tool/check_workflow_tokens.py
 
   core-ref:
     name: Read CORE_REF
@@ -54,6 +72,8 @@ jobs:
       sha: ${{ steps.ref.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - id: ref
         run: |
           sha="$(tr -d '[:space:]' < CORE_REF)"
@@ -73,6 +93,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
@@ -149,6 +171,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
@@ -216,6 +240,8 @@ jobs:
       BASELINE_CORE: 5873ec55747083b3ee64411d11cf62315a7200f3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
