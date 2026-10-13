@@ -4068,7 +4068,7 @@
   },
   "w_classtype_out": {
    "suite": "worker_values",
-   "case": "1672eda42952c86969751fcd0d3e4ae152b2d27381bd923d0dc1e23522fafefd",
+   "case": "f9fe5d42a81bceea6af2ee7ddcc202279e212b2bd5b2fa063ff196b97344f4e2",
    "outcomes": {
     "ref-py": "1fb80f72ae38e0c8116aad20d1832ae26dfa708d7440cd9424561ad3a9603652"
    }
@@ -4194,7 +4194,7 @@
   },
   "w_share_nan_tuples": {
    "suite": "worker_values",
-   "case": "290ec0f22c5b41a82f862f52b0ee949bd6354b2e41d9f5ed2813d734ee41a4e7",
+   "case": "49b545c103e14052ea087604f98cb7318e19b928d67f39c4b233bfe00658d997",
    "outcomes": {
     "ref-py": "32b067686871ba3d2c5e82bcc478f25be243fe854234fc5bd4ca808ff6c6a439"
    }

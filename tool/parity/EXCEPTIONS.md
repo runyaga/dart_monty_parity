@@ -80,8 +80,9 @@ graphs. The core engine's path keeps its rules; it does not compare the id field
 
 ## Worker engine: recorded divergences
 
-`rows.json` `worker` records these; `score.py --assert-worker` prints them. A `diverge` case must DIVERGE
-on every backend and fails once it matches (it then moves to `pre_cutover`).
+`rows.json` `worker` records these; `score.py --assert-worker` prints them. A `diverge` case must differ
+in exactly its recorded fields, with its recorded worker value, on every backend, so any other change
+fails; it fails once it matches (it then moves to `pre_cutover`).
 
 | ID | Rows (cases) | Observed difference | Reachable by a case | Removed when |
 |---|---|---|---|---|
@@ -94,3 +95,8 @@ Cases of these rows that the worker engine does not run, each with its reason in
 and the `x8handle_*`/`x8hostmode_neg` cases (their handle comes from `open()`, an OS call the worker
 driver declines; `w_fh_in`, `w_fh_ret`, `w_fh_large_in` and `w_refuse_fh_position` carry handles through
 inputs and callback returns instead).
+
+The cutover set holds the complex values (`s07_complex` included) and file positions above 2^53
+(`w_fh_large_in`; on the runner, a position an `int` cannot hold is recorded as `Inexpressible`). No
+standalone class-type case is in it: upstream 1.1.0 sends a sandbox class reached as a value as its repr
+text, which `w_classtype_out` checks before the cutover.

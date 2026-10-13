@@ -76,7 +76,8 @@ python3 -I tool/parity/score.py /tmp/e0 --assert-e0
 `--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend.
 The same runs also carry the worker value rows' cases (each row's `worker` sets in `rows.json`; new cases
 in `tool/parity/cases/worker_values`), asserted with `score.py /tmp/e0 --assert-worker`: every
-`pre_cutover` case MATCHES, every recorded `diverge` case DIVERGES, the `cutover` cases are shown only,
+`pre_cutover` case MATCHES, every recorded `diverge` case differs exactly as recorded, the `cutover`
+cases are shown but must still run against an oracle,
 and each negative control under `worker.controls` must turn a matching outcome into a difference. A case
 under `deferred` is run and shown as DEFERRED but not counted; once it matches everywhere, the assertion
 fails until it leaves `deferred`. The `core` engine leaves the `e0` suite out by default.

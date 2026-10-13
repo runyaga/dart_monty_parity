@@ -51,11 +51,21 @@ Future<Map<String, Object?>> runWorkerCase(
   final host = CoreHost(c);
   // One memo: inputs may share objects with each other, as the oracle's do.
   final memo = <int, MontyValue>{};
-  final inputs = <String, MontyValue>{
-    for (final MapEntry(:key, :value)
-        in ((c['inputs'] as Map?) ?? const {}).cast<String, Object?>().entries)
-      key: _input((value! as Map).cast(), host, memo),
-  };
+  var inputs = const <String, MontyValue>{};
+  Inexpressible? inexpressible;
+  try {
+    inputs = {
+      for (final MapEntry(:key, :value)
+          in ((c['inputs'] as Map?) ?? const {})
+              .cast<String, Object?>()
+              .entries)
+        key: _input((value! as Map).cast(), host, memo),
+    };
+  } on Inexpressible catch (e) {
+    // An input this runner cannot build yet (a file position an int cannot
+    // hold): the first feed records it, so the case still has an outcome.
+    inexpressible = e;
+  }
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
   final session = await ProtoSession.open(await spawn(), config);
@@ -68,6 +78,16 @@ Future<Map<String, Object?>> runWorkerCase(
       final prints = <(String, String)>[];
       final ext = step['ext_calls']! as List<Object?>;
       final os = step['os_calls']! as List<Object?>;
+      if (n == 0 && inexpressible != null) {
+        step['exception'] = {
+          'type': 'Inexpressible',
+          'message': inexpressible.message,
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'Inexpressible';
+        host.rawOutputs.add(null);
+        continue;
+      }
       try {
         final r = await session.feed(
           feeds[n],

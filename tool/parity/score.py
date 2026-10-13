@@ -68,9 +68,11 @@ equal the files in tool/parity/cases/<suite>.
 `worker` sets; the top-level `worker` block), compared as --assert-e0 compares:
 
   pre_cutover  must MATCH on every backend; a missing outcome or oracle fails
-  diverge      a recorded divergence: must DIVERGE on every backend, and fails
-               once it matches (it then moves to pre_cutover)
-  cutover      run and shown, not asserted: measured on the cutover candidate
+  diverge      a recorded divergence (worker.diverge): must differ in exactly
+               its recorded fields, with its recorded worker value, on every
+               backend; fails once it matches (it then moves to pre_cutover)
+  cutover      shown, not asserted (measured on the cutover candidate), but it
+               must have an outcome and an oracle on every backend
 
 Every case file in the worker suite must be in exactly one set. Each negative
 control in `worker.controls` mutates a pre-cutover case's real worker outcome
@@ -313,8 +315,8 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
         if cid not in cases or cid in where:
             problems.append(f'{cid}: under worker.not_run, but {"in a worker set" if cid in where else "no such case"}')
     for cid, (row, kind) in where.items():
-        if (kind == 'diverge') != (cid in spec.get('diverge_why', {})):
-            problems.append(f'{cid}: a `diverge` case needs a reason in worker.diverge_why, and only one does')
+        if (kind == 'diverge') != (cid in spec.get('diverge', {})):
+            problems.append(f'{cid}: a `diverge` case needs its record in worker.diverge, and only one has one')
     if problems:
         sys.exit('rows.json worker sets: ' + '; '.join(problems))
     table = {cid: {b: classify_worker(cid, b, outcomes, expected, bool(cases[cid].get('local_refusal')))
@@ -329,15 +331,30 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
                 lines.append(f'| {row} | {cid} | {kind} | ' + ' | '.join(cells) + ' |')
     lines.append('')
     rc = 0
+    def as_recorded(cid: str, b: str) -> bool:
+        """A recorded divergence differs in exactly its recorded fields, with the recorded worker value."""
+        rec = spec['diverge'][cid]
+        cls, bad = table[cid][b]
+        got = load(outcomes / cid / f'worker-{b}.json')
+        if cls != 'DIVERGE' or bad != rec['differs'] or got is None:
+            return False
+        want = {'steps': [{**s, 'value': rec['worker_value'] if i == 0 else s.get('value')}
+                          for i, s in enumerate(got.get('steps') or [])]}
+        return worker_compare.compare(want, got, codes=['V']) == []
+
     for b in backends:
         pre = [c for c, (_, k) in where.items() if k == 'pre_cutover']
         div = [c for c, (_, k) in where.items() if k == 'diverge']
+        cut = [c for c, (_, k) in where.items() if k == 'cutover']
         n = sum(table[c][b][0] == 'MATCH' for c in pre)
-        nd = sum(table[c][b][0] == 'DIVERGE' for c in div)
-        ok = n == len(pre) and nd == len(div)
+        nd = sum(as_recorded(c, b) for c in div)
+        # Shown, not asserted, but they must still run against an oracle.
+        unrun = [c for c in cut if table[c][b][0] in ('NO-OUTCOME', 'NO-ORACLE')]
+        ok = n == len(pre) and nd == len(div) and not unrun
         rc |= not ok
         lines.append(f'{"PASS" if ok else "FAIL"} worker values on {b}: {n}/{len(pre)} pre-cutover cases MATCH, '
-                     f'{nd}/{len(div)} recorded divergences DIVERGE')
+                     f'{nd}/{len(div)} recorded divergences as recorded'
+                     + (f'; cutover cases with no outcome or oracle: {", ".join(unrun)}' if unrun else ''))
     for cid, (row, kind) in where.items():
         if kind == 'diverge' and all(table[cid][b][0] == 'MATCH' for b in backends):
             rc = 1
@@ -366,8 +383,8 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
             controls.append({'case': cid, 'mutation': mutation, 'backend': b, 'verdict': verdict, 'why': why})
             lines.append(f'{verdict} control {mutation} on {cid} ({b}): {why}')
     lines.append('')
-    for cid, why in spec.get('diverge_why', {}).items():
-        lines.append(f'recorded divergence {cid} ({where[cid][0]}): {why}')
+    for cid, rec in spec.get('diverge', {}).items():
+        lines.append(f'recorded divergence {cid} ({where[cid][0]}, differs in {"".join(rec["differs"])}): {rec["why"]}')
     for cid, why in spec.get('not_run', {}).items():
         lines.append(f'not run through the worker: {cid}: {why}')
     for d in spec.get('divergences', []):
