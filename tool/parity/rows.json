@@ -1737,7 +1737,8 @@
    "session": {
     "probes": [
      "api_ext_result_resume",
-     "api_ext_result_callback"
+     "api_ext_result_callback",
+     "sp_oversized_resume"
     ]
    }
   },
@@ -2114,6 +2115,14 @@
    "session": {
     "cases": [
      "ss_os_calls_as_values"
+    ]
+   }
+  },
+  "pool_operation_errors": {
+   "session": {
+    "probes": [
+     "sp_oversized_input",
+     "sp_oversized_answer"
     ]
    }
   }

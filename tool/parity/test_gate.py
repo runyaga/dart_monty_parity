@@ -10,8 +10,10 @@ Against the committed gate manifest, rows.json and expected outcomes:
   - a pending probe that records `unimplemented` passes, and the same record on a landed row fails;
   - a probe whose only difference is the suspension position fails: the session engine tolerates
     no `no-suspension-position`;
-  - a rule that drops a row's core case, names a missing case or carries a named exception, and a
-    session rule the manifest does not gate, are each reported.
+  - a case that did not record every feed, or a probe that recorded nothing, fails whatever its stage;
+  - a rule that drops a row's core case, names a missing case or carries a named exception, a session
+    rule the manifest does not gate, a session probe no gated rule names, and a stage with no rows,
+    are each reported.
 """
 
 from __future__ import annotations
@@ -124,6 +126,26 @@ class GateTest(unittest.TestCase):
         from probes_compare import judge  # noqa: PLC0415 (local module, same dir)
         self.assertEqual(judge('k_function', ref, got, self.rows['run_progress_variants'])[0], 'MATCH')
 
+    def pending(self, kind: str) -> str:
+        return next(cid for k, cid in gated_ids(self.gate, self.rows, landed_only=False)
+                    if k == kind and (k, cid) not in gated_ids(self.gate, self.rows, landed_only=True)
+                    and json.loads((self.out / cid / 'session-vm.json').read_text()).get(
+                        'steps' if kind == 'cases' else 'events'))
+
+    def test_truncated_pending_case_fails(self) -> None:
+        cid = self.pending('cases')
+        got = json.loads((self.out / cid / 'session-vm.json').read_text())
+        got['steps'] = got['steps'][:-1] if len(got['steps']) > 1 else []
+        self.write(cid, 'vm', got)
+        self.assertEqual(self.assert_gate(), 1)
+
+    def test_empty_pending_probe_fails(self) -> None:
+        pid = self.pending('probes')
+        got = json.loads((self.out / pid / 'session-dart2js.json').read_text())
+        got['events'] = []
+        self.write(pid, 'dart2js', got)
+        self.assertEqual(self.assert_gate(), 1)
+
     def test_incomplete_rules_are_reported(self) -> None:
         cases = score.case_index()
         rows = copy.deepcopy(self.rows)
@@ -131,11 +153,16 @@ class GateTest(unittest.TestCase):
         rows['host_suspension_budget']['session']['cases'].append('no_such_case')
         rows['run_progress_variants']['session']['exceptions'] = rows['run_progress_variants']['exceptions']
         rows['os_entropy']['session'] = {'cases': ['b14_urandom']}
-        problems = '\n'.join(score.gate_problems(self.gate, rows, cases, EXPECTED))
+        rows['print_callback']['session']['probes'].remove('sp_print_raise_suspended')
+        gate = copy.deepcopy(self.gate)
+        gate['stages'].insert(1, 'C1-9')
+        problems = '\n'.join(score.gate_problems(gate, rows, cases, EXPECTED))
         self.assertIn('b14_sleep_negative is a case of the row', problems)
         self.assertIn('no case file for no_such_case', problems)
         self.assertIn('tolerates no named exception', problems)
         self.assertIn('os_entropy: has a session rule but no stage', problems)
+        self.assertIn('sp_print_raise_suspended: a session probe of the oracle but in no gated session rule', problems)
+        self.assertIn("stage 'C1-9' gates no row", problems)
 
 
 if __name__ == '__main__':

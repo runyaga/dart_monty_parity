@@ -1,0 +1,19 @@
+{
+ "probe": "sp_oversized_answer",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "request frame of 268435487 bytes exceeds the maximum of 268435456 bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "monty worker protocol error: feed called while a suspension is awaiting an answer"
+  }
+ ],
+ "runner_error": null
+}

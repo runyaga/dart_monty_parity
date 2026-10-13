@@ -102,8 +102,8 @@ rule in `rows.json` names the cases and probes core's pool session must match up
 assigned the C1 pull request that makes it pass (`stages`); a row is asserted once its stage is listed under
 `landed`. Its cases are compared as E0's are; its probes (`lib/src/session_probes.dart` against
 `oracle/run_probes.py`) as the core engine's are, but with no named exception, so a suspension's position is
-compared. The pool and print rows' probes (`sp_*`) and the `session` suite's cases (`ss_*`, exact strings)
-were added for this gate.
+compared. The pool, print and outbound-size probes (`sp_*`) and the `session` suite's cases (`ss_*`, exact
+strings) were added for this gate.
 
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate
@@ -114,7 +114,10 @@ stage is run and shown, not asserted; a probe the session cannot run yet records
 Whatever its stage, every case and probe must have an outcome on every backend and an oracle, and the rules
 must be complete: a `session` rule covers each of its row's core cases and probes or says why not
 (`not_run`), names only cases and probes that exist, carries no named exception, and is gated by the
-manifest. A core change that makes a stage pass moves it to `landed` here, with `CORE_REF`.
+manifest; every stage gates a row, and every `session` case and `sp_*` probe is in a gated rule. A behaviour
+a stage's core pull request must have but that no upstream binding exposes comparably (a busy close, print
+backpressure) is listed under `core_gated` and gated by core's own tests. A core change that makes a stage
+pass moves it to `landed` here, with `CORE_REF`.
 
 To reproduce the measured baseline instead, check out core `5873ec5` (where the capability manifest's
 baseline was measured) and assert `--assert-rows --assert-baseline`. Expected under this suite's

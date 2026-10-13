@@ -373,6 +373,37 @@ def sp_print_raise_suspended(pool: pm.Monty, t: T) -> None:
         run(t, lambda: s.feed_run('8'))
 
 
+# One byte past the frame limit (MAX_FRAME_LEN, 256 MiB): a request carrying it cannot be sent.
+OVERSIZED = 256 * 1024 * 1024 + 1
+
+
+@probe
+def sp_oversized_input(pool: pm.Monty, t: T) -> None:
+    """An input too large to send fails the feed before it reaches the worker; the session stays usable."""
+    with pool.checkout() as s:
+        run(t, lambda: s.feed_run('len(x)', inputs={'x': b'\0' * OVERSIZED}))
+        run(t, lambda: s.feed_run('1'))
+
+
+@probe
+def sp_oversized_answer(pool: pm.Monty, t: T) -> None:
+    """A host function's answer too large to send fails the feed and leaves the call pending: the next feed is
+    refused."""
+    with pool.checkout() as s:
+        run(t, lambda: s.feed_run('f()', external_lookup={'f': lambda: b'\0' * OVERSIZED}))
+        run(t, lambda: s.feed_run('2'))
+
+
+@probe
+def sp_oversized_resume(pool: pm.Monty, t: T) -> None:
+    """A manual resume too large to send fails, and the snapshot is spent: a retry and the next feed are refused."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('f()'))
+        t.step(lambda: x.resume({'return_value': b'\0' * OVERSIZED}))
+        t.step(lambda: x.resume({'return_value': 1}))
+        run(t, lambda: s.feed_run('3'))
+
+
 # ------------------------------------------------------- API surface
 @probe
 def api_run_blocking(pool: pm.Monty, t: T) -> None:

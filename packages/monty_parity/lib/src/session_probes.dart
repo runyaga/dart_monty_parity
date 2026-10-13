@@ -12,6 +12,8 @@
 // Implementation imports are the point of this engine: it measures core's
 // internal session path before that path has a public API.
 // ignore_for_file: implementation_imports
+import 'dart:typed_data';
+
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
@@ -47,9 +49,13 @@ const _pending = <String, String>{
   'api_ext_args_identity': _needsStart,
   'async_gather': 'needs futures in feedRun (C1-4)',
   'api_fork_session': 'needs dump and load (C1-5)',
+  'sp_oversized_resume': _needsStart,
 };
 
 const _needsStart = 'needs feedStart and snapshots (C1-4)';
+
+/// One byte past the frame limit (256 MiB): run_probes.py's `OVERSIZED`.
+const int _oversized = 256 * 1024 * 1024 + 1;
 
 /// run_probes.py's `EXT_RESULT_CODE`.
 const _extResultCode =
@@ -187,6 +193,26 @@ _probes = {
       ),
     ),
   ),
+  'sp_oversized_input': (t, shared, _) => shared.withSession((s) async {
+    await _run(
+      t,
+      () => s.feedRun(
+        'len(x)',
+        inputs: {'x': MontyBytes(Uint8List(_oversized))},
+      ),
+    );
+    await _run(t, () => s.feedRun('1'));
+  }),
+  'sp_oversized_answer': (t, shared, _) => shared.withSession((s) async {
+    await _run(
+      t,
+      () => s.feedRun(
+        'f()',
+        externals: {'f': (args, kwargs) => MontyBytes(Uint8List(_oversized))},
+      ),
+    );
+    await _run(t, () => s.feedRun('2'));
+  }),
   'sp_print_lines': (t, shared, _) => shared.withSession(
     (s) => _run(
       t,

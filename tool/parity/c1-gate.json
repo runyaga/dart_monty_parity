@@ -1,5 +1,5 @@
 {
- "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session).",
+ "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares.",
  "engine": "session",
  "stages": [
   "C1-3a",
@@ -22,6 +22,7 @@
   "os_sync_sleep": "C1-3a",
   "host_suspension_budget": "C1-3a",
   "print_callback": "C1-3b",
+  "pool_operation_errors": "C1-3b",
   "run_progress_variants": "C1-4",
   "resume_os_call": "C1-4",
   "resolve_pending_futures": "C1-4",
@@ -45,5 +46,8 @@
   "host_class_value": "cutover",
   "host_constructor_policy": "cutover",
   "host_value_conversion_hook": "cutover"
+ },
+ "core_gated": {
+  "C1-3b": "print stall and backpressure (pool_async_print_delivery) and close while busy (pool_cancellation_disposal) have no upstream behaviour to compare: upstream's sinks and cancellation are its binding's own, and a Dart close of a busy session is a recorded divergence. dart_monty_core's own tests gate them."
  }
 }

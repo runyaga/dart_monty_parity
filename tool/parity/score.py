@@ -85,14 +85,17 @@ the session engine's outcomes (`session-<backend>.json`, run.py --engine
 session) for every case and probe of each gated row's `session` rule in
 rows.json. Cases are compared as --assert-e0 compares them; probes as the
 core engine's are (probes_compare.py), but with no named exception: a
-suspension's position is compared. A row is gated once its stage is
+suspension's position is compared. Whatever its stage, a case must record a
+value or an exception for every feed, and a probe its events. A row is gated once its stage is
 `landed`: then every case and probe of it must MATCH on every backend. A row
 of a later stage is shown, not asserted. Whatever its stage, every case and
 probe must have an outcome on every backend (a probe the session cannot run
 yet records `unimplemented`, shown as PENDING) and an oracle, and the rules
 must be complete: a `session` rule covers each of its row's core cases and
 probes or names why not (`not_run`), names only cases and probes that exist,
-and carries no named exception; the manifest gates every `session` rule.
+and carries no named exception; the manifest gates every `session` rule,
+every stage gates a row, and every case of the `session` suite and every
+`sp_*` oracle probe is in a gated rule.
 """
 
 from __future__ import annotations
@@ -468,12 +471,30 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
     for row, rule in rows.items():
         if 'session' in rule and row not in gate['rows']:
             problems.append(f'{row}: has a session rule but no stage in the gate manifest')
-    suite = 'session'
-    used = {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get('cases', [])}
+    # The session engine's own cases and probes exist only for the gate: each must be in a gated rule.
+    suite, prefix = 'session', 'sp_'
+    gated = {kind: {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
+             for kind in ('cases', 'probes')}
     for cid, c in cases.items():
-        if c['_suite'] == suite and cid not in used:
+        if c['_suite'] == suite and cid not in gated['cases']:
             problems.append(f'{cid}: in tool/parity/cases/{suite} but in no gated session rule')
+    for d in sorted(expected.glob(f'{prefix}*')):
+        if d.name not in gated['probes']:
+            problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule')
+    for stage in set(gate.get('core_gated', {})) - set(stages):
+        problems.append(f'`core_gated` names {stage!r}, which is not in `stages`')
     return problems
+
+
+def ran_in_full(cid: str, kind: str, backend: str, out: Path, cases: dict[str, dict]) -> bool:
+    """A case recorded one step per feed, each a value or an exception; a probe recorded events or what it waits for."""
+    got = load(out / cid / f'session-{backend}.json') or {}
+    if kind == 'probes':
+        return bool(got.get('events')) or bool(got.get('unimplemented'))
+    steps = got.get('steps') or []
+    return len(steps) == len(cases[cid].get('feeds') or [cases[cid].get('code')]) and all(
+        isinstance(s, dict) and (s.get('value') is not None or isinstance((s.get('exception') or {}).get('type'), str))
+        for s in steps)
 
 
 def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) -> tuple[str, list[str]]:
@@ -526,6 +547,10 @@ def assert_gate(spec_path: Path, outcomes: Path, expected: Path, backends: list[
                         elif cls in ('NO-OUTCOME', 'NO-ORACLE'):
                             rc = 1
                             lines.append(f'FAIL gate: {cid} ({row}, {stage}) has {cls} on {b}; every case and probe must run')
+                        elif not ran_in_full(cid, kind, b, outcomes, cases):
+                            rc = 1
+                            lines.append(f'FAIL gate: {cid} ({row}, {stage}) did not run in full on {b} '
+                                         '(a case: a value or an exception for every feed; a probe: its events)')
             for cid, why in sess.get('not_run', {}).items():
                 lines.append(f'| {row} | {stage} | {cid} | not run: {why} |' + ' |' * (len(backends) - 1))
     lines.append('')

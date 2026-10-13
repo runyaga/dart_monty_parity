@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "e1bdab4dc8009c7c5e8987889d1dd98776ad91dae2e1fbd6b0613aed1cb910b6",
+  "sha256": "3b9cac58ce706597b9b17fe9a7f8b7645bf4436840ca984303f1846735d3f48a",
   "files": {
    "tool/parity/oracle/run_cases.py": "7526bc06c77c7afbed3208cb094056efd95c1e83419192432de9832b12413c07",
-   "tool/parity/oracle/run_probes.py": "6e188984627e38ab5f3af5a6b2c96a381fbb400ea3ea9ca9985ded9784ec40b4",
+   "tool/parity/oracle/run_probes.py": "4a617af9acfcc114286c4e596d86ac9ea42282ca155901a91191639ec5f55ca5",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -4622,6 +4622,21 @@
   "sp_finish_reset": {
    "outcomes": {
     "ref-py": "007679d7f617cd30a1220aa6aaf23b6307245cf94f18051e436f1c231cf795e2"
+   }
+  },
+  "sp_oversized_answer": {
+   "outcomes": {
+    "ref-py": "a9913185919222a5dc23beb54f8135d5fd0cf751118eabc5817448b63f17ef4f"
+   }
+  },
+  "sp_oversized_input": {
+   "outcomes": {
+    "ref-py": "0be28baafdb4f4b804e70256c8d7259dd5a7ed78756e6fc1a7632f87c24e6df2"
+   }
+  },
+  "sp_oversized_resume": {
+   "outcomes": {
+    "ref-py": "52c8e405c20407ff184c1717c79109725ce8a17c3315c0f5cd2f2a9d7f25cd27"
    }
   },
   "sp_pool_close": {
