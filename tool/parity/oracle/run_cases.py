@@ -128,17 +128,29 @@ def canon_batch(values: list[Any]) -> list[Any]:
 
     for v in values:
         number(v)
+    def unnumbered_shared(x: Any) -> bool:
+        """Whether [x], or anything under it (nested sets too), is shared and not numbered yet."""
+        stack, walked = [x], set()
+        while stack:
+            y = stack.pop()
+            if not shareable(y) or id(y) in walked:
+                continue
+            walked.add(id(y))
+            if id(y) not in ids and counts.get(id(y), 0) > 1:
+                return True
+            stack.extend(_children(y))
+        return False
+
     while sets:
         members = sorted(sets.popleft(), key=key_of)
-        for k in range(len(members)):
-            before = len(ids)
-            number(members[k])
-            tied = (k > 0 and key_of(members[k - 1]) == key_of(members[k])) or (
-                k + 1 < len(members) and key_of(members[k + 1]) == key_of(members[k]))
-            if tied and len(ids) != before:
+        for k, m in enumerate(members):
+            tied = (k > 0 and key_of(members[k - 1]) == key_of(m)) or (
+                k + 1 < len(members) and key_of(members[k + 1]) == key_of(m))
+            if tied and unnumbered_shared(m):
                 # Not a ValueError: a feed's handler would record that as a host refusal.
                 raise RuntimeError('set members that tie in label-free form would be numbered in '
                                    'iteration order: no stable encoding')
+            number(m)
 
     def signature(x: Any) -> str:
         """A set member's order key once numbered: shared objects by their number."""

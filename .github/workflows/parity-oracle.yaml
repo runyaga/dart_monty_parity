@@ -60,6 +60,8 @@ jobs:
       - name: Build the Rust oracle
         working-directory: tool/parity/oracle/rust
         run: cargo build --locked --release
+      - name: The oracle's canonical encoding is stable
+        run: /tmp/oracle/bin/python -I tool/parity/oracle/test_canon.py
       - name: Expected outcomes regenerate identically
         run: >-
           /tmp/oracle/bin/python -I tool/parity/oracle/check_expected.py
