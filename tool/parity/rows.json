@@ -754,8 +754,10 @@
    },
    "session": {
     "cases": [
-     "b14_async_sleep_default",
-     "ss_async_sleep_gather"
+     "b14_async_sleep_default"
+    ],
+    "probes": [
+     "sp_async_sleep_order"
     ],
     "not_run": {
      "b14_async_sleep_callhost": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy"

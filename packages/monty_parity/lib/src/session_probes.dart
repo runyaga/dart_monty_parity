@@ -50,11 +50,15 @@ const _pending = <String, String>{
   'api_ext_args_values': _needsStart,
   'api_ext_args_identity': _needsStart,
   'async_gather': 'needs futures in feedRun (C1-4)',
+  'sp_async_sleep_order': 'needs futures in feedRun (C1-4)',
   'api_fork_session': 'needs dump and load (C1-5)',
   'sp_oversized_resume': _needsStart,
 };
 
 const _needsStart = 'needs feedStart and snapshots (C1-4)';
+
+/// A print callback for feeds whose prints a probe does not look at.
+void _quietPrint(String stream, String text) {}
 
 /// One byte past the frame limit (256 MiB): run_probes.py's `OVERSIZED`.
 const int _oversized = 256 * 1024 * 1024 + 1;
@@ -253,25 +257,26 @@ _probes = {
         "import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
         "print('d', end='')\n5",
         // Records only after a suspension of its own: a session that did
-        // not await it would record the completion first.
-        printCallback: (stream, text) async {
-          await Future<void>.delayed(const Duration(milliseconds: 5));
+        // not await it would record the completion first, and one that ran
+        // two at once records an overlap upstream never shows.
+        printCallback: _serial(t, (stream, text) {
           t.add({'ev': 'print', 'stream': stream, 'text': text});
-        },
+        }),
       ),
     ),
     options: const SessionConfig(printFlushInterval: Duration.zero),
   ),
   'sp_print_raise': (t, shared, _) => shared.withSession(
     (s) async {
+      await s.feedRun('x = 1', printCallback: _quietPrint);
       await _failed(
         t,
         () => s.feedRun(
-          "print('a')\nprint('b')\n7",
+          "x = 2\nprint('a')\nx = 3\nprint('b')\n7",
           printCallback: _raising(t),
         ),
       );
-      await _run(t, () => s.feedRun('8'));
+      await _run(t, () => s.feedRun('x'));
     },
     options: const SessionConfig(printFlushInterval: Duration.zero),
   ),
@@ -350,15 +355,37 @@ Future<void> _enterTimed(_T t, MontyPool pool) async {
   await s.close();
 }
 
+/// [record] run after a suspension of the callback's own, with an
+/// `overlap` event first if another delivery is still running: the session
+/// must await each delivery before the next.
+ProtoPrintCallback _serial(_T t, void Function(String, String) record) {
+  var running = 0;
+
+  return (stream, text) async {
+    if (running++ > 0) t.add({'ev': 'overlap'});
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      record(stream, text);
+    } finally {
+      running--;
+    }
+  };
+}
+
 /// A print callback that records its first delivery and throws `cb boom`,
 /// each after a suspension of its own: the session must await it to see
 /// either.
-ProtoPrintCallback _raising(_T t) => (stream, text) async {
-  await Future<void>.delayed(const Duration(milliseconds: 5));
-  t.add({'ev': 'print', 'stream': stream, 'text': text});
-  await Future<void>.delayed(const Duration(milliseconds: 5));
-  throw StateError('cb boom');
-};
+ProtoPrintCallback _raising(_T t) {
+  final record = _serial(t, (stream, text) {
+    t.add({'ev': 'print', 'stream': stream, 'text': text});
+  });
+
+  return (stream, text) async {
+    await record(stream, text);
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    throw StateError('cb boom');
+  };
+}
 
 /// A feed whose print callback throws: `failed`, with whether the error is
 /// the callback's own.

@@ -1,6 +1,0 @@
-{
- "id": "ss_async_sleep_gather",
- "code": "import asyncio\nasync def a(n):\n    await asyncio.sleep(0.05 * n)\n    return n\nawait asyncio.gather(a(3), a(1), a(2))",
- "note": "async_os_sleep: asyncio.sleep under the default policy, three concurrent tasks, through the futures protocol",
- "exact_strings": true
-}

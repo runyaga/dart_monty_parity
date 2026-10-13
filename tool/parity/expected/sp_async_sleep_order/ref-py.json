@@ -1,0 +1,51 @@
+{
+ "probe": "sp_async_sleep_order",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "list",
+      "items": [
+       {
+        "t": "int",
+        "v": "3"
+       },
+       {
+        "t": "int",
+        "v": "1"
+       },
+       {
+        "t": "int",
+        "v": "2"
+       }
+      ]
+     },
+     {
+      "t": "list",
+      "items": [
+       {
+        "t": "int",
+        "v": "1"
+       },
+       {
+        "t": "int",
+        "v": "2"
+       },
+       {
+        "t": "int",
+        "v": "3"
+       }
+      ]
+     }
+    ]
+   },
+   "overlapped": true
+  }
+ ],
+ "runner_error": null
+}

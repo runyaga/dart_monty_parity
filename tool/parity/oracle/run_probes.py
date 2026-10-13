@@ -369,10 +369,32 @@ def _failed(t: T, fn: Any) -> None:
 
 @probe
 def sp_print_raise(pool: pm.Monty, t: T) -> None:
-    """A raising print callback fails the feed after its turn completes; the session stays usable."""
+    """A raising print callback fails the feed, but its turn runs to the end: the session keeps what the feed did
+    after the failed print."""
     with pool.checkout(print_flush_interval=0) as s:
-        _print_failure(t, "print('a')\nprint('b')\n7")(s)
-        run(t, lambda: s.feed_run('8'))
+        s.feed_run('x = 1')
+        _print_failure(t, "x = 2\nprint('a')\nx = 3\nprint('b')\n7")(s)
+        run(t, lambda: s.feed_run('x'))
+
+
+@probe
+def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
+    """Gathered `asyncio.sleep`s overlap under the async binding: tasks finish in delay order, and the gather
+    takes about the longest delay, not the sum."""
+    code = ("import asyncio\norder = []\nasync def a(n):\n    await asyncio.sleep(0.1 * n)\n"
+            "    order.append(n)\n    return n\nr = await asyncio.gather(a(3), a(1), a(2))\n(r, order)")
+
+    async def main() -> None:
+        async with pm.AsyncMonty() as p, p.checkout() as s:
+            start = time.monotonic()
+            try:
+                value = await s.feed_run(code)
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+                return
+            t.add({'ev': 'complete', 'value': canon(value), 'overlapped': time.monotonic() - start < 0.5})
+
+    asyncio.run(main())
 
 
 @probe
