@@ -2,6 +2,7 @@ name: CI
 
 # The suite checks itself against dart_monty_core:
 #   manifest  every case bound to its expected outcome (offline)
+#   pins      every third-party action pinned to a commit SHA (offline)
 #   runner    the Dart runner analyses clean against the core it targets
 #   current   the core commit in CORE_REF reproduces tool/parity/baseline-current.json
 #             case by case on vm, dart2js and dart2wasm (what core's own CI job asserts)
@@ -33,8 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: python3 -I tool/check_parity_manifest.py
+
+  # Every third-party `uses:` pinned to a 40-hex commit SHA (offline).
+  action-pins:
+    name: Action pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: python3 -I tool/check_action_pins.py
 
   core-ref:
     name: Read CORE_REF
@@ -43,7 +53,7 @@ jobs:
     outputs:
       sha: ${{ steps.ref.outputs.sha }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: ref
         run: |
           sha="$(tr -d '[:space:]' < CORE_REF)"
@@ -62,25 +72,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
           ref: ${{ needs.core-ref.outputs.sha }}
           path: core
           persist-credentials: false
-      - uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
           sdk: 3.13.5
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: core/native
           key: core-${{ needs.core-ref.outputs.sha }}
-      - uses: actions/cache@v6
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.pub-cache
           key: pub-parity-${{ runner.os }}-${{ hashFiles('packages/monty_parity/pubspec.yaml') }}
@@ -114,7 +126,7 @@ jobs:
       - name: Publish the scorecard
         if: success() || failure()
         run: '[ -f /tmp/parity/score.md ] && cat /tmp/parity/score.md >> "$GITHUB_STEP_SUMMARY" || true'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: success() || failure()
         with:
           name: parity-current
@@ -136,24 +148,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
           ref: ${{ needs.core-ref.outputs.sha }}
           path: core
           persist-credentials: false
-      - uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
           sdk: 3.13.5
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: |
             core/native
             core/native/worker
           key: core-e0-${{ needs.core-ref.outputs.sha }}
-      - uses: actions/cache@v6
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.pub-cache
           key: pub-parity-${{ runner.os }}-${{ hashFiles('packages/monty_parity/pubspec.yaml') }}
@@ -173,7 +187,7 @@ jobs:
       - name: Publish the E0 table
         if: success() || failure()
         run: '[ -f /tmp/e0/e0.md ] && cat /tmp/e0/e0.md >> "$GITHUB_STEP_SUMMARY" || true'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: success() || failure()
         with:
           name: parity-e0
@@ -201,25 +215,27 @@ jobs:
       RUSTUP_TOOLCHAIN: stable
       BASELINE_CORE: 5873ec55747083b3ee64411d11cf62315a7200f3
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.CORE_REPO }}
           ref: ${{ env.BASELINE_CORE }}
           path: core
           persist-credentials: false
-      - uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
           sdk: 3.13.5
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: core/native
           key: core-5873ec5
-      - uses: actions/cache@v6
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.pub-cache
           key: pub-parity-${{ runner.os }}-${{ hashFiles('packages/monty_parity/pubspec.yaml') }}
@@ -241,7 +257,7 @@ jobs:
       - name: Publish the scorecard
         if: success() || failure()
         run: '[ -f /tmp/parity/score.md ] && cat /tmp/parity/score.md >> "$GITHUB_STEP_SUMMARY" || true'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: success() || failure()
         with:
           name: parity-baseline-5873ec5
