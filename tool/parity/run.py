@@ -2,9 +2,9 @@
 """Run the parity cases through dart_monty_core on one backend and collect outcomes.
 
 usage:
-  python3 -I tool/parity/run.py vm        --core DIR --out OUTDIR [--engine core|worker] [--cases GLOB ...]
-  python3 -I tool/parity/run.py dart2js   --core DIR --out OUTDIR [--engine core|worker] [--cases GLOB ...]
-  python3 -I tool/parity/run.py dart2wasm --core DIR --out OUTDIR [--engine core|worker] [--cases GLOB ...]
+  python3 -I tool/parity/run.py vm        --core DIR --out OUTDIR [--engine core|worker|session] [--cases GLOB ...]
+  python3 -I tool/parity/run.py dart2js   --core DIR --out OUTDIR [--engine core|worker|session] [--cases GLOB ...]
+  python3 -I tool/parity/run.py dart2wasm --core DIR --out OUTDIR [--engine core|worker|session] [--cases GLOB ...]
 
 --core is the dart_monty_core checkout to measure (required). The runner
 package (packages/monty_parity) is pointed at it with a pubspec_overrides.yaml
@@ -28,6 +28,13 @@ the core checkout. It exits 1 if the runner fails (its earlier outcomes for
 the backend are removed first, so a failed run cannot reuse them). It then runs the worker crash tests on the same backend
 (test/worker_crash_{vm,web}_test.dart) and exits 1 if they fail or run fewer
 tests than expected; --no-crash-tests skips them.
+
+--engine session drives core's internal pool session (MontyPool.checkout,
+PoolSession.feedRun): one pool for the run, its one worker Reset and reused
+from case to case. It writes OUTDIR/<case>/session-<backend>.json; its
+default cases are the e0 suite (score.py --assert-e0 --engine session). Like
+the worker engine it needs core's worker executable on the VM, and exits 1
+if the runner fails. It runs no crash tests.
 """
 
 from __future__ import annotations
@@ -50,7 +57,7 @@ CASES = ROOT / 'tool/parity/cases'
 MARKER = 'PARITY_OUTCOME '
 PROBE_MARKER = 'PARITY_PROBE '
 ISOLATE_SECS = 60
-ENGINES = ('core', 'worker')
+ENGINES = ('core', 'worker', 'session')
 # The worker engine's own suites; the core engine leaves them out by default.
 WORKER_SUITE = 'e0'
 WORKER_SUITES = (WORKER_SUITE, 'worker_values')
@@ -68,6 +75,8 @@ WASI_WORKER = 'js/node_modules/@pydantic/monty-wasm32-wasi/wasi-worker-browser.m
 def case_files(globs: list[str], engine: str) -> list[Path]:
     if globs:
         pats = globs
+    elif engine == 'session':
+        pats = [str(CASES / WORKER_SUITE / '*.json')]
     elif engine == 'worker':
         listed = {cid for rule in json.loads(RULES.read_text())['rows'].values()
                   for cases in (rule.get('worker') or {}).values() for cid in cases}
@@ -140,13 +149,13 @@ def clear_outcomes(cases: list[Path], out: Path, engine: str, backend: str) -> N
         (out / json.loads(c.read_text())['id'] / f'{engine}-{backend}.json').unlink(missing_ok=True)
 
 
-def run_worker_vm(cases: list[Path], out: Path, log: Path) -> int:
-    rc = sh(['dart', 'run', 'bin/parity_worker_vm.dart', str(out), *map(str, cases)], log, timeout=1800)
-    print(f'worker vm: {len(cases)} cases, exit {rc}', flush=True)
+def run_worker_vm(cases: list[Path], out: Path, log: Path, engine: str = 'worker') -> int:
+    rc = sh(['dart', 'run', f'bin/parity_{engine}_vm.dart', str(out), *map(str, cases)], log, timeout=1800)
+    print(f'{engine} vm: {len(cases)} cases, exit {rc}', flush=True)
     for c in cases:
         cid = json.loads(c.read_text())['id']
-        if not (out / cid / 'worker-vm.json').exists():
-            write(out, placeholder(cid, 'vm', f'no outcome written (exit {rc})', 'worker'))
+        if not (out / cid / f'{engine}-vm.json').exists():
+            write(out, placeholder(cid, 'vm', f'no outcome written (exit {rc})', engine))
     return rc
 
 
@@ -176,7 +185,8 @@ def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, e
     # Isolated cases are limit cases that may never finish where core cannot
     # bound them; the browser runs them too (it bounds nothing less than the VM).
     bake(cases)
-    test_file = 'test/parity_worker_web_test.dart' if engine == 'worker' else 'test/parity_web_test.dart'
+    test_file = {'worker': 'test/parity_worker_web_test.dart',
+                 'session': 'test/parity_session_web_test.dart'}.get(engine, 'test/parity_web_test.dart')
     try:
         rc = web_test(backend, test_file, log, core)
     finally:
@@ -253,7 +263,7 @@ def main() -> int:
     out = a.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     record_platform(out)
-    log = out / (f'run-{a.backend}.log' if a.engine == 'core' else f'run-worker-{a.backend}.log')
+    log = out / (f'run-{a.backend}.log' if a.engine == 'core' else f'run-{a.engine}-{a.backend}.log')
     log.write_text('')
     cases = case_files(a.cases, a.engine)
     override = PKG / 'pubspec_overrides.yaml'
@@ -261,15 +271,16 @@ def main() -> int:
     try:
         if sh(['dart', 'pub', 'get'], log) != 0:
             sys.exit(f'dart pub get failed; see {log}')
-        if a.engine == 'worker':
-            clear_outcomes(cases, out, 'worker', a.backend)
+        if a.engine in ('worker', 'session'):
+            clear_outcomes(cases, out, a.engine, a.backend)
             if a.backend == 'vm':
-                rc = run_worker_vm(cases, out, log)
+                rc = run_worker_vm(cases, out, log, a.engine)
             else:
-                rc = run_web(a.backend, cases, out, log, core, 'worker')
-            crashes_ok = a.no_crash_tests or run_crash_tests(a.backend, out, core)
+                rc = run_web(a.backend, cases, out, log, core, a.engine)
+            crashes_ok = (a.engine != 'worker' or a.no_crash_tests
+                          or run_crash_tests(a.backend, out, core))
             if rc != 0:
-                print(f'FAIL: the worker runner exited {rc}; see {log}', flush=True)
+                print(f'FAIL: the {a.engine} runner exited {rc}; see {log}', flush=True)
             if rc != 0 or not crashes_ok:
                 return 1
         elif a.backend == 'vm':

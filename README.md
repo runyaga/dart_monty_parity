@@ -29,7 +29,7 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
-| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API) and the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`), VM and browser, plus the worker crash tests |
+| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API), the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`) and the `session` engine (core's internal pool session, `lib/src/session_runner.dart`), VM and browser, plus the worker crash tests |
 | `tool/upstream/` | copies of dart_monty_core's `tool/upstream`: the hash-pinned pydantic-monty lock, the upstream pin and the frozen capability manifest |
 | `tool/check_parity_manifest.py` | offline check that `manifest.json` binds every case to its expected outcomes |
 | `tool/check_core_upstream.py` | checks that a core checkout's `tool/upstream` equals the copies here |
@@ -74,6 +74,17 @@ python3 -I tool/parity/score.py /tmp/e0 --assert-e0
 ```
 
 `--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend.
+
+The `session` engine runs the same E0 cases through core's internal pool session (`MontyPool.checkout`,
+`PoolSession.feedRun`), the path that becomes core's public `Monty` / `MontySession` at the cutover. One pool
+serves the whole run, so its worker is Reset and reused from case to case:
+
+```sh
+for b in vm dart2js dart2wasm; do
+  python3 -I tool/parity/run.py "$b" --engine session --core core --out /tmp/e0
+done
+python3 -I tool/parity/score.py /tmp/e0 --assert-e0 --engine session
+```
 The same runs also carry the worker value rows' cases (each row's `worker` sets in `rows.json`; new cases
 in `tool/parity/cases/worker_values`), asserted with `score.py /tmp/e0 --assert-worker`: every
 `pre_cutover` case MATCHES, every recorded `diverge` case differs exactly as recorded, the `cutover`
@@ -99,7 +110,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
   the runner and checks the upstream copies against that core.
 - **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.
 - **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite and the worker value rows' cases through the
-  worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`.
+  worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`; then the
+  `e0` suite through the session engine on all three, `--assert-e0 --engine session`.
 - **`Parity oracle`** (`parity-oracle.yaml`): regenerates every expected outcome from the hash-pinned
   oracle and fails on any byte of difference. Runs when a parity input changes (cases, expected outcomes,
   manifest, oracle code, upstream pins, the workflow), weekly, and on demand.

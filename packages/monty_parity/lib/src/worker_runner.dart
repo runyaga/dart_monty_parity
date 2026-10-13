@@ -8,6 +8,9 @@
 // `ProcessChannel` on the VM (bin/parity_worker_vm.dart), a `WorkerChannel`
 // in the browser (test/parity_worker_web_test.dart).
 //
+// [runEngineCase] is the engine-independent part: the `session` engine
+// (session_runner.dart) runs the same steps through core's pool session.
+//
 // Implementation imports are the point of this engine: it measures core's
 // internal worker path before that path has a public API.
 // ignore_for_file: implementation_imports
@@ -35,14 +38,49 @@ const _inexpressible = {
   'assert_message_annotations': 'no knob in the worker driver',
 };
 
+/// One case's session, whichever engine opened it.
+abstract interface class CaseSession {
+  /// Runs [code] and completes with its value.
+  Future<MontyValue> feed(
+    String code, {
+    required Map<String, MontyValue> inputs,
+    required Map<String, ProtoExternalFunction> externals,
+    required ProtoOsCallHandler onOsCall,
+    required ProtoPrintCallback onPrint,
+  });
+
+  /// Ends the session.
+  Future<void> close();
+}
+
+/// Opens a session configured as [config] says.
+typedef OpenCaseSession = Future<CaseSession> Function(SessionConfig config);
+
 /// Runs case [c] on [backend] through a worker [spawn] opens.
 Future<Map<String, Object?>> runWorkerCase(
   Map<String, Object?> c,
   String backend,
   ChannelFactory spawn,
-) async {
-  final out = newOutcome(c['id']! as String, 'worker', backend);
-  out['engine_version'] = 'dart_monty_core (internal: ProtoSession)';
+) => runEngineCase(
+  c,
+  backend,
+  engine: 'worker',
+  engineVersion: 'dart_monty_core (internal: ProtoSession)',
+  open: (config) async =>
+      _ProtoCaseSession(await ProtoSession.open(await spawn(), config)),
+);
+
+/// Runs case [c] on [backend] as [engine], through a session [open] opens,
+/// and returns its normalised outcome.
+Future<Map<String, Object?>> runEngineCase(
+  Map<String, Object?> c,
+  String backend, {
+  required String engine,
+  required String engineVersion,
+  required OpenCaseSession open,
+}) async {
+  final out = newOutcome(c['id']! as String, engine, backend);
+  out['engine_version'] = engineVersion;
   final unsupported = out['unsupported']! as Map<String, Object?>;
   for (final MapEntry(:key, :value) in _inexpressible.entries) {
     if (c[key] != null) unsupported[key] = value;
@@ -68,7 +106,7 @@ Future<Map<String, Object?>> runWorkerCase(
   }
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
-  final session = await ProtoSession.open(await spawn(), config);
+  final session = await open(config);
   try {
     final feeds =
         (c['feeds'] as List?)?.cast<String>() ?? [c['code']! as String];
@@ -89,7 +127,7 @@ Future<Map<String, Object?>> runWorkerCase(
         continue;
       }
       try {
-        final r = await session.feed(
+        final value = await session.feed(
           feeds[n],
           inputs: n == 0 ? inputs : const {},
           externals: {
@@ -108,8 +146,8 @@ Future<Map<String, Object?>> runWorkerCase(
           },
           onPrint: (stream, text) => prints.add((stream, text)),
         );
-        step['value'] = identityCanon(r.value);
-        host.rawOutputs.add(r.value);
+        step['value'] = identityCanon(value);
+        host.rawOutputs.add(value);
       } on MontyScriptError catch (e) {
         step['exception'] = e.exception != null
             ? exceptionC(e.exception!)
@@ -164,6 +202,34 @@ Future<Map<String, Object?>> runWorkerCase(
   }
 
   return out;
+}
+
+final class _ProtoCaseSession implements CaseSession {
+  _ProtoCaseSession(this._session);
+
+  final ProtoSession _session;
+
+  @override
+  Future<MontyValue> feed(
+    String code, {
+    required Map<String, MontyValue> inputs,
+    required Map<String, ProtoExternalFunction> externals,
+    required ProtoOsCallHandler onOsCall,
+    required ProtoPrintCallback onPrint,
+  }) async {
+    final result = await _session.feed(
+      code,
+      inputs: inputs,
+      externals: externals,
+      onOsCall: onOsCall,
+      onPrint: onPrint,
+    );
+
+    return result.value;
+  }
+
+  @override
+  Future<void> close() => _session.close();
 }
 
 /// Case limits -> the worker's [SessionConfig]. A limit the worker has no
