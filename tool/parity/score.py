@@ -56,7 +56,8 @@ listed under `deltas`.
 
 --assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
 the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
-worker) against upstream's, every field compared with worker_compare.py (shared
+worker), or with --engine session the session engine's
+(`session-<backend>.json`, run.py --engine session), against upstream's, every field compared with worker_compare.py (shared
 objects and sandbox ids up to relabelling, strings exactly), no exceptions
 tolerated. It fails unless every counted case is MATCH on every backend. A case listed
 under `deferred` is shown as DEFERRED and not counted, and fails once it
@@ -257,10 +258,11 @@ def probe_status(row: str, rule: dict, backend: str, out: Path, expected: Path) 
 
 # ------------------------------------------------------------------ worker engine
 def classify_worker(cid: str, backend: str, out: Path, expected: Path,
-                    local_refusal: bool = False, got: dict | None = None) -> tuple[str, list[str]]:
-    """A worker-engine case on [backend]: (class, differing codes), compared by worker_compare."""
+                    local_refusal: bool = False, got: dict | None = None,
+                    engine: str = 'worker') -> tuple[str, list[str]]:
+    """A worker- or session-engine case on [backend]: (class, differing codes), compared by worker_compare."""
     ref = load(expected / cid / 'ref-py.json')
-    got = got if got is not None else load(out / cid / f'worker-{backend}.json')
+    got = got if got is not None else load(out / cid / f'{engine}-{backend}.json')
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!']
     if ref is None or ref.get('runner_error'):
@@ -412,15 +414,19 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
 
 # ------------------------------------------------------------------ main
 def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
-              markdown: Path | None, json_out: Path | None) -> int:
+              markdown: Path | None, json_out: Path | None, engine: str | None = None) -> int:
     """The E0 gate: every counted case MATCH on every backend; deferred cases shown, not counted."""
     spec = json.loads(spec_path.read_text())
-    cases, deferred, engine = spec['cases'], spec.get('deferred', {}), spec.get('engine', 'worker')
+    cases, deferred = spec['cases'], spec.get('deferred', {})
+    engine = engine or spec.get('engine', 'worker')
+    if engine not in ('worker', 'session'):
+        sys.exit(f'--assert-e0 scores the worker or session engine, not {engine!r}')
     on_disk = sorted(p.stem for p in (CASES / spec['suite']).glob('*.json'))
     if sorted(cases) != on_disk or set(deferred) - set(cases):
         sys.exit(f'{spec_path}: cases {sorted(cases)} (deferred {sorted(deferred)}) do not match '
                  f'tool/parity/cases/{spec["suite"]}: {on_disk}')
-    table = {cid: {b: (*classify_worker(cid, b, outcomes, expected), []) for b in backends} for cid in cases}
+    table = {cid: {b: (*classify_worker(cid, b, outcomes, expected, engine=engine), []) for b in backends}
+             for cid in cases}
     counted = [c for c in cases if c not in deferred]
     lines = [f'E0 through the `{engine}` engine: {len(counted)} counted cases, {len(deferred)} deferred', '',
              '| case | ' + ' | '.join(backends) + ' |', '|---|' + '---|' * len(backends)]
@@ -483,9 +489,14 @@ def main() -> int:
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     ap.add_argument('--assert-worker', action='store_true',
                     help="score the worker engine's value rows instead (rows.json `worker`)")
+    ap.add_argument('--engine', choices=['worker', 'session'],
+                    help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
+    if a.engine and not a.assert_e0:
+        sys.exit('--engine applies to --assert-e0 only')
     if a.assert_e0:
-        return assert_e0(a.assert_e0, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
+        return assert_e0(a.assert_e0, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json,
+                         a.engine)
     if a.assert_worker:
         return assert_worker(a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
