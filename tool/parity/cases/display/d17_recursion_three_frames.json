@@ -1,0 +1,7 @@
+{
+ "id": "d17_recursion_three_frames",
+ "code": "def f(n):\n    if n == 0:\n        raise ValueError('bottom')\n    return f(n - 1)\n\nf(3)",
+ "display": true,
+ "exact_strings": true,
+ "note": "exactly 3 identical consecutive frames: all shown, no collapse line"
+}

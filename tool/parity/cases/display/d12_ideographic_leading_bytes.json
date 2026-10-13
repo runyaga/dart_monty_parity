@@ -1,0 +1,7 @@
+{
+ "id": "d12_ideographic_leading_bytes",
+ "code": "s = '''abc\n\u3000''' ; y = 1 / 0",
+ "display": true,
+ "exact_strings": true,
+ "note": "an error on a line starting with U+3000: the stripped indent is counted in bytes (3), so the carets sit 2 left of the span"
+}

@@ -15,7 +15,8 @@ or `feeds` (one REPL session, one feed each); optional typed `inputs`;
 scripted `externals` / `os` answers per name in call order (`return`,
 `raise`, `echo`, `echo_arg`); `limits`; `os_policy`; `fs` (mounts + seeded
 files); `cwd`; `host` (host classes, objects, wrappers); `restore_before`;
-`refmem` (also run upstream's in-memory filesystem). Values use the canonical
+`refmem` (also run upstream's in-memory filesystem); `display` (also record the
+error's rendered forms, see `display_fields`). Values use the canonical
 form `canon` produces ({"t": kind, ...}; floats compared by IEEE-754 bits;
 shared containers carry id/ref). The outcome has one step per feed: value,
 exception (type, message, traceback frames, structured data), prints,
@@ -665,6 +666,30 @@ def exc_fields(e: Any) -> dict[str, Any]:
     return {'type': typ, 'message': msg, 'traceback': [frame_c(f) for f in e.traceback()]}
 
 
+# A format display() rejects, to record upstream's refusal text.
+BAD_DISPLAY_FORMAT = 'nope'
+
+
+def display_fields(e: Any) -> dict[str, Any]:
+    """Upstream's rendered forms of a MontyRuntimeError / MontySyntaxError: display() in each
+    format, str(), the exception() object's type and arguments, and display()'s refusal of an
+    unknown format."""
+    inner = e.exception()
+    try:
+        e.display(BAD_DISPLAY_FORMAT)
+        refusal = None
+    except ValueError as v:
+        refusal = {'format': BAD_DISPLAY_FORMAT, 'type': type(v).__name__, 'message': str(v)}
+    return {
+        'traceback': e.display('traceback'),
+        'type-msg': e.display('type-msg'),
+        'msg': e.display('msg'),
+        'str': str(e),
+        'exception': {'type': type(inner).__name__, 'args': canon(inner.args)},
+        'bad_format': refusal,
+    }
+
+
 def exc_data(inner: BaseException) -> dict[str, Any] | None:
     """The structured payload pydantic_monty's exception() object carries."""
     if isinstance(inner, UnicodeError) and hasattr(inner, 'start'):
@@ -825,6 +850,8 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     step['exception']['data'] = d
                 step['error_class'] = type(e).__name__
                 step['host_exception_mro'] = [k.__name__ for k in type(e.exception()).__mro__]
+                if case.get('display'):
+                    step['display'] = display_fields(e)
             except pm.MontyConversionError as e:  # input/return conversion rejected
                 inner = e.exception()
                 step['exception'] = {'type': type(inner).__name__, 'message': str(e), 'traceback': []}

@@ -1,0 +1,7 @@
+{
+ "id": "d13_nbsp_indent_syntax_error",
+ "code": "x = [\n\u00a0\u00a0\u00a01 / 0]",
+ "display": true,
+ "exact_strings": true,
+ "note": "a line indented with U+00A0 is a syntax error at column 1: the indent is stripped and the caret is not shifted"
+}

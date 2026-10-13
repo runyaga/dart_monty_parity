@@ -1,0 +1,7 @@
+{
+ "id": "d18_recursion_four_frames",
+ "code": "def f(n):\n    if n == 0:\n        raise ValueError('bottom')\n    return f(n - 1)\n\nf(4)",
+ "display": true,
+ "exact_strings": true,
+ "note": "exactly 4 identical consecutive frames: 3 shown, then [Previous line repeated 1 more times]"
+}

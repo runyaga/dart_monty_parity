@@ -1,0 +1,7 @@
+{
+ "id": "d07_multiline_elided",
+ "code": "def f(a, b):\n    return a + b\n\nf(\n    1,\n    'x',\n)",
+ "display": true,
+ "exact_strings": true,
+ "note": "a call over four lines: upstream elides the middle lines in the preview block"
+}

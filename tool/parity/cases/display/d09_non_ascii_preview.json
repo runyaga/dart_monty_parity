@@ -1,0 +1,7 @@
+{
+ "id": "d09_non_ascii_preview",
+ "code": "s = 'h\u00e9llo w\u00f6rld' + 1",
+ "display": true,
+ "exact_strings": true,
+ "note": "a preview line with two-byte characters: caret width and offset count characters"
+}

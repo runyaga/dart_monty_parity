@@ -1,0 +1,7 @@
+{
+ "id": "d06_multiline_block",
+ "code": "d = {}\nv = d[\n    'k'\n]",
+ "display": true,
+ "exact_strings": true,
+ "note": "a span over several lines: the preview is a dedented block printed line by line, no carets"
+}

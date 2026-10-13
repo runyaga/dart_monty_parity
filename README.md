@@ -20,6 +20,7 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | Path | What |
 |---|---|
 | `tool/parity/cases/<suite>/<id>.json` | parity cases: Python code or REPL feeds, typed inputs, scripted external / OS-call answers, limits, OS policy, mounts, host objects |
+| `tool/parity/cases/display/<id>.json` | the display suite: errors whose expected outcome also records upstream's renderings (`display()` in each format, `str()`, the `exception()` type and arguments, the refusal of an unknown format). No engine runs them; dart_monty_core's traceback renderer tests read them (`tool/parity/oracle/test_display.py` checks they are recorded) |
 | `tool/parity/expected/<id>/` | upstream's outcome for each case and probe: `ref-py.json` (pydantic-monty), `refmem-py.json` (upstream's in-memory filesystem), `ref-rust.json` (upstream monty's Rust API, three Rust-only probes) |
 | `tool/parity/manifest.json` | binds every case (sha256) to the expected outcomes generated from it (sha256), plus the sha256 of the generator (the oracle's code) and of the upstream pins |
 | `tool/parity/oracle/` | the reference oracle that generates `expected/`: `run_cases.py`, `run_probes.py`, `rust/` |
@@ -113,8 +114,10 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
   worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`; then the
   `e0` suite through the session engine on all three, `--assert-e0 --engine session`.
 - **`Parity oracle`** (`parity-oracle.yaml`): regenerates every expected outcome from the hash-pinned
-  oracle and fails on any byte of difference. Runs when a parity input changes (cases, expected outcomes,
-  manifest, oracle code, upstream pins, the workflow), weekly, and on demand.
+  oracle and fails on any byte of difference; then `tool/parity/oracle/test_display.py` checks that every
+  display case carries its renderings and that a deliberately wrong expected rendering fails the
+  regeneration. Runs when a parity input changes (cases, expected outcomes, manifest, oracle code,
+  upstream pins, the workflow), weekly, and on demand.
 
 ## Regenerating the expected outcomes
 

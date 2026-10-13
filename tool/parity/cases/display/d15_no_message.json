@@ -1,0 +1,7 @@
+{
+ "id": "d15_no_message",
+ "code": "raise ValueError",
+ "display": true,
+ "exact_strings": true,
+ "note": "an exception with no message: `Type` alone; exception() still has the argument ''"
+}

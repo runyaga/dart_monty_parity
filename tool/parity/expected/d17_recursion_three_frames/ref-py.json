@@ -1,0 +1,105 @@
+{
+ "case": "d17_recursion_three_frames",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": null,
+   "exception": {
+    "type": "ValueError",
+    "message": "bottom",
+    "traceback": [
+     {
+      "filename": "<python-input-0>",
+      "line": 6,
+      "column": 1,
+      "end_line": 6,
+      "end_column": 5,
+      "function": "<module>",
+      "source_line": "f(3)"
+     },
+     {
+      "filename": "<python-input-0>",
+      "line": 4,
+      "column": 12,
+      "end_line": 4,
+      "end_column": 20,
+      "function": "f",
+      "source_line": "    return f(n - 1)"
+     },
+     {
+      "filename": "<python-input-0>",
+      "line": 4,
+      "column": 12,
+      "end_line": 4,
+      "end_column": 20,
+      "function": "f",
+      "source_line": "    return f(n - 1)"
+     },
+     {
+      "filename": "<python-input-0>",
+      "line": 4,
+      "column": 12,
+      "end_line": 4,
+      "end_column": 20,
+      "function": "f",
+      "source_line": "    return f(n - 1)"
+     },
+     {
+      "filename": "<python-input-0>",
+      "line": 3,
+      "column": 15,
+      "end_line": 3,
+      "end_column": 35,
+      "function": "f",
+      "source_line": "        raise ValueError('bottom')"
+     }
+    ]
+   },
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null,
+   "error_class": "MontyRuntimeError",
+   "host_exception_mro": [
+    "ValueError",
+    "Exception",
+    "BaseException",
+    "object"
+   ],
+   "display": {
+    "traceback": "Traceback (most recent call last):\n  File \"<python-input-0>\", line 6, in <module>\n    f(3)\n    ~~~~\n  File \"<python-input-0>\", line 4, in f\n    return f(n - 1)\n           ~~~~~~~~\n  File \"<python-input-0>\", line 4, in f\n    return f(n - 1)\n           ~~~~~~~~\n  File \"<python-input-0>\", line 4, in f\n    return f(n - 1)\n           ~~~~~~~~\n  File \"<python-input-0>\", line 3, in f\n    raise ValueError('bottom')\nValueError: bottom",
+    "type-msg": "ValueError: bottom",
+    "msg": "bottom",
+    "str": "ValueError: bottom",
+    "exception": {
+     "type": "ValueError",
+     "args": {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "bottom"
+       }
+      ]
+     }
+    },
+    "bad_format": {
+     "format": "nope",
+     "type": "ValueError",
+     "message": "Invalid display format: 'nope'. Expected 'traceback', 'type-msg', or 'msg'"
+    }
+   }
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

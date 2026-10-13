@@ -17,7 +17,8 @@ OUTDIR/<case>/core-<backend>.json (and core1-<backend>.json for one-shot
 cases). A case marked "isolate" runs in its own VM process under a 60 s cap,
 because an FFI run that core cannot interrupt would otherwise hang the batch;
 a case that hits the cap records `runner_error`. Its default cases are every
-suite except the worker engine's own (e0 and worker_values).
+suite except the worker engine's own (e0 and worker_values) and the display
+suite, whose expected renderings dart_monty_core's own tests check.
 
 --engine worker drives core's internal monty-proto worker (each case on a
 fresh worker: a process on the VM, a Web Worker in the browser) and writes
@@ -61,6 +62,8 @@ ENGINES = ('core', 'worker', 'session')
 # The worker engine's own suites; the core engine leaves them out by default.
 WORKER_SUITE = 'e0'
 WORKER_SUITES = (WORKER_SUITE, 'worker_values')
+# Expected renderings (display() / str()) that core's renderer tests read; no engine runs them.
+DISPLAY_SUITE = 'display'
 RULES = ROOT / 'tool/parity/rows.json'
 # Tests per backend in the worker crash test files (a floor: a filter or a
 # load failure that runs fewer is a failure, not a pass).
@@ -82,7 +85,7 @@ def case_files(globs: list[str], engine: str) -> list[Path]:
                   for cases in (rule.get('worker') or {}).values() for cid in cases}
         pats = [str(CASES / WORKER_SUITE / '*.json'), *(str(CASES / '*' / f'{cid}.json') for cid in sorted(listed))]
     else:
-        pats = [str(p) for p in sorted(CASES.glob('*/*.json')) if p.parent.name not in WORKER_SUITES]
+        pats = [str(p) for p in sorted(CASES.glob('*/*.json')) if p.parent.name not in (*WORKER_SUITES, DISPLAY_SUITE)]
     files = sorted({Path(p).resolve() for g in pats for p in glob.glob(g)})
     if not files:
         sys.exit(f'no cases match {pats}')
