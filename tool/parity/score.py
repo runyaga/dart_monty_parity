@@ -332,8 +332,13 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
     lines.append('')
     rc = 0
     def ran_every_feed(cid: str, b: str) -> bool:
+        """One step per feed, each with a value or a recorded exception (a staged refusal counts)."""
         got = load(outcomes / cid / f'worker-{b}.json') or {}
-        return len(got.get('steps') or []) == len(cases[cid].get('feeds') or [cases[cid].get('code')])
+        steps = got.get('steps') or []
+        return len(steps) == len(cases[cid].get('feeds') or [cases[cid].get('code')]) and all(
+            isinstance(s, dict) and (s.get('value') is not None
+                                     or isinstance((s.get('exception') or {}).get('type'), str))
+            for s in steps)
 
     def as_recorded(cid: str, b: str) -> bool:
         """A recorded divergence differs in exactly its recorded fields, with the recorded worker value."""
