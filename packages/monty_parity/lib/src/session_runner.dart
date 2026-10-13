@@ -29,14 +29,9 @@ Future<Map<String, Object?>> runSessionCase(
   engine: 'session',
   engineVersion: 'dart_monty_core (internal: MontyPool session)',
   open: (config) async => _PoolCaseSession(
-    await pool.checkout(
-      scriptName: config.scriptName,
-      limits: SessionLimits(
-        maxMemoryBytes: config.maxMemoryBytes,
-        maxRecursionDepth: config.maxRecursionDepth,
-        maxFeedDuration: config.maxFeedDuration,
-      ),
-    ),
+    // The worker engine's settings, as they are: the session takes the same
+    // record.
+    await pool.checkout(options: config),
   ),
 );
 

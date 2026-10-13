@@ -14,6 +14,7 @@ import 'dart:io';
 
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/process_channel.dart';
+import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/monty_parity.dart';
 import 'package:monty_parity/src/session_runner.dart';
 
@@ -22,7 +23,9 @@ const enc = JsonEncoder.withIndent(' ');
 Future<void> main(List<String> args) async {
   final outdir = args.first;
   var failed = false;
-  final pool = await MontyPool.start(maxProcesses: 1);
+  final pool = await MontyPool.start(
+    options: const PoolOptions(maxProcesses: 1),
+  );
   for (final path in args.skip(1)) {
     final c = (jsonDecode(File(path).readAsStringSync()) as Map)
         .cast<String, Object?>();
