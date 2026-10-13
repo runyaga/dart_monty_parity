@@ -15,6 +15,8 @@
 import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart';
+import 'package:dart_monty_core/src/worker/monty_channel.dart'
+    show MontyCrashedError;
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
@@ -123,28 +125,38 @@ _probes = {
     },
   ),
   // One worker, held: a checkout waits for it and gets it once it is
-  // returned; held again, a checkout waits out the timeout and is refused.
-  'sp_checkout_timeout': (t, _, start) => _withPool(
-    start,
-    const PoolOptions(
-      maxProcesses: 1,
-      checkoutTimeout: Duration(milliseconds: 300),
-    ),
-    (p) async {
-      final s = await p.checkout();
-      Future<void>? waiting;
-      try {
-        await _run(t, () => s.feedRun('1'));
-        waiting = _enterTimed(t, p);
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        t.add({'ev': 'release'});
-      } finally {
-        await s.close();
-      }
-      await waiting;
-      await p.withSession((_) => _enterTimed(t, p));
-    },
-  ),
+  // returned (a 10 s timeout, so no race); held again under a 0.3 s
+  // timeout, a checkout waits it out and is refused.
+  'sp_checkout_timeout': (t, _, start) async {
+    await _withPool(
+      start,
+      const PoolOptions(
+        maxProcesses: 1,
+        checkoutTimeout: Duration(seconds: 10),
+      ),
+      (p) async {
+        final s = await p.checkout();
+        Future<void>? waiting;
+        try {
+          await _run(t, () => s.feedRun('1'));
+          waiting = _enterTimed(t, p);
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          t.add({'ev': 'release'});
+        } finally {
+          await s.close();
+        }
+        await waiting;
+      },
+    );
+    await _withPool(
+      start,
+      const PoolOptions(
+        maxProcesses: 1,
+        checkoutTimeout: Duration(milliseconds: 300),
+      ),
+      (p) => p.withSession((_) => _enterTimed(t, p)),
+    );
+  },
   'sp_pool_close': (t, _, start) async {
     final p = await start(const PoolOptions(maxProcesses: 2));
     final PoolSession s;
@@ -171,7 +183,28 @@ _probes = {
     const PoolOptions(requestTimeout: Duration(milliseconds: 500)),
     (p) async {
       await p.withSession((s) async {
-        await _run(t, () => s.feedRun('while True:\n    pass'));
+        await _run(t, () => s.feedRun('sum(range(1000))'));
+        final clock = Stopwatch()..start();
+        try {
+          await s.feedRun('while True:\n    pass');
+          t.add({'ev': 'complete'});
+          // The crash is the outcome measured here.
+          // ignore: avoid_catching_errors
+        } on MontyCrashedError {
+          final at = clock.elapsed;
+          t.add({
+            'ev': 'crashed',
+            'at_deadline':
+                at >= const Duration(milliseconds: 400) &&
+                at < const Duration(seconds: 5),
+          });
+        } on Object catch (e) {
+          t.add({
+            'ev': 'refused',
+            'cls': e.runtimeType.toString(),
+            'msg': '$e',
+          });
+        }
         await _run(t, () => s.feedRun('1'));
       });
       await p.withSession((s) => _run(t, () => s.feedRun('1 + 1')));
@@ -219,8 +252,12 @@ _probes = {
       () => s.feedRun(
         "import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
         "print('d', end='')\n5",
-        printCallback: (stream, text) =>
-            t.add({'ev': 'print', 'stream': stream, 'text': text}),
+        // Records only after a suspension of its own: a session that did
+        // not await it would record the completion first.
+        printCallback: (stream, text) async {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+          t.add({'ev': 'print', 'stream': stream, 'text': text});
+        },
       ),
     ),
     options: const SessionConfig(printFlushInterval: Duration.zero),
@@ -313,9 +350,13 @@ Future<void> _enterTimed(_T t, MontyPool pool) async {
   await s.close();
 }
 
-/// A print callback that records its first delivery and throws `cb boom`.
-ProtoPrintCallback _raising(_T t) => (stream, text) {
+/// A print callback that records its first delivery and throws `cb boom`,
+/// each after a suspension of its own: the session must await it to see
+/// either.
+ProtoPrintCallback _raising(_T t) => (stream, text) async {
+  await Future<void>.delayed(const Duration(milliseconds: 5));
   t.add({'ev': 'print', 'stream': stream, 'text': text});
+  await Future<void>.delayed(const Duration(milliseconds: 5));
   throw StateError('cb boom');
 };
 

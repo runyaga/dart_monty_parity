@@ -4,9 +4,15 @@
  "backend": "py",
  "events": [
   {
-   "ev": "refused",
-   "cls": "MontyCrashedError",
-   "msg": "monty worker killed after exceeding request timeout of 500ms"
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "crashed",
+   "at_deadline": true
   },
   {
    "ev": "refused",

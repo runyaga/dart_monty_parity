@@ -13,8 +13,8 @@ dart_monty_core, and tool/parity/probes_compare.py compares the two.
 Event vocabulary: suspend{kind,name,args,kwargs,position,pending},
 complete{value}, error{type,message,tb_last}, refused{}, handler{who,args},
 unsupported{what}, plus probe-specific observation events; the pool and print
-probes (`sp_*`) add print{stream,text}, checkout{}, checkout_refused{waited}, release{} and
-failed{callback_error}.
+probes (`sp_*`) add print{stream,text}, checkout{}, checkout_refused{waited}, release{},
+crashed{at_deadline} and failed{callback_error}.
 """
 
 from __future__ import annotations
@@ -277,8 +277,8 @@ def sp_finish_reset(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
-    """One worker, held: a checkout waits for it and gets it once it is returned; held again, a checkout
-    waits out `checkout_timeout` (0.3 s) and is refused."""
+    """One worker, held: a checkout waits for it and gets it once it is returned (a 10 s timeout, so no race);
+    held again under a 0.3 s timeout, a checkout waits it out and is refused."""
     async def enter_async(p: pm.AsyncMonty) -> None:
         start = time.monotonic()
         try:
@@ -288,13 +288,14 @@ def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
             t.add({'ev': 'checkout_refused', 'waited': time.monotonic() - start >= 0.25})
 
     async def main() -> None:
-        async with pm.AsyncMonty(max_processes=1, checkout_timeout=0.3) as p:
+        async with pm.AsyncMonty(max_processes=1, checkout_timeout=10) as p:
             async with p.checkout() as s:
                 t.add({'ev': 'complete', 'value': canon(await s.feed_run('1'))})
                 waiting = asyncio.ensure_future(enter_async(p))
                 await asyncio.sleep(0.1)
                 t.add({'ev': 'release'})
             await waiting
+        async with pm.AsyncMonty(max_processes=1, checkout_timeout=0.3) as p:
             async with p.checkout():
                 await enter_async(p)
 
@@ -319,10 +320,19 @@ def sp_pool_close(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_request_timeout(pool: pm.Monty, t: T) -> None:
-    """A turn past `request_timeout` kills the worker and finishes the session; the next checkout runs."""
+    """A turn within `request_timeout` (0.5 s) runs; one past it is killed at the deadline, as a crash, and
+    finishes the session; the next checkout runs."""
     with pm.Monty(request_timeout=0.5) as p:
         with p.checkout() as s:
-            run(t, lambda: s.feed_run('while True:\n    pass'))
+            run(t, lambda: s.feed_run('sum(range(1000))'))
+            start = time.monotonic()
+            try:
+                s.feed_run('while True:\n    pass')
+                t.add({'ev': 'complete'})
+            except pm.MontyCrashedError:
+                t.add({'ev': 'crashed', 'at_deadline': 0.4 <= time.monotonic() - start < 5})
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
             run(t, lambda: s.feed_run('1'))
         with p.checkout() as s:
             run(t, lambda: s.feed_run('1 + 1'))
