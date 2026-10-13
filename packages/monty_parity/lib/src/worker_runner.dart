@@ -49,10 +49,12 @@ Future<Map<String, Object?>> runWorkerCase(
   }
   final config = workerConfig(c, unsupported);
   final host = CoreHost(c);
+  // One memo: inputs may share objects with each other, as the oracle's do.
+  final memo = <int, MontyValue>{};
   final inputs = <String, MontyValue>{
     for (final MapEntry(:key, :value)
         in ((c['inputs'] as Map?) ?? const {}).cast<String, Object?>().entries)
-      key: canonToMonty((value! as Map).cast(), host),
+      key: _input((value! as Map).cast(), host, memo),
   };
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
@@ -110,6 +112,19 @@ Future<Map<String, Object?>> runWorkerCase(
         step['thrown'] = 'MontyCrashedError(${e.cause.name})';
         step['prints'] = mergePrints(prints);
         break;
+        // A value the driver refuses to send (an unhashable key, a temporal
+        // out of range, an unknown name, a non-canonical uuid): refused
+        // locally, before anything reaches the worker; the session carries
+        // on. Only the inputs are written outside a guarded callback.
+        // ignore: avoid_catching_errors
+      } on ArgumentError catch (e) {
+        step['exception'] = {
+          'type': 'ArgumentError',
+          'message': '${e.message}',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'ArgumentError';
+        host.rawOutputs.add(null);
         // A value outside the driver's subset: the driver's own refusal is
         // the outcome, and the session carries on.
         // ignore: avoid_catching_errors
@@ -161,18 +176,66 @@ SessionConfig workerConfig(
   );
 }
 
+/// A call's record: its arguments and keyword arguments canonicalised as
+/// one batch, as the oracle's `canon_call` does.
 Map<String, Object?> _callRecord(
   String name,
   List<MontyValue> args,
   Map<String, MontyValue> kwargs,
-) => {
-  'name': name,
-  'args': [for (final a in args) identityCanon(a)],
-  'kwargs': {
-    for (final MapEntry(:key, :value) in kwargs.entries)
-      key: identityCanon(value),
-  },
+) {
+  final keys = kwargs.keys.toList();
+  final c = identityCanonBatch([...args, for (final k in keys) kwargs[k]!]);
+
+  return {
+    'name': name,
+    'args': c.sublist(0, args.length),
+    'kwargs': {
+      for (var i = 0; i < keys.length; i++) keys[i]: c[args.length + i],
+    },
+  };
+}
+
+/// The canonical kinds the worker can carry that core's public API cannot:
+/// a file handle, and a sandbox class instance the host names by id
+/// (`instance_id`, `class_id`), which the worker resolves, or the driver
+/// refuses when the id is not a canonical uuid.
+MontyValue? _workerExtra(Map<String, Object?> c) => switch (c['t']) {
+  'filehandle' => MontyFileHandle(
+    path: c['path']! as String,
+    mode: c['mode']! as String,
+    position: _position(c['position']! as String),
+  ),
+  'proxy' => MontyClassInstance(
+    classType: MontyClassType(
+      name: c['class']! as String,
+      id: c['class_id']! as String,
+      hostDefined: false,
+      isDataclass: (c['dataclass'] as bool?) ?? false,
+      attrs: const {},
+    ),
+    instanceId: c['instance_id']! as String,
+    attrs: const {},
+  ),
+  _ => null,
 };
+
+/// A file position as an `int`; one an `int` cannot hold exactly on this
+/// compiler is inexpressible until the position is a `BigInt` (the cutover).
+int _position(String text) {
+  final b = BigInt.parse(text);
+  if (!b.isValidInt) {
+    throw Inexpressible('file position $text does not fit an int here');
+  }
+
+  return b.toInt();
+}
+
+/// Canonical input [c] -> [MontyValue], sharing [memo] across the inputs.
+MontyValue _input(
+  Map<String, Object?> c,
+  CoreHost host,
+  Map<int, MontyValue> memo,
+) => canonToMonty(c, host, memo, _workerExtra);
 
 /// A scripted answer [a] for the call to [name], as the driver takes it.
 MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
@@ -183,7 +246,7 @@ MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
     );
   }
   if (a['return'] case final Map<Object?, Object?> ret) {
-    return canonToMonty(ret.cast(), host);
+    return canonToMonty(ret.cast(), host, null, _workerExtra);
   }
   if (a['echo'] case final int step) {
     return host.rawOutputs[step] ??
@@ -197,12 +260,16 @@ MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
   );
 }
 
-bool _isContainer(MontyValue v) =>
+/// Whether [v] carries identity: a container, a named tuple or a class
+/// instance, each of which the oracle's `canon_batch` marks once when shared.
+bool _isShared(MontyValue v) =>
     v is MontyList ||
     v is MontyTuple ||
     v is MontyDict ||
     v is MontySet ||
-    v is MontyFrozenSet;
+    v is MontyFrozenSet ||
+    v is MontyNamedTuple ||
+    v is MontyClassInstance;
 
 List<MontyValue> _children(MontyValue v) => switch (v) {
   MontyList(:final items) || MontyTuple(:final items) => items,
@@ -210,31 +277,39 @@ List<MontyValue> _children(MontyValue v) => switch (v) {
   MontyDict(:final pairs) => [
     for (final (k, x) in pairs) ...[k, x],
   ],
+  MontyNamedTuple(:final values) => values,
+  MontyClassInstance(:final attrs) => [...attrs.values],
   _ => const [],
 };
 
-/// [MontyValue] -> canonical form, identity-aware as the oracle's `canon`
-/// is: a container reached more than once is written once with an `id`,
-/// and each later occurrence as `{"t": "ref", "id": n}`.
+/// [MontyValue] -> canonical form, identity-aware as the oracle's `canon` is.
+Object? identityCanon(MontyValue root) => identityCanonBatch([root]).single;
+
+/// [MontyValue]s -> canonical forms with one identity memo over the whole
+/// batch, as the oracle's `canon_batch` does: a container, named tuple or
+/// class instance reached more than once anywhere in [roots] (a call's
+/// arguments and keyword arguments, say) is written once with an `id`, and
+/// each later occurrence as `{"t": "ref", "id": n}`. The walk goes into class
+/// instance attributes too. A class instance carries its `instance_id`.
 ///
 /// Identity is Dart object identity: the worker driver decodes a node it
 /// meets twice into one object. Never `==`, which walks a shared graph as a
 /// tree.
-Object? identityCanon(MontyValue root) {
+List<Object?> identityCanonBatch(List<MontyValue> roots) {
   final counts = HashMap<MontyValue, int>.identity();
   final onPath = HashSet<MontyValue>.identity();
   void count(MontyValue v) {
-    if (!_isContainer(v)) return;
+    if (!_isShared(v)) return;
     final n = counts[v] = (counts[v] ?? 0) + 1;
     if (n > 1 || !onPath.add(v)) return;
     _children(v).forEach(count);
     onPath.remove(v);
   }
 
-  count(root);
+  roots.forEach(count);
   final ids = HashMap<MontyValue, int>.identity();
   Object? enc(MontyValue v) {
-    if (!_isContainer(v)) return montyToCanon(v);
+    if (!_isShared(v)) return montyToCanon(v);
     if (ids[v] case final int id) return {'t': 'ref', 'id': id};
     final out = <String, Object?>{};
     if ((counts[v] ?? 0) > 1) out['id'] = ids[v] = ids.length + 1;
@@ -256,12 +331,30 @@ Object? identityCanon(MontyValue root) {
         out['items'] = [
           for (final (k, x) in pairs) [enc(k), enc(x)],
         ];
+      case MontyNamedTuple(:final typeName, :final fieldNames, :final values):
+        out['t'] = 'namedtuple';
+        out['type'] = typeName;
+        out['fields'] = fieldNames;
+        out['items'] = [for (final i in values) enc(i)];
+      case MontyClassInstance(
+        :final classType,
+        :final instanceId,
+        :final attrs,
+      ):
+        out['t'] = 'proxy';
+        out['class'] = classType.name;
+        out['dataclass'] = classType.isDataclass;
+        out['instance_id'] = instanceId;
+        out['attrs'] = [
+          for (final MapEntry(:key, :value) in attrs.entries) [key, enc(value)],
+        ];
+        out['_host_defined'] = classType.hostDefined;
       default:
-        throw StateError('not a container: ${v.runtimeType}');
+        throw StateError('not an identity-carrying value: ${v.runtimeType}');
     }
 
     return out;
   }
 
-  return enc(root);
+  return [for (final r in roots) enc(r)];
 }

@@ -46,5 +46,6 @@
    "system.sleep"
   ]
  },
- "runner_error": null
+ "runner_error": null,
+ "strings_rewritten": true
 }
