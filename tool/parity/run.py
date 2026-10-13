@@ -23,7 +23,8 @@ suite except e0.
 fresh worker: a process on the VM, a Web Worker in the browser) and writes
 OUTDIR/<case>/worker-<backend>.json. Its default cases are the e0 suite. The
 VM needs the worker executable that core's tool/build_worker.sh writes into
-the core checkout. It then runs the worker crash tests on the same backend
+the core checkout. It exits 1 if the runner fails (its earlier outcomes for
+the backend are removed first, so a failed run cannot reuse them). It then runs the worker crash tests on the same backend
 (test/worker_crash_{vm,web}_test.dart) and exits 1 if they fail or run fewer
 tests than expected; --no-crash-tests skips them.
 """
@@ -37,6 +38,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -88,9 +90,13 @@ def sh(cmd: list[str], log: Path, timeout: int | None = None) -> int:
     with log.open('a') as f:
         f.write('$ ' + ' '.join(cmd) + '\n')
         f.flush()
+        # Its own process group, so a timeout also kills what it started (worker processes).
+        p = subprocess.Popen(cmd, cwd=PKG, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
         try:
-            return subprocess.run(cmd, cwd=PKG, stdout=f, stderr=subprocess.STDOUT, timeout=timeout).returncode
+            return p.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            os.killpg(p.pid, signal.SIGKILL)
+            p.wait()
             f.write(f'\n# killed after {timeout} s\n')
             return -999
 
@@ -123,13 +129,20 @@ def bake(cases: list[Path]) -> None:
     (PKG / 'test/cases.g.dart').write_text('\n'.join(lines) + '\n')
 
 
-def run_worker_vm(cases: list[Path], out: Path, log: Path) -> None:
+def clear_outcomes(cases: list[Path], out: Path, engine: str, backend: str) -> None:
+    """Removes earlier outcomes, so a failed run cannot be scored on a previous run's."""
+    for c in cases:
+        (out / json.loads(c.read_text())['id'] / f'{engine}-{backend}.json').unlink(missing_ok=True)
+
+
+def run_worker_vm(cases: list[Path], out: Path, log: Path) -> int:
     rc = sh(['dart', 'run', 'bin/parity_worker_vm.dart', str(out), *map(str, cases)], log, timeout=1800)
     print(f'worker vm: {len(cases)} cases, exit {rc}', flush=True)
     for c in cases:
         cid = json.loads(c.read_text())['id']
         if not (out / cid / 'worker-vm.json').exists():
             write(out, placeholder(cid, 'vm', f'no outcome written (exit {rc})', 'worker'))
+    return rc
 
 
 def web_test(backend: str, test_file: str, log: Path, core: Path) -> int:
@@ -154,7 +167,7 @@ def web_test(backend: str, test_file: str, log: Path, core: Path) -> int:
             shutil.rmtree(p) if p.is_dir() else p.unlink(missing_ok=True)
 
 
-def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, engine: str = 'core') -> None:
+def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, engine: str = 'core') -> int:
     # Isolated cases are limit cases that may never finish where core cannot
     # bound them; the browser runs them too (it bounds nothing less than the VM).
     bake(cases)
@@ -183,6 +196,7 @@ def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, e
         cid = json.loads(c.read_text())['id']
         if not (out / cid / f'{engine}-{backend}.json').exists():
             write(out, placeholder(cid, backend, f'no outcome printed (dart test exit {rc})', engine))
+    return rc
 
 
 def run_crash_tests(backend: str, out: Path, core: Path) -> bool:
@@ -243,11 +257,15 @@ def main() -> int:
         if sh(['dart', 'pub', 'get'], log) != 0:
             sys.exit(f'dart pub get failed; see {log}')
         if a.engine == 'worker':
+            clear_outcomes(cases, out, 'worker', a.backend)
             if a.backend == 'vm':
-                run_worker_vm(cases, out, log)
+                rc = run_worker_vm(cases, out, log)
             else:
-                run_web(a.backend, cases, out, log, core, 'worker')
-            if not a.no_crash_tests and not run_crash_tests(a.backend, out, core):
+                rc = run_web(a.backend, cases, out, log, core, 'worker')
+            crashes_ok = a.no_crash_tests or run_crash_tests(a.backend, out, core)
+            if rc != 0:
+                print(f'FAIL: the worker runner exited {rc}; see {log}', flush=True)
+            if rc != 0 or not crashes_ok:
                 return 1
         elif a.backend == 'vm':
             run_vm(cases, out, log)

@@ -59,7 +59,8 @@ the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
 worker) against upstream's, every field compared, no exceptions tolerated. It
 fails unless every counted case is MATCH on every backend. A case listed
 under `deferred` is shown as DEFERRED and not counted, and fails once it
-matches on every backend (it then leaves `deferred`). The case list must
+matches on every backend (it then leaves `deferred`); it must still have
+an outcome and an oracle on every backend. The case list must
 equal the files in tool/parity/cases/<suite>.
 """
 
@@ -264,6 +265,11 @@ def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[st
                      + (f'; deferred: {", ".join(f"{c} {table[c][b][0]}" for c in deferred)}' if deferred else ''))
     for cid, why in deferred.items():
         lines.append(f'deferred {cid}: {why}')
+        # Deferred is not skipped: the case must still have run, against an oracle, everywhere.
+        for b in backends:
+            if table[cid][b][0] in ('NO-OUTCOME', 'NO-ORACLE'):
+                rc = 1
+                lines.append(f'FAIL e0: deferred case {cid} has {table[cid][b][0]} on {b}; it must still run')
         if all(table[cid][b][0] == 'MATCH' for b in backends):
             rc = 1
             lines.append(f'FAIL e0: deferred case {cid} now MATCHES on every backend; take it out of `deferred`')
