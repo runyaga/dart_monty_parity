@@ -11,12 +11,14 @@
    }
   },
   {
-   "ev": "refused",
-   "cls": "TimeoutError",
-   "msg": "no monty worker became available within the checkout timeout"
+   "ev": "release"
   },
   {
    "ev": "checkout"
+  },
+  {
+   "ev": "checkout_refused",
+   "waited": true
   }
  ],
  "runner_error": null

@@ -437,6 +437,8 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
     stages = gate['stages']
     if set(gate['landed']) - set(stages):
         problems.append(f"landed stages {sorted(set(gate['landed']) - set(stages))} are not in `stages`")
+    for stage in sorted(set(stages) - set(gate['rows'].values())):
+        problems.append(f'stage {stage!r} gates no row: landing it would assert nothing')
     for row, stage in gate['rows'].items():
         if stage not in stages:
             problems.append(f'{row}: stage {stage!r} is not in `stages`')

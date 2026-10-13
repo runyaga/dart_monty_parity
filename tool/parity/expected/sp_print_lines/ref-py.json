@@ -10,13 +10,18 @@
   },
   {
    "ev": "print",
-   "stream": "stderr",
+   "stream": "stdout",
    "text": "b\n"
   },
   {
    "ev": "print",
+   "stream": "stderr",
+   "text": "c\n"
+  },
+  {
+   "ev": "print",
    "stream": "stdout",
-   "text": "c"
+   "text": "d"
   },
   {
    "ev": "complete",

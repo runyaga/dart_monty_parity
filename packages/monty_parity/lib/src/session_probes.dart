@@ -116,18 +116,27 @@ _probes = {
       await p.withSession((s) => _run(t, () => s.feedRun('x')));
     },
   ),
+  // One worker, held: a checkout waits for it and gets it once it is
+  // returned; held again, a checkout waits out the timeout and is refused.
   'sp_checkout_timeout': (t, _, start) => _withPool(
     start,
     const PoolOptions(
       maxProcesses: 1,
-      checkoutTimeout: Duration(milliseconds: 200),
+      checkoutTimeout: Duration(milliseconds: 300),
     ),
     (p) async {
-      await p.withSession((s) async {
+      final s = await p.checkout();
+      Future<void>? waiting;
+      try {
         await _run(t, () => s.feedRun('1'));
-        await _enter(t, p);
-      });
-      await _enter(t, p);
+        waiting = _enterTimed(t, p);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        t.add({'ev': 'release'});
+      } finally {
+        await s.close();
+      }
+      await waiting;
+      await p.withSession((_) => _enterTimed(t, p));
     },
   ),
   'sp_pool_close': (t, _, start) async {
@@ -182,8 +191,8 @@ _probes = {
     (s) => _run(
       t,
       () => s.feedRun(
-        "import sys\nprint('a')\nprint('b', file=sys.stderr)\n"
-        "print('c', end='')\n5",
+        "import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+        "print('d', end='')\n5",
         printCallback: (stream, text) =>
             t.add({'ev': 'print', 'stream': stream, 'text': text}),
       ),
@@ -252,6 +261,25 @@ Future<void> _enter(_T t, MontyPool pool) async {
     s = await pool.checkout();
   } on Object catch (e) {
     t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+
+    return;
+  }
+  t.add({'ev': 'checkout'});
+  await s.close();
+}
+
+/// Records whether [pool] grants a checkout (returned at once), or refuses
+/// it after waiting at least 250 ms.
+Future<void> _enterTimed(_T t, MontyPool pool) async {
+  final clock = Stopwatch()..start();
+  final PoolSession s;
+  try {
+    s = await pool.checkout();
+  } on Object {
+    t.add({
+      'ev': 'checkout_refused',
+      'waited': clock.elapsed >= const Duration(milliseconds: 250),
+    });
 
     return;
   }

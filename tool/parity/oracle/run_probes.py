@@ -13,7 +13,8 @@ dart_monty_core, and tool/parity/probes_compare.py compares the two.
 Event vocabulary: suspend{kind,name,args,kwargs,position,pending},
 complete{value}, error{type,message,tb_last}, refused{}, handler{who,args},
 unsupported{what}, plus probe-specific observation events; the pool and print
-probes (`sp_*`) add print{stream,text}, checkout{} and failed{callback_error}.
+probes (`sp_*`) add print{stream,text}, checkout{}, checkout_refused{waited}, release{} and
+failed{callback_error}.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ import hashlib
 import json
 import sys
 import tempfile
+import time
 import traceback
 import uuid
 from pathlib import Path, PurePosixPath
@@ -275,12 +277,28 @@ def sp_finish_reset(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
-    """One worker, held: a second checkout times out; once it is returned, a checkout gets it."""
-    with pm.Monty(max_processes=1, checkout_timeout=0.2) as p:
-        with p.checkout() as s:
-            run(t, lambda: s.feed_run('1'))
-            enter(t, p)
-        enter(t, p)
+    """One worker, held: a checkout waits for it and gets it once it is returned; held again, a checkout
+    waits out `checkout_timeout` (0.3 s) and is refused."""
+    async def enter_async(p: pm.AsyncMonty) -> None:
+        start = time.monotonic()
+        try:
+            async with p.checkout():
+                t.add({'ev': 'checkout'})
+        except Exception:  # noqa: BLE001 - recorded: whether it waited, not the host's error type
+            t.add({'ev': 'checkout_refused', 'waited': time.monotonic() - start >= 0.25})
+
+    async def main() -> None:
+        async with pm.AsyncMonty(max_processes=1, checkout_timeout=0.3) as p:
+            async with p.checkout() as s:
+                t.add({'ev': 'complete', 'value': canon(await s.feed_run('1'))})
+                waiting = asyncio.ensure_future(enter_async(p))
+                await asyncio.sleep(0.1)
+                t.add({'ev': 'release'})
+            await waiting
+            async with p.checkout():
+                await enter_async(p)
+
+    asyncio.run(main())
 
 
 @probe
@@ -312,13 +330,14 @@ def sp_request_timeout(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_print_lines(pool: pm.Monty, t: T) -> None:
-    """With no flush interval each line arrives on its own, in order, on its stream."""
+    """With no flush interval each line arrives on its own, in order, on its stream: two lines on one
+    stream are two deliveries."""
     with pool.checkout(print_flush_interval=0) as s:
         def cb(stream: str, text: str) -> None:
             t.add({'ev': 'print', 'stream': stream, 'text': text})
 
-        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b', file=sys.stderr)\nprint('c', end='')\n5",
-                                  print_callback=cb))
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+                                  "print('d', end='')\n5", print_callback=cb))
 
 
 def _print_failure(t: T, code: str, **kw: Any) -> Any:
