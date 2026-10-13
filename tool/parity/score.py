@@ -331,6 +331,10 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
                 lines.append(f'| {row} | {cid} | {kind} | ' + ' | '.join(cells) + ' |')
     lines.append('')
     rc = 0
+    def ran_every_feed(cid: str, b: str) -> bool:
+        got = load(outcomes / cid / f'worker-{b}.json') or {}
+        return len(got.get('steps') or []) == len(cases[cid].get('feeds') or [cases[cid].get('code')])
+
     def as_recorded(cid: str, b: str) -> bool:
         """A recorded divergence differs in exactly its recorded fields, with the recorded worker value."""
         rec = spec['diverge'][cid]
@@ -348,13 +352,13 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
         cut = [c for c, (_, k) in where.items() if k == 'cutover']
         n = sum(table[c][b][0] == 'MATCH' for c in pre)
         nd = sum(as_recorded(c, b) for c in div)
-        # Shown, not asserted, but they must still run against an oracle.
-        unrun = [c for c in cut if table[c][b][0] in ('NO-OUTCOME', 'NO-ORACLE')]
+        # Shown, not asserted, but they must still run, every feed, against an oracle.
+        unrun = [c for c in cut if table[c][b][0] in ('NO-OUTCOME', 'NO-ORACLE') or not ran_every_feed(c, b)]
         ok = n == len(pre) and nd == len(div) and not unrun
         rc |= not ok
         lines.append(f'{"PASS" if ok else "FAIL"} worker values on {b}: {n}/{len(pre)} pre-cutover cases MATCH, '
                      f'{nd}/{len(div)} recorded divergences as recorded'
-                     + (f'; cutover cases with no outcome or oracle: {", ".join(unrun)}' if unrun else ''))
+                     + (f'; cutover cases that did not run every feed against an oracle: {", ".join(unrun)}' if unrun else ''))
     for cid, (row, kind) in where.items():
         if kind == 'diverge' and all(table[cid][b][0] == 'MATCH' for b in backends):
             rc = 1
