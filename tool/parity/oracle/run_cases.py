@@ -140,7 +140,7 @@ def canon_batch(values: list[Any]) -> list[Any]:
             out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
         elif isinstance(v, (set, frozenset)):
             out['t'] = 'set' if isinstance(v, set) else 'frozenset'
-            out['items'] = sorted((enc(x) for x in v), key=_set_order)
+            out['items'] = _sorted_members([enc(x) for x in v])
         elif isinstance(v, tuple) and hasattr(v, '_fields'):
             out['t'] = 'namedtuple'
             m = type(v).__module__
@@ -165,6 +165,21 @@ def _set_order(e: Any) -> str:
         return x
 
     return json.dumps(strip(e), sort_keys=True)
+
+
+def _sorted_members(items: list[Any]) -> list[Any]:
+    """Set members in a run-independent order.
+
+    Members that differ only in their sandbox ids would keep the set's iteration order, and with it
+    which id is labelled first; such a set fails here rather than regenerating differently. Upstream
+    cannot build one (its class proxies are unhashable).
+    """
+    keyed = sorted(((_set_order(e), e) for e in items), key=lambda p: p[0])
+    for (ka, ea), (kb, eb) in zip(keyed, keyed[1:]):
+        if ka == kb and json.dumps(ea, sort_keys=True) != json.dumps(eb, sort_keys=True):
+            # Not a ValueError: a feed's handler would record that as a host refusal, not a runner error.
+            raise RuntimeError('set members that differ only in sandbox ids have no stable order')
+    return [e for _, e in keyed]
 
 
 def canon_call(args: Any, kwargs: Any) -> tuple[list[Any], dict[str, Any]]:

@@ -130,6 +130,17 @@ class Constructed(unittest.TestCase):
         got['items'][2] = {'t': 'ref', 'id': 9}
         self.assertEqual(wc.compare(outcome(ref), outcome(got)), ['V'])
 
+    def test_a_large_set_matches_in_either_order_in_bounded_memory(self):
+        import tracemalloc  # noqa: PLC0415
+        ints = [{'t': 'int', 'v': str(i)} for i in range(450)]
+        ref = {'t': 'set', 'items': ints}
+        for got in ({'t': 'set', 'items': list(ints)}, {'t': 'set', 'items': list(reversed(ints))}):
+            tracemalloc.start()
+            self.assertEqual(wc.compare(outcome(ref), outcome(got)), [])
+            peak = tracemalloc.get_traced_memory()[1]
+            tracemalloc.stop()
+            self.assertLess(peak, 50 * 2**20)
+
     def test_core_scoring_keeps_ordinary_keys_named_like_id_fields(self):
         import score  # noqa: PLC0415 (local module, same dir)
         call = {'t': 'dict', 'items': [], 'instance_id': 'x'}

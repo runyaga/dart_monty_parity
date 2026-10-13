@@ -178,18 +178,18 @@ def _solve(tasks: list[tuple[str, list, list]], st: State) -> State | None:
                         deferred = (('msgo',) + c[1:], deferred)
                     else:
                         work = (c, work)
-            else:  # 'msgo': set members as a multiset
+            elif item[0] == 'msgo':  # set members as a multiset
                 _, g, xs, ys = item
                 if len(xs) != len(ys):
                     failed = True
                     break
-                if not xs:
-                    continue
-                alts = [(('m', g, xs[0], y, None), (('msgo', g, xs[1:], ys[:j] + ys[j + 1:]), work))
-                        for j, y in enumerate(ys)]
-                for alt in reversed(alts[1:]):
-                    stack.append((st, alt, deferred))
-                work = alts[0]
+                if xs:
+                    work = (('pick', g, xs, ys, 0), work)
+            else:  # 'pick': pair xs[0] with ys[j]; the choice point holds only the next index
+                _, g, xs, ys, j = item
+                if j + 1 < len(ys):
+                    stack.append((st, (('pick', g, xs, ys, j + 1), work), deferred))
+                work = (('m', g, xs[0], ys[j], None), (('msgo', g, xs[1:], ys[:j] + ys[j + 1:]), work))
         if not failed:
             return st
     return None
