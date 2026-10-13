@@ -1,0 +1,69 @@
+{
+ "case": "d09_non_ascii_preview",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": null,
+   "exception": {
+    "type": "TypeError",
+    "message": "can only concatenate str (not \"int\") to str",
+    "traceback": [
+     {
+      "filename": "<python-input-0>",
+      "line": 1,
+      "column": 5,
+      "end_line": 1,
+      "end_column": 22,
+      "function": "<module>",
+      "source_line": "s = 'héllo wörld' + 1"
+     }
+    ]
+   },
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null,
+   "error_class": "MontyRuntimeError",
+   "host_exception_mro": [
+    "TypeError",
+    "Exception",
+    "BaseException",
+    "object"
+   ],
+   "display": {
+    "traceback": "Traceback (most recent call last):\n  File \"<python-input-0>\", line 1, in <module>\n    s = 'héllo wörld' + 1\n        ~~~~~~~~~~~~~~~~~\nTypeError: can only concatenate str (not \"int\") to str",
+    "type-msg": "TypeError: can only concatenate str (not \"int\") to str",
+    "msg": "can only concatenate str (not \"int\") to str",
+    "str": "TypeError: can only concatenate str (not \"int\") to str",
+    "exception": {
+     "type": "TypeError",
+     "args": {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "can only concatenate str (not \"int\") to str"
+       }
+      ]
+     }
+    },
+    "bad_format": {
+     "format": "nope",
+     "type": "ValueError",
+     "message": "Invalid display format: 'nope'. Expected 'traceback', 'type-msg', or 'msg'"
+    }
+   }
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

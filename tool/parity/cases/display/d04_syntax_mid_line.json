@@ -1,0 +1,7 @@
+{
+ "id": "d04_syntax_mid_line",
+ "code": "x = )",
+ "display": true,
+ "exact_strings": true,
+ "note": "a syntax error mid-line: a SyntaxError-style frame without the `, in <name>` part"
+}

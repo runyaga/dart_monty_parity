@@ -1,0 +1,7 @@
+{
+ "id": "d19_recursion_deep",
+ "code": "def f():\n    return f()\n\nf()",
+ "display": true,
+ "exact_strings": true,
+ "note": "a RecursionError at the default depth: 3 frames shown, the rest collapsed into one line"
+}

@@ -1,0 +1,7 @@
+{
+ "id": "d01_nested_calls",
+ "code": "def inner(x):\n    return x / 0\n\ndef middle(x):\n    return inner(x) + 1\n\ndef outer():\n    return middle(7)\n\nouter()",
+ "display": true,
+ "exact_strings": true,
+ "note": "a runtime error through nested calls: one frame per call, carets under each call"
+}

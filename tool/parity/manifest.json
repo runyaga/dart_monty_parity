@@ -1,8 +1,8 @@
 {
  "generator": {
-  "sha256": "32856a4d76e08d2e8bf672611048ee6475f21215e676c3d96974fa9a86c77b38",
+  "sha256": "55b33c6d688b9dc8b56768d4c66b7efcead2b26ccf65817ee1419e05fd8d859f",
   "files": {
-   "tool/parity/oracle/run_cases.py": "e21aecc239df3a46158faa728a8525ef52cbebf8f3fbd07ec71a0c83d53987ad",
+   "tool/parity/oracle/run_cases.py": "7526bc06c77c7afbed3208cb094056efd95c1e83419192432de9832b12413c07",
    "tool/parity/oracle/run_probes.py": "a6738a2f5f5ec947f13f58b8add4f787b7fa66f8c85ddf2eaebfb379d159f712",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -17,6 +17,139 @@
   }
  },
  "cases": {
+  "d01_nested_calls": {
+   "suite": "display",
+   "case": "d64eab1cd64f16de223e284dcd093aa9cddbb6cf82fa0dd9d51400f34040dbc2",
+   "outcomes": {
+    "ref-py": "f9a14568fa432ed7969029ae557ea1950d65d0152bf26cd46a95e9550b4a40e9"
+   }
+  },
+  "d02_syntax_eof_empty_line": {
+   "suite": "display",
+   "case": "8fedad6fcaa528bb48f07cd9d1617c3b4c216022f5f55815f00de35029b55789",
+   "outcomes": {
+    "ref-py": "d6bcdbc5e7bf7b4c034f4a4e1939b16789339208345f34d6828a30defd2280ce"
+   }
+  },
+  "d03_syntax_eof_line_end": {
+   "suite": "display",
+   "case": "b0a5576529577813a190b583aa93c9c928f496242da6ce0e1d17e063aee091bb",
+   "outcomes": {
+    "ref-py": "033df1ac4119589885f5eda267d773067269c8e74d0c45aa254cc944deafa5f4"
+   }
+  },
+  "d04_syntax_mid_line": {
+   "suite": "display",
+   "case": "6dc16c6f7cee746f7fe45ad6e733ebb2b2336615eca1ec15617f23b994314b35",
+   "outcomes": {
+    "ref-py": "4df400012dac485e526ab4644f273ce05bc167726557262a80c3d7ae49ce19f0"
+   }
+  },
+  "d05_raise_hide_caret": {
+   "suite": "display",
+   "case": "30ed7194812fa51430b5ac8e795583b4fd77b12ee17c8b4f23ff0b8b72cb86e9",
+   "outcomes": {
+    "ref-py": "82c9bf559e4e544fb90bfac70ed1e38e95c6cef8dba635a7fe8b290880d65734"
+   }
+  },
+  "d06_multiline_block": {
+   "suite": "display",
+   "case": "d38446de0b6f161d3f7adb9661c70bba717dc310b7e40b4d354d67940fa71201",
+   "outcomes": {
+    "ref-py": "fe8d3ae3644da954b996f99901eec3116855922e8e3a09efb4bf1671be5160ed"
+   }
+  },
+  "d07_multiline_elided": {
+   "suite": "display",
+   "case": "a16b812a42f30e8268d71559d3c8674918f04b755cdf48f2dcb16f863f2f4015",
+   "outcomes": {
+    "ref-py": "ffc79ddfdb6ab7a90e73509a1f69be6e291b51e6dbb35ec42fc035c6d4ee29b1"
+   }
+  },
+  "d08_multiline_trailing_newline": {
+   "suite": "display",
+   "case": "4e92f35137f33d39442ff1c8c9c2ae090a39c9a3a3d02dc956e959f8af709004",
+   "outcomes": {
+    "ref-py": "1351edb69dc98310c9ebb420618a3aef342143abbc66920439252a7a9532fa9f"
+   }
+  },
+  "d09_non_ascii_preview": {
+   "suite": "display",
+   "case": "26c99dc6355547a877be6fdc56af2bba8678a04745a3ac59bc4426561dcd67f7",
+   "outcomes": {
+    "ref-py": "9ba975facfc1b5dc56a54cb1eaf3fb08a2472c08a5ce83c642b4957ca7538a51"
+   }
+  },
+  "d10_non_ascii_preview_cyrillic": {
+   "suite": "display",
+   "case": "9d315fc3c58fefdcd2bb7f8ed751ee1c020655e4560313ac1d28c421a83d3812",
+   "outcomes": {
+    "ref-py": "3a6a9b25a3b3e9c81311882aa2ae18426d27e8f6ac14b35e43151ce7e3058eb1"
+   }
+  },
+  "d11_nbsp_leading_bytes": {
+   "suite": "display",
+   "case": "a6195d0bc8ffce40fe8ec8dfbdd4ebddb6b4db2e756d746efe9340d96b0256e6",
+   "outcomes": {
+    "ref-py": "c664ac33eacafd65696a95af9567ee8e40aaba853f27b11f24edee38e41affc7"
+   }
+  },
+  "d12_ideographic_leading_bytes": {
+   "suite": "display",
+   "case": "fbb8e866a7e6d508aee58a23e8ae872616e54ebbadb31813d7c87314da0513e0",
+   "outcomes": {
+    "ref-py": "561452ea8eb0bb2afc7df79ca55b5119137f259f9a4f0b441fc00437ffd7f020"
+   }
+  },
+  "d13_nbsp_indent_syntax_error": {
+   "suite": "display",
+   "case": "5d8b6d277709daac0cc69e0b5c9482e02b5db5a42f689329e6db1611c0ae6d81",
+   "outcomes": {
+    "ref-py": "1536acd7c1f029c69b892af3d16c2237877a408ff9334a6e28cb69a410c9d1ee"
+   }
+  },
+  "d14_ideographic_indent_syntax_error": {
+   "suite": "display",
+   "case": "3fde4d4c441b3d536012dbff4e291de03c86f01baad69353fb03a5aa1b272345",
+   "outcomes": {
+    "ref-py": "970cd09f21626e0e3fcd3e0ed0ecd6bb556aa559607d3d17c60e140066b8a2c6"
+   }
+  },
+  "d15_no_message": {
+   "suite": "display",
+   "case": "34884f612117069649c5bee243f8471f6e28b036befe550295b100b0c3b544d2",
+   "outcomes": {
+    "ref-py": "09fe78fe662d11d23d79d3fc6c9a4a5dc90dceb6c478a0231084dd97b08e4aef"
+   }
+  },
+  "d16_empty_message": {
+   "suite": "display",
+   "case": "95f3017e1bfea0d6759db469dbe7b006cd6a8f2a3ba45e91619a323f4a7d6ad8",
+   "outcomes": {
+    "ref-py": "6aed5603e6e20b7e9a833812871ff6b84258ab7a9c7c993c9fed77223fe4c8f0"
+   }
+  },
+  "d17_recursion_three_frames": {
+   "suite": "display",
+   "case": "5e5a6d7a109b869ccdf0d9c08f55a73c1764b9692e18c6b7d76f6bdfafd554cb",
+   "outcomes": {
+    "ref-py": "23835e54738250fc547a8d6b4b5bee4320185172e5636bd4031caaf1493891be"
+   }
+  },
+  "d18_recursion_four_frames": {
+   "suite": "display",
+   "case": "bd71fc94765ab53530e693a1abc350615c7359bf208e75472c4f263674164fbf",
+   "outcomes": {
+    "ref-py": "0d71c3d64f8d624e93744e9cd6ffb74691338985ecf4c751d8941209a6511129"
+   }
+  },
+  "d19_recursion_deep": {
+   "suite": "display",
+   "case": "2b2213223ead7abbe4155ebe888512c74d2068d40607f3de6645572a7978d7a6",
+   "outcomes": {
+    "ref-py": "e99b9b0fd59bddaf12dce19d964e58cf9bc5efab927c3c3a047f270bd852a133"
+   }
+  },
   "s01_int_bigint_input": {
    "suite": "e0",
    "case": "f5658807388d6b7e59145ed7570fd4103dacaf86791316b2c083d2ace684ec21",

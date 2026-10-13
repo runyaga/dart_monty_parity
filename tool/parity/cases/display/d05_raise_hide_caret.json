@@ -1,0 +1,7 @@
+{
+ "id": "d05_raise_hide_caret",
+ "code": "def f():\n    raise ValueError('boom')\n\nf()",
+ "display": true,
+ "exact_strings": true,
+ "note": "a raise statement: its frame has no caret line, the caller frame has one"
+}

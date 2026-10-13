@@ -1,0 +1,7 @@
+{
+ "id": "d03_syntax_eof_line_end",
+ "code": "x = (1, 2",
+ "display": true,
+ "exact_strings": true,
+ "note": "a syntax error at the end of a line with no newline: a zero-length range past the last character, one ~"
+}

@@ -66,3 +66,7 @@ jobs:
         run: >-
           /tmp/oracle/bin/python -I tool/parity/oracle/check_expected.py
           --rust tool/parity/oracle/rust/target/release/parity-rust-oracle
+      - name: Display renderings recorded, and a wrong one fails the regeneration
+        run: >-
+          /tmp/oracle/bin/python -I tool/parity/oracle/test_display.py
+          --rust tool/parity/oracle/rust/target/release/parity-rust-oracle

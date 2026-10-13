@@ -1,0 +1,7 @@
+{
+ "id": "d11_nbsp_leading_bytes",
+ "code": "s = '''abc\n\u00a0\u00a0''' ; y = 1 / 0",
+ "display": true,
+ "exact_strings": true,
+ "note": "an error on a line starting with two U+00A0: the stripped indent is counted in bytes (4), so the carets sit 2 left of the span"
+}

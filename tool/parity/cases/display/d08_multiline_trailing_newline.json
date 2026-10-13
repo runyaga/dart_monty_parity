@@ -1,0 +1,7 @@
+{
+ "id": "d08_multiline_trailing_newline",
+ "code": "if True:\n",
+ "display": true,
+ "exact_strings": true,
+ "note": "a syntax error whose span ends on the next line: the preview block ends with a newline that adds no line"
+}

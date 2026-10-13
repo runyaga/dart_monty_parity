@@ -1,0 +1,7 @@
+{
+ "id": "d10_non_ascii_preview_cyrillic",
+ "code": "s = '\u043a\u043b\u044e\u0447'; x = 1 + '\u00e9'",
+ "display": true,
+ "exact_strings": true,
+ "note": "a preview line with two-byte characters before the span and inside it: the caret offset counts characters, not bytes"
+}

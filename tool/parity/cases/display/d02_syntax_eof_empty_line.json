@@ -1,0 +1,7 @@
+{
+ "id": "d02_syntax_eof_empty_line",
+ "code": "x = (1, 2\n",
+ "display": true,
+ "exact_strings": true,
+ "note": "a syntax error at end of input: the frame points at the empty last line, one ~ for a zero-length range, no `, in` part"
+}

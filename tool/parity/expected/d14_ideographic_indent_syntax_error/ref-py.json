@@ -1,0 +1,69 @@
+{
+ "case": "d14_ideographic_indent_syntax_error",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": null,
+   "exception": {
+    "type": "SyntaxError",
+    "message": "Got unexpected token 　",
+    "traceback": [
+     {
+      "filename": "<python-input-0>",
+      "line": 2,
+      "column": 1,
+      "end_line": 2,
+      "end_column": 2,
+      "function": null,
+      "source_line": "　　1 / 0]"
+     }
+    ]
+   },
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null,
+   "error_class": "MontySyntaxError",
+   "host_exception_mro": [
+    "SyntaxError",
+    "Exception",
+    "BaseException",
+    "object"
+   ],
+   "display": {
+    "traceback": "Traceback (most recent call last):\n  File \"<python-input-0>\", line 2\n    1 / 0]\n    ~\nSyntaxError: Got unexpected token 　",
+    "type-msg": "SyntaxError: Got unexpected token 　",
+    "msg": "Got unexpected token 　",
+    "str": "Got unexpected token 　",
+    "exception": {
+     "type": "SyntaxError",
+     "args": {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "Got unexpected token 　"
+       }
+      ]
+     }
+    },
+    "bad_format": {
+     "format": "nope",
+     "type": "ValueError",
+     "message": "Invalid display format: 'nope'. Expected 'traceback', 'type-msg', or 'msg'"
+    }
+   }
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}
