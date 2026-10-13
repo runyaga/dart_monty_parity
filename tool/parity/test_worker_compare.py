@@ -163,6 +163,16 @@ class Constructed(unittest.TestCase):
             self.assertEqual(score.classify_worker('c', 'vm', Path(d) / 'out', Path(d) / 'exp'),
                              ('NO-ORACLE', ['strings_rewritten']))
 
+    def test_nested_sets_ordered_differently_by_each_side_match(self):
+        # The oracle orders frozenset members by their text with bits, the runner by display text.
+        lo = {'t': 'float', 'v': '-1.5', 'bits': 'bff8000000000000'}
+        hi = {'t': 'float', 'v': '2.5', 'bits': '4004000000000000'}
+        ref = {'t': 'set', 'items': [{'t': 'frozenset', 'items': [hi, lo]}]}
+        got = {'t': 'set', 'items': [{'t': 'frozenset', 'items': [lo, hi]}]}
+        self.assertEqual(wc.compare(outcome(ref), outcome(got)), [])
+        got['items'][0]['items'][0] = dict(lo, bits='bff8000000000001')
+        self.assertEqual(wc.compare(outcome(ref), outcome(got)), ['V'])
+
     def test_uuid_text_in_a_string_is_compared(self):
         s = '12345678-1234-4234-8234-123456789abc'
         ref = outcome({'t': 'str', 'v': s})

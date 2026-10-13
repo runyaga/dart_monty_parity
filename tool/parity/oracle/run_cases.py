@@ -99,7 +99,63 @@ def canon_batch(values: list[Any]) -> list[Any]:
 
     for v in values:
         count(v, set())
+
+    # Numbering, before encoding: reference ids in document order, each set's members after
+    # everything outside sets, in their label-free order. So an id never depends on a set's
+    # iteration order, and a member shared outside its set takes its number from there.
+    standalone: dict[int, str] = {}
+
+    def key_of(x: Any) -> str:
+        if id(x) not in standalone:
+            standalone[id(x)] = _label_free(canon_batch([x])[0])
+        return standalone[id(x)]
+
     ids: dict[int, int] = {}
+    seen: set[int] = set()
+    sets: collections.deque[Any] = collections.deque()
+
+    def number(v: Any) -> None:
+        if not shareable(v) or id(v) in seen:
+            return
+        seen.add(id(v))
+        if counts.get(id(v), 0) > 1:
+            ids[id(v)] = len(ids) + 1
+        if isinstance(v, (set, frozenset)):
+            sets.append(v)
+            return
+        for x in _children(v):
+            number(x)
+
+    for v in values:
+        number(v)
+    while sets:
+        members = sorted(sets.popleft(), key=key_of)
+        for k in range(len(members)):
+            before = len(ids)
+            number(members[k])
+            tied = (k > 0 and key_of(members[k - 1]) == key_of(members[k])) or (
+                k + 1 < len(members) and key_of(members[k + 1]) == key_of(members[k]))
+            if tied and len(ids) != before:
+                # Not a ValueError: a feed's handler would record that as a host refusal.
+                raise RuntimeError('set members that tie in label-free form would be numbered in '
+                                   'iteration order: no stable encoding')
+
+    def signature(x: Any) -> str:
+        """A set member's order key once numbered: shared objects by their number."""
+        def rend(y: Any) -> Any:
+            if shareable(y) and id(y) in ids:
+                return f'#{ids[id(y)]}'
+            if isinstance(y, (set, frozenset)):
+                return sorted(json.dumps(rend(z)) for z in y)
+            if isinstance(y, dict):
+                return [[rend(k), rend(z)] for k, z in y.items()]
+            if shareable(y):
+                return [type(y).__name__, *(rend(z) for z in _children(y))]
+            return canon_batch([y])[0]
+
+        return json.dumps(rend(x), sort_keys=True)
+
+    emitted: set[int] = set()
 
     def enc(v: Any) -> Any:
         if id(v) in HOST_LABELS:
@@ -127,11 +183,11 @@ def canon_batch(values: list[Any]) -> list[Any]:
             x = canon_extra(v, enc)
             return x if x is not None else {'t': 'other', 'kind': type(v).__name__, 'repr': repr(v)}
         i = id(v)
-        if i in ids:
+        if i in emitted:
             return {'t': 'ref', 'id': ids[i]}
+        emitted.add(i)
         out: dict[str, Any] = {}
-        if counts.get(i, 0) > 1:
-            ids[i] = len(ids) + 1
+        if i in ids:
             out['id'] = ids[i]
         if _proxy(v):
             out.update(canon_extra(v, enc))
@@ -140,16 +196,9 @@ def canon_batch(values: list[Any]) -> list[Any]:
             out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
         elif isinstance(v, (set, frozenset)):
             out['t'] = 'set' if isinstance(v, set) else 'frozenset'
-            # Members are encoded (and so numbered) in an order that does not depend on the set's
-            # iteration order: by their label-free form. Members that tie there but encode
-            # differently (distinct objects that each carry a reference id) have no stable
-            # numbering, so the oracle refuses them rather than regenerate differently.
-            members = sorted(v, key=lambda x: _label_free(canon_batch([x])[0]))
-            out['items'] = [enc(x) for x in members]
-            for m1, m2, e1, e2 in zip(members, members[1:], out['items'], out['items'][1:]):
-                if _label_free(e1) == _label_free(e2) and json.dumps(e1) != json.dumps(e2):
-                    # Not a ValueError: a feed's handler would record that as a host refusal.
-                    raise RuntimeError('set members that differ only in their labels have no stable order')
+            # Encoded in label-free order, ties broken by the numbers already fixed; members that
+            # still tie are interchangeable, so either order writes the same text.
+            out['items'] = [enc(x) for x in sorted(v, key=lambda x: (key_of(x), signature(x)))]
         elif isinstance(v, tuple) and hasattr(v, '_fields'):
             out['t'] = 'namedtuple'
             m = type(v).__module__

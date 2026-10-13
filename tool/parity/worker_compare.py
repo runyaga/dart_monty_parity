@@ -146,7 +146,10 @@ def _plain(x: Any) -> str | None:
                 raise LookupError
             if y.get('t') == 'float':
                 return {'t': 'float', 'bits': y.get('bits')}
-            return {k: strip(z) for k, z in y.items() if not k.startswith('_')}
+            d = {k: strip(z) for k, z in y.items() if not k.startswith('_')}
+            if d.get('t') in ('set', 'frozenset'):  # each side orders members its own way
+                d['items'] = sorted(d['items'], key=lambda z: json.dumps(z, sort_keys=True))
+            return d
         if isinstance(y, list):
             return [strip(z) for z in y]
         return y
