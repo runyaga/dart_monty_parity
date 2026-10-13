@@ -41,6 +41,15 @@ class SetEncoding(unittest.TestCase):
             with self.subTest(graph=name):
                 self.assertEqual(len(self.encodings(build)), 1)
 
+    def test_nested_sets_encode_in_bounded_time(self):
+        import time  # noqa: PLC0415
+        x: object = 0
+        for _ in range(40):
+            x = frozenset([x])
+        t = time.monotonic()
+        run_cases.canon(x)
+        self.assertLess(time.monotonic() - t, 2.0)
+
     def test_refused_when_ties_would_be_numbered_in_iteration_order(self):
         graphs = {
             'tied members numbered only inside sets': lambda: (lambda a, b, x: [{a, b}, {a}, {b, x}])(

@@ -69,7 +69,7 @@ def canon(value: Any) -> Any:
     return canon_batch([value])[0]
 
 
-def canon_batch(values: list[Any]) -> list[Any]:
+def canon_batch(values: list[Any], _keys: dict[int, str] | None = None) -> list[Any]:
     """Python values -> canonical JSON forms, with one identity memo over the whole batch.
 
     A container, named tuple or class proxy reached more than once anywhere in
@@ -103,11 +103,13 @@ def canon_batch(values: list[Any]) -> list[Any]:
     # Numbering, before encoding: reference ids in document order, each set's members after
     # everything outside sets, in their label-free order. So an id never depends on a set's
     # iteration order, and a member shared outside its set takes its number from there.
-    standalone: dict[int, str] = {}
+    # A member's label-free form depends on the member alone, so one cache serves the nested calls
+    # too; without it, each level of nested sets would encode everything below it again.
+    standalone: dict[int, str] = {} if _keys is None else _keys
 
     def key_of(x: Any) -> str:
         if id(x) not in standalone:
-            standalone[id(x)] = _label_free(canon_batch([x])[0])
+            standalone[id(x)] = _label_free(canon_batch([x], standalone)[0])
         return standalone[id(x)]
 
     ids: dict[int, int] = {}
@@ -158,7 +160,8 @@ def canon_batch(values: list[Any]) -> list[Any]:
             if shareable(y) and id(y) in ids:
                 return f'#{ids[id(y)]}'
             if isinstance(y, (set, frozenset)):
-                return sorted(json.dumps(rend(z)) for z in y)
+                # Structures, not JSON strings: a string re-escaped at every level grows exponentially.
+                return sorted((rend(z) for z in y), key=lambda q: json.dumps(q, sort_keys=True))
             if isinstance(y, dict):
                 return [[rend(k), rend(z)] for k, z in y.items()]
             if shareable(y):
