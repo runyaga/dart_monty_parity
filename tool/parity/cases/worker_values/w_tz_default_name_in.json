@@ -1,0 +1,44 @@
+{
+ "id": "w_tz_default_name_in",
+ "code": "(repr(a), repr(b), repr(c), repr(d), repr(e), repr(f), a, b, c, d, e, f)",
+ "inputs": {
+  "a": {
+   "t": "timezone",
+   "offset": 3600,
+   "name": null
+  },
+  "b": {
+   "t": "timezone",
+   "offset": 3600,
+   "name": "UTC+01:00"
+  },
+  "c": {
+   "t": "time",
+   "v": "01:00:00.000000",
+   "offset": 3600,
+   "tzname": null,
+   "fold": 0
+  },
+  "d": {
+   "t": "time",
+   "v": "01:00:00.000000",
+   "offset": 3600,
+   "tzname": "UTC+01:00",
+   "fold": 0
+  },
+  "e": {
+   "t": "datetime",
+   "v": "2020-01-02T03:00:00.000000",
+   "offset": 3600,
+   "tzname": null
+  },
+  "f": {
+   "t": "datetime",
+   "v": "2020-01-02T03:00:00.000000",
+   "offset": 3600,
+   "tzname": "UTC+01:00"
+  }
+ },
+ "note": "time_duration_zone_values: unnamed zones against explicit default names, as feed inputs",
+ "exact_strings": true
+}

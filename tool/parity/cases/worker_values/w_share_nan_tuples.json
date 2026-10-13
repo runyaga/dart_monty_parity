@@ -1,0 +1,6 @@
+{
+ "id": "w_share_nan_tuples",
+ "code": "a = (float('nan'),)\nb = (float('nan'),)\n[{a, b}, a, b]",
+ "note": "boundary_value_graph: tuples of distinct NaNs: upstream keeps one member of the set and shares it with the first tuple outside; the two-member tie (C2a's positive and negative controls) cannot be built in the sandbox and is covered by test_worker_compare.py",
+ "exact_strings": true
+}

@@ -1,0 +1,16 @@
+{
+ "id": "w_refuse_time_range",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "time",
+   "v": "24:00:00.000000",
+   "offset": null,
+   "tzname": null,
+   "fold": 0
+  }
+ },
+ "note": "time_duration_zone_values: an hour out of range is refused on the host; nothing runs",
+ "exact_strings": true
+}

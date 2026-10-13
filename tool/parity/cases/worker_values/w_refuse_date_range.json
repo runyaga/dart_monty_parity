@@ -1,0 +1,13 @@
+{
+ "id": "w_refuse_date_range",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "date",
+   "v": "2021-02-29"
+  }
+ },
+ "note": "time_duration_zone_values: a day out of range is refused on the host; nothing runs",
+ "exact_strings": true
+}

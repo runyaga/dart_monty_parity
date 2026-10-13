@@ -1,0 +1,35 @@
+{
+ "id": "w_batch_inputs",
+ "code": "(a is b, c[0] is a, c[1] is a, a)",
+ "inputs": {
+  "a": {
+   "t": "list",
+   "id": 1,
+   "items": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ]
+  },
+  "b": {
+   "t": "ref",
+   "id": 1
+  },
+  "c": {
+   "t": "tuple",
+   "items": [
+    {
+     "t": "ref",
+     "id": 1
+    },
+    {
+     "t": "ref",
+     "id": 1
+    }
+   ]
+  }
+ },
+ "note": "shared_value_batches: one list across three feed inputs is one object",
+ "exact_strings": true
+}

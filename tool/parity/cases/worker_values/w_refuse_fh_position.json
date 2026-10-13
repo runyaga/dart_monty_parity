@@ -1,0 +1,15 @@
+{
+ "id": "w_refuse_fh_position",
+ "code": "x",
+ "local_refusal": true,
+ "inputs": {
+  "x": {
+   "t": "filehandle",
+   "path": "/d/a.txt",
+   "mode": "r",
+   "position": "-1"
+  }
+ },
+ "note": "file_handle_value_conversion: a negative position is refused on the host",
+ "exact_strings": true
+}

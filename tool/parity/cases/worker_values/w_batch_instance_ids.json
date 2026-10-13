@@ -1,0 +1,16 @@
+{
+ "id": "w_batch_instance_ids",
+ "feeds": [
+  "from dataclasses import dataclass\n@dataclass\nclass P:\n    x: object\norig = [P(1), P(2)]\norig",
+  "x = echo()\n(x[0] is orig[0], x[1] is orig[1], type(x[0]) is type(x[1]), x)"
+ ],
+ "externals": {
+  "echo": [
+   {
+    "echo": 0
+   }
+  ]
+ },
+ "note": "shared_value_batches: two instances of one class sent back are the same objects, of one class",
+ "exact_strings": true
+}

@@ -1,0 +1,6 @@
+{
+ "id": "w_classtype_out",
+ "code": "from dataclasses import dataclass\n@dataclass\nclass P:\n    x: object\nP",
+ "note": "lossy_output_placeholders: a sandbox class reached as a value arrives as its repr text (upstream 1.1.0 emits a repr node, not a class type node)",
+ "exact_strings": true
+}

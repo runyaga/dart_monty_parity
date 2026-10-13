@@ -1,0 +1,15 @@
+{
+ "id": "w_batch_call_args",
+ "code": "x = [1]\nf(x, (x,), k=x)\n",
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "note": "shared_value_batches: one list across a call's arguments and keyword arguments",
+ "exact_strings": true
+}

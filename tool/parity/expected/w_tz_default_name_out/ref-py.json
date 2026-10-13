@@ -1,0 +1,75 @@
+{
+ "case": "w_tz_default_name_out",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "timezone",
+      "offset": 3600,
+      "name": null
+     },
+     {
+      "t": "timezone",
+      "offset": 3600,
+      "name": "UTC+01:00"
+     },
+     {
+      "t": "timezone",
+      "offset": 0,
+      "name": null
+     },
+     {
+      "t": "timezone",
+      "offset": 0,
+      "name": "UTC"
+     },
+     {
+      "t": "time",
+      "v": "01:00:00.000000",
+      "offset": 3600,
+      "tzname": null,
+      "fold": 0
+     },
+     {
+      "t": "time",
+      "v": "01:00:00.000000",
+      "offset": 3600,
+      "tzname": "UTC+01:00",
+      "fold": 0
+     },
+     {
+      "t": "datetime",
+      "v": "2020-01-02T03:00:00.000000",
+      "offset": 3600,
+      "tzname": null
+     },
+     {
+      "t": "datetime",
+      "v": "2020-01-02T03:00:00.000000",
+      "offset": 3600,
+      "tzname": "UTC+01:00"
+     }
+    ]
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_payloadless_out",
+ "code": "import json\nout = []\ntry:\n    b'\\xff'.decode()\nexcept UnicodeDecodeError as e:\n    out.append(e)\ntry:\n    json.loads('{')\nexcept json.JSONDecodeError as e:\n    out.append(e)\n(out, type(out[0]).__name__, type(out[1]).__name__)",
+ "note": "exception_value_conversion: a UnicodeDecodeError or JSONDecodeError value arrives without its payload and becomes ValueError, with its message",
+ "exact_strings": true
+}

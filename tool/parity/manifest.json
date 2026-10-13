@@ -4023,6 +4023,251 @@
    "outcomes": {
     "ref-py": "bb84e281e560dbfe1dc2c0b1bd328ede7f157876541d503323186cb93e8003f8"
    }
+  },
+  "w_batch_call_args": {
+   "suite": "worker_values",
+   "case": "75277eeef5ca1ee9d596e11875b318d55d7a7f3ca882a38eab317e52cd2da3bf",
+   "outcomes": {
+    "ref-py": "d1bb96912cc43e7b3bf67ff91743e33014689c4040f51c368c94f647bcd6ab09"
+   }
+  },
+  "w_batch_inputs": {
+   "suite": "worker_values",
+   "case": "94cddcc8bad140fbb4cdb246f47f2b896b0337d6fe9f34d497f8280d832e7fca",
+   "outcomes": {
+    "ref-py": "9cb22e2423d60cb709df908e31626274e4b403f49db5c60be81a1466e9385e06"
+   }
+  },
+  "w_batch_instance_ids": {
+   "suite": "worker_values",
+   "case": "146af3709f222a4757bf285c01c294b6053e2dcc067a2e5ae55410addb979cba",
+   "outcomes": {
+    "ref-py": "5a4e969498d1deb24882fee64f0e912c6d801c3bd381b0befbbb01b384a0e9b7"
+   }
+  },
+  "w_batch_proxy_args": {
+   "suite": "worker_values",
+   "case": "0e5dbf5f5bfa4370698ec74c20a74ae67e5daeb24e7ac2ab294190d421fb503f",
+   "outcomes": {
+    "ref-py": "ec4a62dbb51b126533a296158c18071cdf35f809a6590718852e8cebc2dcfd8a"
+   }
+  },
+  "w_bigint_inputs": {
+   "suite": "worker_values",
+   "case": "a3aaf122b657dfe7787f566ea7d5b284eebf45ac735c894cf10eaff4132442ff",
+   "outcomes": {
+    "ref-py": "95a00e5aac4e654c640e6443e4b0f9bb5b363ff7b28ba2e347d87332ec8e8c1c"
+   }
+  },
+  "w_builtin_type_echo": {
+   "suite": "worker_values",
+   "case": "685701d1e83a1244945b3a2117c0b787765e135b593e322da3d41a2a80980ac4",
+   "outcomes": {
+    "ref-py": "e89d898ae552fd998e436b23d25ba0bf8edf1cc8797cb2ff6941a65626999de5"
+   }
+  },
+  "w_classtype_out": {
+   "suite": "worker_values",
+   "case": "f9fe5d42a81bceea6af2ee7ddcc202279e212b2bd5b2fa063ff196b97344f4e2",
+   "outcomes": {
+    "ref-py": "1fb80f72ae38e0c8116aad20d1832ae26dfa708d7440cd9424561ad3a9603652"
+   }
+  },
+  "w_exc_lossy_in": {
+   "suite": "worker_values",
+   "case": "9d899da09e56a7c49da06ae8a228408d20a50f8b60d617925d6f11ac03e9f9c7",
+   "outcomes": {
+    "ref-py": "611e04edb85e268af23e2d116452e7e55190bd84e16dafd1b16c92878b0278b9"
+   }
+  },
+  "w_exc_lossy_ret": {
+   "suite": "worker_values",
+   "case": "125ddcc2135f964211a09de13969fbd8aa0b15d69ab28ecccd68ebcfa12a445d",
+   "outcomes": {
+    "ref-py": "1c04a1feb1916d761afe7bbf1e3faa7b74daeb55e83f19ea6801523eec6a8929"
+   }
+  },
+  "w_exc_noarg_out": {
+   "suite": "worker_values",
+   "case": "6378b0f91ca29a0775d54056765c05f57ccc751a5f8f5709541d8b1462ee4ee0",
+   "outcomes": {
+    "ref-py": "66ac6847a7cabc2ba1a116ceef011323ff629f31980f058d1c96c0cc4a622e5d"
+   }
+  },
+  "w_exc_payloadless_out": {
+   "suite": "worker_values",
+   "case": "d031978fb193b1ed607d3569733ab519d8540f4d9ff0e8c38b93c0497047030e",
+   "outcomes": {
+    "ref-py": "0f13edb6339c77140bc3b900a4879918da5f45a185ffcd8494ad47a8ea8e970b"
+   }
+  },
+  "w_exc_unicode_version_in": {
+   "suite": "worker_values",
+   "case": "85ef226948b2b9d62ec232e71536d6f4ef6f56a5c02e7b270e8be7bdb7c164cd",
+   "outcomes": {
+    "ref-py": "52c1c7076399abb2b65e6720ceef2a6b299ffb9741cb6c2b20bd77f27b76e596"
+   }
+  },
+  "w_fh_in": {
+   "suite": "worker_values",
+   "case": "492a0645491dd5b709b4d3c00e4dd2e8cd8205b5261d25bfc35b633b06ef584e",
+   "outcomes": {
+    "ref-py": "7c6617784663847a485d0afd4a0a9fd9461be63b2f93f3228c98af6429cce3e0"
+   }
+  },
+  "w_fh_large_in": {
+   "suite": "worker_values",
+   "case": "51fc1aa12e7f923499e595c83ea10b1051c6dbb7232e9ae3aa38b406e8018075",
+   "outcomes": {
+    "ref-py": "6d86dbee53fc66a4c847667486be3b22b7c4caf3317b41d74161979bc68c3bfb"
+   }
+  },
+  "w_fh_ret": {
+   "suite": "worker_values",
+   "case": "299e8541ca967d27f31e253e7674756b87f7f9fbfcb1cbfa4c73ccd4cc924b69",
+   "outcomes": {
+    "ref-py": "d949c771c96ad09bbf940dfa5e910ce3302bbaa46c1cf54cf4712a29d511cd36"
+   }
+  },
+  "w_float_nan_neg": {
+   "suite": "worker_values",
+   "case": "1bd79e39c8564a243217f2a0de824c5375ba790d4615cd4b79a0e24383477472",
+   "outcomes": {
+    "ref-py": "ed5484f183d6c2cc9a7f8473811b4e30844a3e127388ef1730f1b4bcd7990eeb"
+   }
+  },
+  "w_lossy_key_collision": {
+   "suite": "worker_values",
+   "case": "b3a83cfec223b0d68557a49256b0f9fdd9826bc13107f346e2ceca98cd235ed6",
+   "outcomes": {
+    "ref-py": "7e57218b0735cd097fda2ac52da8b58d66d2107b1cdb35e88e89545c9ec2df76"
+   }
+  },
+  "w_refuse_date_range": {
+   "suite": "worker_values",
+   "case": "cd39d7df0a8c5fa784e3f0b3fc3e0e7044ce50f58fc7e5586ba3882e979487b0",
+   "outcomes": {
+    "ref-py": "4f69d817cbd0822680144eaa5757dbc550d960c4d6835d3a288a572d1ea1d891"
+   }
+  },
+  "w_refuse_exc_name": {
+   "suite": "worker_values",
+   "case": "004236156f9cc2b68a45510ed55accf7c2e3a73654c6d993fe5c6ada75f9af23",
+   "outcomes": {
+    "ref-py": "834fdf64f9cd56964f93f5d8002946bb3c290d5f7c2db2a8e5076e4f25bf166c"
+   }
+  },
+  "w_refuse_fh_position": {
+   "suite": "worker_values",
+   "case": "6b4033635542c1a66572e06146764c53a16f199f0f4e6f5498c77f0ba1d16c92",
+   "outcomes": {
+    "ref-py": "9844c715812f0eb33f1df999adf5200415c3424f6eed0b945f586b3499d216b4"
+   }
+  },
+  "w_refuse_time_range": {
+   "suite": "worker_values",
+   "case": "0a5f071c336de71fb1a5c1368926d075fca1c1ae2e949c7b4acba1ef560611c8",
+   "outcomes": {
+    "ref-py": "8aefcc9247bf84441d1bdcbcc5ad9f5de01778f5b457b6112b326006a0dee1fc"
+   }
+  },
+  "w_refuse_type_name": {
+   "suite": "worker_values",
+   "case": "68782d02c6589ea0f7f1eb57f7f6e3bf1eafe0ac79fe1fe5b6cebb4c5b44aaf6",
+   "outcomes": {
+    "ref-py": "84b17196eca3b90d9bbb689265e2a43f0d260f93a9668635f48064698bcbcda3"
+   }
+  },
+  "w_refuse_unhashable_key": {
+   "suite": "worker_values",
+   "case": "d56b16347aaeb0360748809ad35019834857e0f8bb7e86643e33e7ae39c673ca",
+   "outcomes": {
+    "ref-py": "0092a43aa0a323d03ef64bf14f2a1163a2c169b9a94a6eb5b519abe5dd08ca89"
+   }
+  },
+  "w_refuse_uuid": {
+   "suite": "worker_values",
+   "case": "83b3dcde2b6417e4b1359fe9242cc52019eead5103dbf68d840fd8343b5bd125",
+   "outcomes": {
+    "ref-py": "b274fbe1d3a80b9f28bf16f74608937305682b86942dedca99ad38f12975d580"
+   }
+  },
+  "w_share_namedtuple": {
+   "suite": "worker_values",
+   "case": "fe174e84efe3fa4fa94f52a947c9e72a31ce958f5bff6a0c14d49a53b8fa80d9",
+   "outcomes": {
+    "ref-py": "d25f858b35c537b13b61504294f49d78cbcd12c93fc4e5fcd0b6c6226c348716"
+   }
+  },
+  "w_share_nan_tuples": {
+   "suite": "worker_values",
+   "case": "49b545c103e14052ea087604f98cb7318e19b928d67f39c4b233bfe00658d997",
+   "outcomes": {
+    "ref-py": "32b067686871ba3d2c5e82bcc478f25be243fe854234fc5bd4ca808ff6c6a439"
+   }
+  },
+  "w_share_proxy": {
+   "suite": "worker_values",
+   "case": "11ba6673ddcc8a2573410b7ead5eaa5a7d56fe870c438f1c613f2a7caf12796d",
+   "outcomes": {
+    "ref-py": "9058a6f3129f2c107ab442355ee723fb16c4571422dfb140af8fbeb108748d46"
+   }
+  },
+  "w_share_set_order": {
+   "suite": "worker_values",
+   "case": "5dd9f1cc9700a7340739e8acd15eec7eeaca23124c11aad6324f9f52c79836f5",
+   "outcomes": {
+    "ref-py": "3c350179a7e059f97f757797ace520bab6b12247f7de95dc0588784f39cd7967"
+   }
+  },
+  "w_str_exact": {
+   "suite": "worker_values",
+   "case": "6212ef5a69d3bc76f6e4d8af49940e4e9d9a942c44248f72efc6e4123c81e5bb",
+   "outcomes": {
+    "ref-py": "3809db768328a6285455d1739128dfbebb10247d7ee62f30a07cb609dd9de0a4"
+   }
+  },
+  "w_time_fold_in": {
+   "suite": "worker_values",
+   "case": "641c85d9124a7b83f6aee333ccc990bbdcb334233c052227870a87e2470a8105",
+   "outcomes": {
+    "ref-py": "f33e63fa48c31813a6d63f6583a631f0d9759b009b39577494056e147485b10e"
+   }
+  },
+  "w_tz_default_name_in": {
+   "suite": "worker_values",
+   "case": "b1fa3678e205e2dcdc5641afce3893c0cbe00932605efa4c810720617f4fefb3",
+   "outcomes": {
+    "ref-py": "13ec35a2b51c7a7156b4c0a10c1d7abb085efcaae9e61d359bdba7732a8fa87c"
+   }
+  },
+  "w_tz_default_name_out": {
+   "suite": "worker_values",
+   "case": "33f89a2248e92f6dad0dc6d41c68b80c6f23b7308e271cde0abc1fd1cfc53c41",
+   "outcomes": {
+    "ref-py": "7c58af5ce0f8dc4628e10a3aaf4b0bbcbee50d4ade39bc3f970d7f5fce31a924"
+   }
+  },
+  "w_tz_empty_name_in": {
+   "suite": "worker_values",
+   "case": "19a477b1e8dba61e4aea0b40253ba33764a41f72fc5074115ad6e526137414be",
+   "outcomes": {
+    "ref-py": "986ae723d54c571fd63dbf9593d086dde60bb0499efdc02471e9df784592f831"
+   }
+  },
+  "w_tz_empty_name_ret": {
+   "suite": "worker_values",
+   "case": "304773d06a97c403cdcd77ef4fcf06328553dfd5757d674770713873149b8018",
+   "outcomes": {
+    "ref-py": "3df0de11184177c4f2e951aaf8b700b9e705cf77169ed3f833b66a99dd779b24"
+   }
+  },
+  "w_tz_unencodable_name_in": {
+   "suite": "worker_values",
+   "case": "20a005a2ff63b19a83712552dd08999920fa0939878c09931b70b492be758b72",
+   "outcomes": {
+    "ref-py": "388b3a068d5ee8fcd76f29fcad63282fb2b7cf37d75d46ed06bfa517b6aaf625"
+   }
   }
  },
  "probes": {

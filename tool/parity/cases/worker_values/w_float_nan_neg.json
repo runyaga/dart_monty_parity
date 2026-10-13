@@ -1,0 +1,6 @@
+{
+ "id": "w_float_nan_neg",
+ "code": "-float('nan')",
+ "note": "float_values: a negated NaN keeps its sign bit (fff8000000000000) through the value arena",
+ "exact_strings": true
+}

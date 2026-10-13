@@ -1,0 +1,26 @@
+{
+ "id": "w_fh_in",
+ "code": "(repr(a), a, b, c)",
+ "inputs": {
+  "a": {
+   "t": "filehandle",
+   "path": "/d/a.txt",
+   "mode": "rt",
+   "position": "0"
+  },
+  "b": {
+   "t": "filehandle",
+   "path": "/d/b.bin",
+   "mode": "rb",
+   "position": "5"
+  },
+  "c": {
+   "t": "filehandle",
+   "path": "/d/c.txt",
+   "mode": "w",
+   "position": "2147483648"
+  }
+ },
+ "note": "file_handle_value_conversion: file handles as feed inputs, mode canonicalised",
+ "exact_strings": true
+}

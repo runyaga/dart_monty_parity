@@ -1,0 +1,13 @@
+{
+ "id": "w_exc_unicode_version_in",
+ "code": "(repr(a), str(a), a)",
+ "inputs": {
+  "a": {
+   "t": "exception",
+   "type": "KeyError",
+   "arg": "\ud83e\udee9\ud800"
+  }
+ },
+ "note": "exception_value_conversion: a KeyError argument with an unpaired surrogate is sent as its repr, and repr escapes a character by the Unicode tables in use: U+1FAE9 is unassigned in CPython 3.12's Unicode 15.0",
+ "exact_strings": true
+}

@@ -1,0 +1,20 @@
+{
+ "id": "w_tz_unencodable_name_in",
+ "code": "(repr(a), repr(b), a, b)",
+ "inputs": {
+  "a": {
+   "t": "timezone",
+   "offset": 3600,
+   "name": "a\ud800"
+  },
+  "b": {
+   "t": "time",
+   "v": "01:00:00.000000",
+   "offset": -7200,
+   "tzname": "\udfff",
+   "fold": 0
+  }
+ },
+ "note": "time_duration_zone_values: a zone name with no UTF-8 form is dropped and its offset kept",
+ "exact_strings": true
+}

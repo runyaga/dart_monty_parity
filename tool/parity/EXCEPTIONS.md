@@ -62,7 +62,7 @@ bits.
 
 ## Worker engine: comparison rules
 
-The worker engine (`run.py --engine worker`; `score.py --assert-e0`) is compared by
+The worker engine (`run.py --engine worker`; `score.py --assert-e0`, `--assert-worker`) is compared by
 `tool/parity/worker_compare.py`, not by the core engine's `norm`, and tolerates no named exception:
 
 | Rule | Why |
@@ -77,3 +77,26 @@ The worker engine (`run.py --engine worker`; `score.py --assert-e0`) is compared
 `tool/parity/test_worker_compare.py` checks the comparison on every committed expected outcome (each
 matches itself and a relabelled copy; every negative control that applies is caught) and on constructed
 graphs. The core engine's path keeps its rules; it does not compare the id fields, which it never did.
+
+## Worker engine: recorded divergences
+
+`rows.json` `worker` records these; `score.py --assert-worker` prints them. A `diverge` case must differ
+in exactly its recorded fields, with its recorded worker value, on every backend, so any other change
+fails; it fails once it matches (it then moves to `pre_cutover`).
+
+| ID | Rows (cases) | Observed difference | Reachable by a case | Removed when |
+|---|---|---|---|---|
+| `exception-arg-absent` | `exception_value_conversion` (`i_exception`, set `diverge`) | a host exception value with no argument (`RuntimeError()`): upstream's encoder always sends `str(exc)`, so the sandbox sees `RuntimeError('')`; core's writer sends the argument absent, so the sandbox sees `RuntimeError()` and `repr` differs | yes, on every backend | core's writer sends `''` for an exception value with no message |
+| `unicode-normalization` | `named_tuple_values` | CPython applies NFKC to a named tuple's field names when it builds the type; core has no Unicode normalization, so it accepts two field names that normalize alike (`K` and KELVIN SIGN), where CPython raises `SyntaxError`. The reference is the oracle's CPython 3.12, also for the rules that differ in 3.14 (names that normalize to `None`, `True` or `False`) | no: no sandbox emits such a named tuple, and upstream's host cannot build one as an input; core's own fixtures cover it | not planned (recorded by decision) |
+| `unicode-version` | `exception_value_conversion` (`w_exc_unicode_version_in`, set `diverge`), `named_tuple_values`, `text_and_bytes` | core reads the platform's Unicode tables for Rust `{:?}` escaping in error messages, `str.isidentifier()` and `repr()` printability; measured against upstream over every code point, the only differences are characters one side's Unicode version assigns and the other's does not (CPython 3.12 has Unicode 15.0). A `KeyError` argument with an unpaired surrogate goes out as its `repr`, where core keeps U+1FAE9 and CPython escapes it | yes, through that `KeyError` on every backend; otherwise only through names and malformed arenas | the tables agree |
+
+Cases of these rows that the worker engine does not run, each with its reason in `worker.not_run`:
+`h_b05_std_type_proxy` (needs host classes and objects, which the worker driver has no registry for yet)
+and the `x8handle_*`/`x8hostmode_neg` cases (their handle comes from `open()`, an OS call the worker
+driver declines; `w_fh_in`, `w_fh_ret`, `w_fh_large_in` and `w_refuse_fh_position` carry handles through
+inputs and callback returns instead).
+
+The cutover set holds the complex values (`s07_complex` included) and file positions above 2^53
+(`w_fh_large_in`; on the runner, a position an `int` cannot hold is recorded as `Inexpressible`). No
+standalone class-type case is in it: upstream 1.1.0 sends a sandbox class reached as a value as its repr
+text, which `w_classtype_out` checks before the cutover.
