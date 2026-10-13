@@ -1,0 +1,5 @@
+{
+ "id": "s02_float_neg_zero",
+ "code": "-0.0",
+ "note": "negative zero keeps its sign bit"
+}

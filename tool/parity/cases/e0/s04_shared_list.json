@@ -1,0 +1,5 @@
+{
+ "id": "s04_shared_list",
+ "code": "a = [1, 2]\n[a, a, [a]]",
+ "note": "one list referenced three times keeps its identity"
+}

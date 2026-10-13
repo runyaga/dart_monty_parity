@@ -1,0 +1,267 @@
+// The `worker` engine: drives one parity case through dart_monty_core's
+// monty-proto worker (its internal `ProtoSession` driver over a
+// `MontyChannel`) and returns the same normalised outcome as the `core`
+// engine, for tool/parity/score.py. Web-safe.
+//
+// The worker stack is internal to core (lib/src/worker, no public API yet),
+// so this file imports it directly. The caller supplies the channel: a
+// `ProcessChannel` on the VM (bin/parity_worker_vm.dart), a `WorkerChannel`
+// in the browser (test/parity_worker_web_test.dart).
+//
+// Implementation imports are the point of this engine: it measures core's
+// internal worker path before that path has a public API.
+// ignore_for_file: implementation_imports
+import 'dart:async';
+import 'dart:collection';
+
+import 'package:dart_monty_core/dart_monty_core.dart';
+import 'package:dart_monty_core/src/worker/monty_channel.dart';
+import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:monty_parity/src/canon.dart';
+import 'package:monty_parity/src/case_runner.dart';
+
+/// Opens a fresh channel to a new worker.
+typedef ChannelFactory = Future<MontyChannel> Function();
+
+/// The case keys this engine has no way to apply. Each one present is
+/// recorded under `unsupported` and the case runs without it.
+const _inexpressible = {
+  'os_policy': 'no OS policy in the worker driver; ran with the default',
+  'cwd': 'no per-feed cwd in the worker driver; ran without it',
+  'fs': 'no mounts in the worker driver; ran without them',
+  'host': 'no host objects in the worker driver; ran without them',
+  'restore_before': 'no snapshot/restore in the worker driver',
+  'close_mount_before_feed': 'no mounts in the worker driver',
+  'assert_message_annotations': 'no knob in the worker driver',
+};
+
+/// Runs case [c] on [backend] through a worker [spawn] opens.
+Future<Map<String, Object?>> runWorkerCase(
+  Map<String, Object?> c,
+  String backend,
+  ChannelFactory spawn,
+) async {
+  final out = newOutcome(c['id']! as String, 'worker', backend);
+  out['engine_version'] = 'dart_monty_core (internal: ProtoSession)';
+  final unsupported = out['unsupported']! as Map<String, Object?>;
+  for (final MapEntry(:key, :value) in _inexpressible.entries) {
+    if (c[key] != null) unsupported[key] = value;
+  }
+  final config = workerConfig(c, unsupported);
+  final host = CoreHost(c);
+  final inputs = <String, MontyValue>{
+    for (final MapEntry(:key, :value)
+        in ((c['inputs'] as Map?) ?? const {}).cast<String, Object?>().entries)
+      key: canonToMonty((value! as Map).cast(), host),
+  };
+  final script = Script(c);
+  final steps = out['steps']! as List<Object?>;
+  final session = await ProtoSession.open(await spawn(), config);
+  try {
+    final feeds =
+        (c['feeds'] as List?)?.cast<String>() ?? [c['code']! as String];
+    for (var n = 0; n < feeds.length; n++) {
+      final step = newStep();
+      steps.add(step);
+      final prints = <(String, String)>[];
+      final ext = step['ext_calls']! as List<Object?>;
+      final os = step['os_calls']! as List<Object?>;
+      try {
+        final r = await session.feed(
+          feeds[n],
+          inputs: n == 0 ? inputs : const {},
+          externals: {
+            for (final name in script.externals.keys)
+              name: (args, kwargs) {
+                ext.add(_callRecord(name, args, kwargs));
+
+                return _answer(script.next(name, isOs: false), name, host);
+              },
+          },
+          onOsCall: (name, args, kwargs) {
+            os.add(_callRecord(name, args, kwargs));
+            final a = script.next(name, isOs: true);
+
+            return a == null ? null : _answer(a, name, host);
+          },
+          onPrint: (stream, text) => prints.add((stream, text)),
+        );
+        step['value'] = identityCanon(r.value);
+        host.rawOutputs.add(r.value);
+      } on MontyScriptError catch (e) {
+        step['exception'] = e.exception != null
+            ? exceptionC(e.exception!)
+            : {
+                'type': e.excType,
+                'message': e.message,
+                'traceback': <Object?>[],
+              };
+        step['thrown'] = e.runtimeType.toString();
+        host.rawOutputs.add(null);
+        // A dead worker is reported as an Error; it is an outcome here.
+        // ignore: avoid_catching_errors
+      } on MontyCrashedError catch (e) {
+        // The worker is gone: no later feed can run.
+        step['exception'] = {
+          'type': 'MontyCrashedError',
+          'message': '$e',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'MontyCrashedError(${e.cause.name})';
+        step['prints'] = mergePrints(prints);
+        break;
+        // A value outside the driver's subset: the driver's own refusal is
+        // the outcome, and the session carries on.
+        // ignore: avoid_catching_errors
+      } on UnsupportedError catch (e) {
+        step['exception'] = {
+          'type': 'UnsupportedError',
+          'message': '${e.message}',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'UnsupportedError';
+        host.rawOutputs.add(null);
+      }
+      step['prints'] = mergePrints(prints);
+    }
+  } finally {
+    await session.close();
+  }
+
+  return out;
+}
+
+/// Case limits -> the worker's [SessionConfig]. A limit the worker has no
+/// field for is recorded under `unsupported`.
+SessionConfig workerConfig(
+  Map<String, Object?> c,
+  Map<String, Object?> unsupported,
+) {
+  int? memory;
+  int? recursion;
+  Duration? feed;
+  final limits = ((c['limits'] as Map?) ?? const {}).cast<String, Object?>();
+  for (final MapEntry(:key, :value) in limits.entries) {
+    switch (key) {
+      case 'max_memory':
+        memory = value! as int;
+      case 'max_recursion_depth':
+        recursion = value! as int;
+      case 'max_duration_secs' || 'max_feed_duration_secs':
+        feed = Duration(microseconds: ((value! as num) * 1e6).round());
+      default:
+        unsupported['limits.$key'] = 'the worker driver has no $key';
+    }
+  }
+
+  return SessionConfig(
+    maxMemoryBytes: memory,
+    maxRecursionDepth: recursion,
+    maxFeedDuration: feed,
+  );
+}
+
+Map<String, Object?> _callRecord(
+  String name,
+  List<MontyValue> args,
+  Map<String, MontyValue> kwargs,
+) => {
+  'name': name,
+  'args': [for (final a in args) identityCanon(a)],
+  'kwargs': {
+    for (final MapEntry(:key, :value) in kwargs.entries)
+      key: identityCanon(value),
+  },
+};
+
+/// A scripted answer [a] for the call to [name], as the driver takes it.
+MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
+  if (a == null) {
+    throw OsCallException(
+      "name '$name' is not defined",
+      pythonExceptionType: 'NameError',
+    );
+  }
+  if (a['return'] case final Map<Object?, Object?> ret) {
+    return canonToMonty(ret.cast(), host);
+  }
+  if (a['echo'] case final int step) {
+    return host.rawOutputs[step] ??
+        (throw StateError('step $step produced no value to echo'));
+  }
+  final r = ((a['raise'] as Map?) ?? const {}).cast<String, Object?>();
+  if (r.isEmpty) throw UnsupportedError('scripted answer $a');
+  throw OsCallException(
+    (r['message'] as String?) ?? '',
+    pythonExceptionType: r['type'] as String?,
+  );
+}
+
+bool _isContainer(MontyValue v) =>
+    v is MontyList ||
+    v is MontyTuple ||
+    v is MontyDict ||
+    v is MontySet ||
+    v is MontyFrozenSet;
+
+List<MontyValue> _children(MontyValue v) => switch (v) {
+  MontyList(:final items) || MontyTuple(:final items) => items,
+  MontySet(:final items) || MontyFrozenSet(:final items) => items,
+  MontyDict(:final pairs) => [
+    for (final (k, x) in pairs) ...[k, x],
+  ],
+  _ => const [],
+};
+
+/// [MontyValue] -> canonical form, identity-aware as the oracle's `canon`
+/// is: a container reached more than once is written once with an `id`,
+/// and each later occurrence as `{"t": "ref", "id": n}`.
+///
+/// Identity is Dart object identity: the worker driver decodes a node it
+/// meets twice into one object. Never `==`, which walks a shared graph as a
+/// tree.
+Object? identityCanon(MontyValue root) {
+  final counts = HashMap<MontyValue, int>.identity();
+  final onPath = HashSet<MontyValue>.identity();
+  void count(MontyValue v) {
+    if (!_isContainer(v)) return;
+    final n = counts[v] = (counts[v] ?? 0) + 1;
+    if (n > 1 || !onPath.add(v)) return;
+    _children(v).forEach(count);
+    onPath.remove(v);
+  }
+
+  count(root);
+  final ids = HashMap<MontyValue, int>.identity();
+  Object? enc(MontyValue v) {
+    if (!_isContainer(v)) return montyToCanon(v);
+    if (ids[v] case final int id) return {'t': 'ref', 'id': id};
+    final out = <String, Object?>{};
+    if ((counts[v] ?? 0) > 1) out['id'] = ids[v] = ids.length + 1;
+    switch (v) {
+      case MontyList(:final items):
+        out['t'] = 'list';
+        out['items'] = [for (final i in items) enc(i)];
+      case MontyTuple(:final items):
+        out['t'] = 'tuple';
+        out['items'] = [for (final i in items) enc(i)];
+      case MontySet(:final items):
+        out['t'] = 'set';
+        out['items'] = sortedItems([for (final i in items) enc(i)]);
+      case MontyFrozenSet(:final items):
+        out['t'] = 'frozenset';
+        out['items'] = sortedItems([for (final i in items) enc(i)]);
+      case MontyDict(:final pairs):
+        out['t'] = 'dict';
+        out['items'] = [
+          for (final (k, x) in pairs) [enc(k), enc(x)],
+        ];
+      default:
+        throw StateError('not a container: ${v.runtimeType}');
+    }
+
+    return out;
+  }
+
+  return enc(root);
+}

@@ -1,0 +1,15 @@
+{
+ "id": "s11_os_call",
+ "code": "from pathlib import Path\nPath('/x').read_text()",
+ "os": {
+  "Path.read_text": [
+   {
+    "return": {
+     "t": "str",
+     "v": "hello from host"
+    }
+   }
+  ]
+ },
+ "note": "Path.read_text answered by the host"
+}

@@ -25,9 +25,10 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/oracle/` | the reference oracle that generates `expected/`: `run_cases.py`, `run_probes.py`, `rust/` |
 | `tool/parity/rows.json` | per capability row: its cases or probes, the status recorded at core 5873ec5 per backend, per-architecture expectations, and the named exceptions |
 | `tool/parity/baseline-current.json` | the current baseline: every case's result within every re-measured row, every row's status, per backend, the PRESENT totals, per-architecture differences and the list of intentional moves (`deltas`) |
+| `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
-| `packages/monty_parity` | the Dart runner (core's public API, VM and browser) |
+| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API) and the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`), VM and browser, plus the worker crash tests |
 | `tool/upstream/` | copies of dart_monty_core's `tool/upstream`: the hash-pinned pydantic-monty lock, the upstream pin and the frozen capability manifest |
 | `tool/check_parity_manifest.py` | offline check that `manifest.json` binds every case to its expected outcomes |
 | `tool/check_core_upstream.py` | checks that a core checkout's `tool/upstream` equals the copies here |
@@ -54,6 +55,27 @@ python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/score.md \
 run and removed afterwards. `--cases GLOB ...` limits a run to some cases. One output directory holds one
 architecture's outcomes; `score.py` reads the architecture from `platform.json` in it.
 
+### E0 through the worker
+
+The `worker` engine drives core's internal monty-proto worker: a worker process on the VM, a Web Worker
+running core's committed proto-worker wasm in the browser, each case on a fresh worker. It runs the `e0`
+suite by default, then the worker crash tests on the same backend (a deadline kill, a native stack
+overflow on the VM, a wasm trap under JSPI and the forced fallback in the browser; each must surface as a
+typed `MontyCrashedError`, then a fresh worker must answer `1 + 1`). The VM needs core's worker
+executable, built into the core checkout:
+
+```sh
+bash core/tool/build_worker.sh
+for b in vm dart2js dart2wasm; do
+  python3 -I tool/parity/run.py "$b" --engine worker --core core --out /tmp/e0
+done
+python3 -I tool/parity/score.py /tmp/e0 --assert-e0
+```
+
+`--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend. A case
+under `deferred` is run and shown as DEFERRED but not counted; once it matches everywhere, the assertion
+fails until it leaves `deferred`. The `core` engine leaves the `e0` suite out by default.
+
 To reproduce the measured baseline instead, check out core `5873ec5` (where the capability manifest's
 baseline was measured) and assert `--assert-rows --assert-baseline`. Expected under this suite's
 rules: on arm64 FFI PRESENT 36/185, dart2js 35, dart2wasm 35; on x86_64 35/35/34 (see per-architecture
@@ -69,6 +91,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 - **`current`** (`ci.yaml`): core at `CORE_REF`, all three backends, `--assert-current`; also analyses
   the runner and checks the upstream copies against that core.
 - **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.
+- **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite through the worker engine on all three
+  backends with the crash tests, `--assert-e0`.
 - **`Parity oracle`** (`parity-oracle.yaml`): regenerates every expected outcome from the hash-pinned
   oracle and fails on any byte of difference. Runs when a parity input changes (cases, expected outcomes,
   manifest, oracle code, upstream pins, the workflow), weekly, and on demand.

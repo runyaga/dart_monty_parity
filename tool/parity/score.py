@@ -53,6 +53,15 @@ current tree (tool/parity/baseline-current.json): every case's class within
 every re-measured row, every row's status, on every backend, and the PRESENT
 totals. A change that moves a case or a row updates that file, with the move
 listed under `deltas`.
+
+--assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
+the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
+worker) against upstream's, every field compared, no exceptions tolerated. It
+fails unless every counted case is MATCH on every backend. A case listed
+under `deferred` is shown as DEFERRED and not counted, and fails once it
+matches on every backend (it then leaves `deferred`); it must still have
+an outcome and an oracle on every backend. The case list must
+equal the files in tool/parity/cases/<suite>.
 """
 
 from __future__ import annotations
@@ -170,10 +179,11 @@ def load(p: Path):
     return json.loads(p.read_text()) if p.exists() else None
 
 
-def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path) -> tuple[str, list[str], list[str]]:
+def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
+                  engine: str = 'core') -> tuple[str, list[str], list[str]]:
     """-> (class, differing codes, names of the exceptions that changed the verdict)."""
     ref = load(expected / cid / f"{rule.get('oracle', 'ref-py')}.json")
-    got = load(out / cid / f'core-{backend}.json')
+    got = load(out / cid / f'{engine}-{backend}.json')
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!'], []
     if is_refusal(got, rule):
@@ -224,6 +234,56 @@ def probe_status(row: str, rule: dict, backend: str, out: Path, expected: Path) 
 
 
 # ------------------------------------------------------------------ main
+def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
+              markdown: Path | None, json_out: Path | None) -> int:
+    """The E0 gate: every counted case MATCH on every backend; deferred cases shown, not counted."""
+    spec = json.loads(spec_path.read_text())
+    cases, deferred, engine = spec['cases'], spec.get('deferred', {}), spec.get('engine', 'worker')
+    on_disk = sorted(p.stem for p in (CASES / spec['suite']).glob('*.json'))
+    if sorted(cases) != on_disk or set(deferred) - set(cases):
+        sys.exit(f'{spec_path}: cases {sorted(cases)} (deferred {sorted(deferred)}) do not match '
+                 f'tool/parity/cases/{spec["suite"]}: {on_disk}')
+    rule = {'compare': ALL_CODES}
+    table = {cid: {b: classify_case(cid, b, rule, outcomes, expected, engine) for b in backends} for cid in cases}
+    counted = [c for c in cases if c not in deferred]
+    lines = [f'E0 through the `{engine}` engine: {len(counted)} counted cases, {len(deferred)} deferred', '',
+             '| case | ' + ' | '.join(backends) + ' |', '|---|' + '---|' * len(backends)]
+    for cid in cases:
+        cells = []
+        for b in backends:
+            cls, bad, _ = table[cid][b]
+            cell = cls + (f' `{"".join(bad)}`' if bad else '')
+            cells.append(f'DEFERRED ({cell})' if cid in deferred else cell)
+        lines.append(f'| {cid} | ' + ' | '.join(cells) + ' |')
+    lines.append('')
+    rc = 0
+    for b in backends:
+        n = sum(table[c][b][0] == 'MATCH' for c in counted)
+        ok = n == len(counted)
+        rc |= not ok
+        lines.append(f'{"PASS" if ok else "FAIL"} e0 on {b}: {n}/{len(counted)} counted cases MATCH'
+                     + (f'; deferred: {", ".join(f"{c} {table[c][b][0]}" for c in deferred)}' if deferred else ''))
+    for cid, why in deferred.items():
+        lines.append(f'deferred {cid}: {why}')
+        # Deferred is not skipped: the case must still have run, against an oracle, everywhere.
+        for b in backends:
+            if table[cid][b][0] in ('NO-OUTCOME', 'NO-ORACLE'):
+                rc = 1
+                lines.append(f'FAIL e0: deferred case {cid} has {table[cid][b][0]} on {b}; it must still run')
+        if all(table[cid][b][0] == 'MATCH' for b in backends):
+            rc = 1
+            lines.append(f'FAIL e0: deferred case {cid} now MATCHES on every backend; take it out of `deferred`')
+    text = '\n'.join(lines) + '\n'
+    print(text)
+    if markdown:
+        markdown.write_text(text)
+    if json_out:
+        json_out.write_text(json.dumps({'engine': engine, 'deferred': deferred, 'cases': {
+            cid: {b: {'class': c, 'differs': d} for b, (c, d, _) in by_b.items()} for cid, by_b in table.items()}},
+            indent=1) + '\n')
+    return rc
+
+
 def platform_arch(outcomes: Path) -> str:
     p = outcomes / 'platform.json'
     if not p.exists():
@@ -243,7 +303,11 @@ def main() -> int:
     ap.add_argument('--assert-baseline', action='store_true')
     ap.add_argument('--assert-current', type=Path)
     ap.add_argument('--write-current', type=Path, help='write the measured rows and totals (keeps `deltas`)')
+    ap.add_argument('--assert-e0', type=Path, nargs='?', const=ROOT / 'tool/parity/e0.json',
+                    help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     a = ap.parse_args()
+    if a.assert_e0:
+        return assert_e0(a.assert_e0, a.outcomes, a.expected, a.backends.split(','), a.markdown, a.json)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     rules = json.loads(RULES.read_text())['rows']
     check_exceptions(rules)

@@ -1,0 +1,15 @@
+{
+ "id": "s10_external_call",
+ "code": "r = fetch(1, mode='x')\nr + '!'",
+ "externals": {
+  "fetch": [
+   {
+    "return": {
+     "t": "str",
+     "v": "ok"
+    }
+   }
+  ]
+ },
+ "note": "external function called with a positional and a keyword argument"
+}

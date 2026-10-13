@@ -1,0 +1,5 @@
+{
+ "id": "s05_dict_int_keys",
+ "code": "{1: 'one', 2: [2], -3: None}",
+ "note": "dict with non-str keys, in insertion order"
+}

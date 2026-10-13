@@ -1,0 +1,14 @@
+{
+ "id": "s01_int_bigint_input",
+ "code": "(n + 1, 2**70)",
+ "inputs": {
+  "n": {
+   "t": "int",
+   "v": "41"
+  }
+ },
+ "limits": {
+  "max_memory": 268435456
+ },
+ "note": "typed int input and a bigint result in a tuple, under a memory limit"
+}

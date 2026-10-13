@@ -1,0 +1,5 @@
+{
+ "id": "s03_str_bytes_tuple",
+ "code": "('h\\u00e9llo \\u2713', b'\\x00\\xff')",
+ "note": "non-ASCII str and bytes in a tuple"
+}
