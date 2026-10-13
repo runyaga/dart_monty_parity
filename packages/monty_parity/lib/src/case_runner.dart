@@ -230,20 +230,30 @@ Object? canonToDart(Map<String, Object?> c) {
   };
 }
 
+/// Canonical kinds an engine builds itself, before [canonToMonty]'s own; null
+/// for any other kind.
+typedef CanonExtra = MontyValue? Function(Map<String, Object?> c);
+
 /// Canonical -> [MontyValue] for callback returns (core's typed host->Python
 /// path). Shared `id`s map to the same Dart object; core still serialises a
-/// tree.
+/// tree. [extra] is asked first at every level.
 MontyValue canonToMonty(
   Map<String, Object?> c,
   CoreHost host, [
   Map<int, MontyValue>? memo,
+  CanonExtra? extra,
 ]) {
   memo ??= {};
   final t = c['t'];
   if (t == 'ref') return memo[c['id']]!;
+  if (extra?.call(c) case final MontyValue v) {
+    if (c['id'] case final int id) memo[id] = v;
+
+    return v;
+  }
   List<MontyValue> items() => [
     for (final x in c['items']! as List)
-      canonToMonty((x! as Map).cast(), host, memo),
+      canonToMonty((x! as Map).cast(), host, memo, extra),
   ];
   (int, int, int, int) hms(String v) {
     final p = v.split(RegExp('[:.]'));
@@ -274,8 +284,8 @@ MontyValue canonToMonty(
     'dict' => MontyDict([
       for (final kv in c['items']! as List)
         (
-          canonToMonty(((kv as List)[0] as Map).cast(), host, memo),
-          canonToMonty((kv[1] as Map).cast(), host, memo),
+          canonToMonty(((kv as List)[0] as Map).cast(), host, memo, extra),
+          canonToMonty((kv[1] as Map).cast(), host, memo, extra),
         ),
     ]),
     'namedtuple' => MontyNamedTuple(

@@ -28,6 +28,7 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
+| `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
 | `packages/monty_parity` | the Dart runner: the `core` engine (core's public API) and the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`), VM and browser, plus the worker crash tests |
 | `tool/upstream/` | copies of dart_monty_core's `tool/upstream`: the hash-pinned pydantic-monty lock, the upstream pin and the frozen capability manifest |
 | `tool/check_parity_manifest.py` | offline check that `manifest.json` binds every case to its expected outcomes |
@@ -87,7 +88,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 
 - **`manifest`** (`ci.yaml`, every change): `tool/check_parity_manifest.py` fails if a case changed
   without its expected outcome being regenerated (or the reverse), an expected outcome changed outside a
-  regeneration, or the oracle's code or the upstream pins changed since the outcomes were generated.
+  regeneration, or the oracle's code or the upstream pins changed since the outcomes were generated;
+  then `tool/parity/test_worker_compare.py`, the worker comparison's self-test.
 - **`current`** (`ci.yaml`): core at `CORE_REF`, all three backends, `--assert-current`; also analyses
   the runner and checks the upstream copies against that core.
 - **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.

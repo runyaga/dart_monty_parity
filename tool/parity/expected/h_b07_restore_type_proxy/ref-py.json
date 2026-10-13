@@ -36,6 +36,7 @@
     "t": "typeproxy",
     "name": "Person",
     "dataclass": true,
+    "class_id": "id#1",
     "attrs": []
    },
    "exception": null,

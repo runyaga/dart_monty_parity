@@ -160,6 +160,19 @@
    "to": "ABSENT",
    "rule": "scoring",
    "why": "limit-wording dropped: l06_feed_timeout words the timeout differently; no case matches in full on the VM"
+  },
+  {
+   "row": "host_instance_value",
+   "case": "h_b02_proxy_nested",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "MATCH",
+   "to": "DIVERGE",
+   "rule": "oracle",
+   "why": "the oracle now tracks a class proxy's identity: the one instance the case returns twice is one object upstream, written once and then referenced; core's public API returns two equal copies. The row stays PARTIAL"
   }
  ],
  "rows": {
@@ -998,9 +1011,9 @@
     "dart2wasm": "MATCH"
    },
    "h_b02_proxy_nested": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_b03_dataclass_proxy": {
     "vm": "MATCH",

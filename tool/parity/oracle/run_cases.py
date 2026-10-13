@@ -51,29 +51,54 @@ def float_c(x: float) -> dict[str, Any]:
     return {'t': 'float', 'v': repr(x), 'bits': struct.pack('>d', x).hex()}
 
 
+def _proxy(v: Any) -> bool:
+    return isinstance(v, (pm.MontyClassProxy, pm.MontyClassTypeProxy))
+
+
+def _children(v: Any) -> list[Any]:
+    """What an identity-carrying value holds: container items, dict pairs, proxy attribute values."""
+    if isinstance(v, dict):
+        return [x for kv in v.items() for x in kv]
+    if _proxy(v):
+        return list(v.attributes.values())
+    return list(v)
+
+
 def canon(value: Any) -> Any:
     """Python value -> canonical JSON form (identity-aware: shared containers get id/ref)."""
+    return canon_batch([value])[0]
+
+
+def canon_batch(values: list[Any]) -> list[Any]:
+    """Python values -> canonical JSON forms, with one identity memo over the whole batch.
+
+    A container, named tuple or class proxy reached more than once anywhere in
+    the batch (a call's arguments and keyword arguments, say) is written once
+    with an `id`, and each later occurrence as `{"t": "ref", "id": n}`; the
+    walk goes into proxy attributes too. A class proxy carries its instance id
+    under `instance_id`, which `stable` relabels.
+    """
     counts: dict[int, int] = {}
     keep: list[Any] = []  # keep objects alive so ids stay unique
 
-    def count(v: Any, stack: set[int]) -> None:
-        if isinstance(v, CONTAINERS):
-            i = id(v)
-            counts[i] = counts.get(i, 0) + 1
-            keep.append(v)
-            if counts[i] > 1 or i in stack:
-                return
-            stack.add(i)
-            if isinstance(v, dict):
-                for k, x in v.items():
-                    count(k, stack)
-                    count(x, stack)
-            else:
-                for x in v:
-                    count(x, stack)
-            stack.discard(i)
+    def shareable(v: Any) -> bool:
+        return isinstance(v, CONTAINERS) or _proxy(v)
 
-    count(value, set())
+    def count(v: Any, stack: set[int]) -> None:
+        if not shareable(v):
+            return
+        i = id(v)
+        counts[i] = counts.get(i, 0) + 1
+        keep.append(v)
+        if counts[i] > 1 or i in stack:
+            return
+        stack.add(i)
+        for x in _children(v):
+            count(x, stack)
+        stack.discard(i)
+
+    for v in values:
+        count(v, set())
     ids: dict[int, int] = {}
 
     def enc(v: Any) -> Any:
@@ -98,36 +123,59 @@ def canon(value: Any) -> Any:
             return {'t': 'path', 'v': v.as_posix()}
         if isinstance(v, pm.MontyFileHandle):
             return {'t': 'filehandle', 'path': v.path, 'mode': v.mode, 'position': str(v.position)}
-        x = canon_extra(v, enc)
-        if x is not None:
-            return x
-        if isinstance(v, CONTAINERS):
-            i = id(v)
-            if i in ids:
-                return {'t': 'ref', 'id': ids[i]}
-            out: dict[str, Any] = {}
-            if counts.get(i, 0) > 1:
-                ids[i] = len(ids) + 1
-                out['id'] = ids[i]
-            if isinstance(v, dict):
-                out['t'] = 'dict'
-                out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
-            elif isinstance(v, (set, frozenset)):
-                out['t'] = 'set' if isinstance(v, set) else 'frozenset'
-                out['items'] = sorted((enc(x) for x in v), key=lambda e: json.dumps(e, sort_keys=True))
-            elif isinstance(v, tuple) and hasattr(v, '_fields'):
-                out['t'] = 'namedtuple'
-                m = type(v).__module__
-                out['type'] = type(v).__name__ if m in ('', '__main__', 'builtins') else f'{m}.{type(v).__name__}'
-                out['fields'] = list(v._fields)
-                out['items'] = [enc(x) for x in v]
-            else:
-                out['t'] = 'list' if isinstance(v, list) else 'tuple'
-                out['items'] = [enc(x) for x in v]
-            return out
-        return {'t': 'other', 'kind': type(v).__name__, 'repr': repr(v)}
+        if not shareable(v):
+            x = canon_extra(v, enc)
+            return x if x is not None else {'t': 'other', 'kind': type(v).__name__, 'repr': repr(v)}
+        i = id(v)
+        if i in ids:
+            return {'t': 'ref', 'id': ids[i]}
+        out: dict[str, Any] = {}
+        if counts.get(i, 0) > 1:
+            ids[i] = len(ids) + 1
+            out['id'] = ids[i]
+        if _proxy(v):
+            out.update(canon_extra(v, enc))
+        elif isinstance(v, dict):
+            out['t'] = 'dict'
+            out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
+        elif isinstance(v, (set, frozenset)):
+            out['t'] = 'set' if isinstance(v, set) else 'frozenset'
+            out['items'] = sorted((enc(x) for x in v), key=lambda e: json.dumps(e, sort_keys=True))
+        elif isinstance(v, tuple) and hasattr(v, '_fields'):
+            out['t'] = 'namedtuple'
+            m = type(v).__module__
+            out['type'] = type(v).__name__ if m in ('', '__main__', 'builtins') else f'{m}.{type(v).__name__}'
+            out['fields'] = list(v._fields)
+            out['items'] = [enc(x) for x in v]
+        else:
+            out['t'] = 'list' if isinstance(v, list) else 'tuple'
+            out['items'] = [enc(x) for x in v]
+        return out
 
-    return enc(value)
+    return [enc(v) for v in values]
+
+
+def canon_call(args: Any, kwargs: Any) -> tuple[list[Any], dict[str, Any]]:
+    """A call's arguments and keyword arguments, canonicalised as one batch."""
+    keys = list(kwargs)
+    c = canon_batch([*args, *(kwargs[k] for k in keys)])
+    return c[:len(args)], dict(zip(keys, c[len(args):]))
+
+
+def _tz_name(tz: Any) -> str | None:
+    """A zone's explicit name, as upstream reads it (convert.rs py_timezone_to_monty).
+
+    `timezone.utc` has none. Any other `datetime.timezone` has a name only if
+    it was built with one: `__getinitargs__()` is `(offset,)` or `(offset,
+    name)`, so an explicit name equal to the generated `UTC+hh:mm`, or `""`,
+    stays.
+    """
+    if tz is dt.timezone.utc:
+        return None
+    if isinstance(tz, dt.timezone):
+        args = tz.__getinitargs__()
+        return args[1] if len(args) > 1 and isinstance(args[1], str) else None
+    return tz.tzname(None)
 
 
 def _dt_off(t: Any) -> tuple[int | None, str | None]:
@@ -135,12 +183,7 @@ def _dt_off(t: Any) -> tuple[int | None, str | None]:
     if tz is None:
         return None, None
     off = tz.utcoffset(None) if isinstance(t, dt.time) else tz.utcoffset(t)
-    name = tz.tzname(None) if isinstance(t, dt.time) else tz.tzname(t)
-    secs = int(off.total_seconds())
-    # datetime.timezone without an explicit name reports 'UTC+hh:mm'; keep only explicit names
-    if isinstance(tz, dt.timezone) and name == dt.timezone(off).tzname(None):
-        name = None
-    return secs, name
+    return int(off.total_seconds()), _tz_name(tz)
 
 
 def _type_name(t: type) -> str:
@@ -165,20 +208,16 @@ def canon_extra(v: Any, enc: Any) -> Any:
     if isinstance(v, dt.timedelta):
         return {'t': 'timedelta', 'days': v.days, 'seconds': v.seconds, 'us': v.microseconds}
     if isinstance(v, dt.timezone):
-        off = v.utcoffset(None)
-        name = v.tzname(None)
-        if name == dt.timezone(off).tzname(None):
-            name = None
-        return {'t': 'timezone', 'offset': int(off.total_seconds()), 'name': name}
+        return {'t': 'timezone', 'offset': int(v.utcoffset(None).total_seconds()), 'name': _tz_name(v)}
     if isinstance(v, BaseException):
         return {'t': 'exception', 'type': type(v).__name__, 'arg': (str(v.args[0]) if v.args else None)}
     if isinstance(v, pm.MontyStdTypeProxy):
         return {'t': 'builtin' if v.kind == 'function' else 'type', 'name': v.name, '_proxy': 'std'}
     if isinstance(v, pm.MontyClassProxy):
-        return {'t': 'proxy', 'class': v.name, 'dataclass': v.is_dataclass,
+        return {'t': 'proxy', 'class': v.name, 'dataclass': v.is_dataclass, 'instance_id': str(v.id),
                 'attrs': [[k, enc(x)] for k, x in v.attributes.items()], '_raw': True}
     if isinstance(v, pm.MontyClassTypeProxy):
-        return {'t': 'typeproxy', 'name': v.name, 'dataclass': v.is_dataclass,
+        return {'t': 'typeproxy', 'name': v.name, 'dataclass': v.is_dataclass, 'class_id': str(v.id),
                 'attrs': [[k, enc(x)] for k, x in v.attributes.items()]}
     if isinstance(v, type):
         return {'t': 'type', 'name': _type_name(v)}
@@ -250,7 +289,8 @@ def decode(c: dict[str, Any], ctx: Ctx | None = None, memo: dict[int, Any] | Non
         v = cls.fromisoformat(c['v'])
         if c.get('offset') is not None:
             off = dt.timedelta(seconds=c['offset'])
-            tz = dt.timezone(off, c['tzname']) if c.get('tzname') else dt.timezone(off)
+            # Presence, not truthiness: an explicit '' is a name (convert.rs:145-149).
+            tz = dt.timezone(off, c['tzname']) if c.get('tzname') is not None else dt.timezone(off)
             v = v.replace(tzinfo=tz)
         if t == 'time' and c.get('fold'):
             v = v.replace(fold=c['fold'])
@@ -259,7 +299,7 @@ def decode(c: dict[str, Any], ctx: Ctx | None = None, memo: dict[int, Any] | Non
         return dt.timedelta(days=c['days'], seconds=c['seconds'], microseconds=c['us'])
     if t == 'timezone':
         off = dt.timedelta(seconds=c['offset'])
-        return dt.timezone(off, c['name']) if c.get('name') else dt.timezone(off)
+        return dt.timezone(off, c['name']) if c.get('name') is not None else dt.timezone(off)
     if t == 'exception':
         cls = getattr(builtins, c['type'])
         return cls(c['arg']) if c.get('arg') is not None else cls()
@@ -269,6 +309,8 @@ def decode(c: dict[str, Any], ctx: Ctx | None = None, memo: dict[int, Any] | Non
             mod, _, nm = n.rpartition('.')
             return getattr(__import__(mod), nm)
         return getattr(builtins, n)
+    if t == 'proxy':  # a sandbox instance: the host has no way to build one (raises TypeError)
+        return pm.MontyClassProxy()
     if t == 'opaque':  # a host value no engine can convert
         return object()
     if t == 'str_repeat':  # a large string without a large case file
@@ -609,12 +651,20 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
             raw_out: Any = None
             kw: dict[str, Any] = {'print_callback': lambda s, t: raw_prints.append((s, t))}
             if n == 0 and case.get('inputs'):
-                kw['inputs'] = {k: decode(v, ctx) for k, v in case['inputs'].items()}
+                try:
+                    memo: dict[int, Any] = {}  # one memo: inputs may share objects with each other
+                    kw['inputs'] = {k: decode(v, ctx, memo) for k, v in case['inputs'].items()}
+                except (TypeError, ValueError, OverflowError, AttributeError) as e:
+                    # The host cannot build the inputs, so nothing reaches the sandbox.
+                    step['exception'] = {'type': 'HOST:' + type(e).__name__, 'message': str(e), 'traceback': []}
+                    ctx.raw_outputs.append(None)
+                    out['steps'].append(step)
+                    continue
             kw.update(feed_kw)
             if mounts is not None:
                 def recorder(*, name: Any, args: Any, kwargs: Any, is_async: Any, **_: Any) -> Any:
-                    step['os_calls'].append({'name': str(name), 'args': [canon(a) for a in args],
-                                             'kwargs': {k: canon(v) for k, v in kwargs.items()}})
+                    c_args, c_kwargs = canon_call(args, kwargs)
+                    step['os_calls'].append({'name': str(name), 'args': c_args, 'kwargs': c_kwargs})
                     a = answer((case.get('os') or {}).get(str(name)), used.get('os:' + str(name), 0))
                     used['os:' + str(name)] = used.get('os:' + str(name), 0) + 1
                     if a is None:
@@ -652,11 +702,8 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                         continue
                     if isinstance(snap, pm.FunctionSnapshot):
                         name = str(snap.function_name)
-                        rec = {
-                            'name': name,
-                            'args': [canon(a) for a in snap.args],
-                            'kwargs': {k: canon(v) for k, v in snap.kwargs.items()},
-                        }
+                        c_args, c_kwargs = canon_call(snap.args, snap.kwargs)
+                        rec = {'name': name, 'args': c_args, 'kwargs': c_kwargs}
                         table = case.get('os') if snap.is_os_function else case.get('externals')
                         (step['os_calls'] if snap.is_os_function else step['ext_calls']).append(rec)
                         key = ('os:' if snap.is_os_function else 'ext:') + name
@@ -758,19 +805,37 @@ UUID = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 LIMIT_AMOUNT = re.compile(r'\d+(\.\d+)?')
 
 
-def stable(v: Any, fsroot: str) -> Any:
-    """Drops what varies between runs: timings, uuids, the temp mount root, measured limit amounts."""
-    if isinstance(v, str):
-        v = v.replace(fsroot, '<fsroot>')
-        v = UUID.sub('<uuid>', v)
-        if 'limit exceeded: ' in v:
-            v = LIMIT_AMOUNT.sub('N', v)
-        return v
-    if isinstance(v, list):
-        return [stable(x, fsroot) for x in v]
-    if isinstance(v, dict):
-        return {k: stable(x, fsroot) for k, x in v.items() if k != 'wall_ms'}
-    return v
+ID_FIELDS = ('instance_id', 'class_id')
+
+
+def stable(v: Any, fsroot: str, exact: bool = False) -> Any:
+    """Drops what varies between runs: timings, the temp mount root, sandbox object ids, and (unless
+    [exact]) uuids and measured limit amounts inside strings.
+
+    A class or instance id field is relabelled `id#1`, `id#2`, ... in order of first appearance, so
+    equal ids stay equal and distinct ids distinct. A case marked `exact_strings` keeps every other
+    string as upstream returned it.
+    """
+    labels: dict[str, str] = {}
+
+    def walk(x: Any, key: str | None = None) -> Any:
+        if isinstance(x, str):
+            if key in ID_FIELDS:
+                return labels.setdefault(x, f'id#{len(labels) + 1}')
+            x = x.replace(fsroot, '<fsroot>')
+            if exact:
+                return x
+            x = UUID.sub('<uuid>', x)
+            if 'limit exceeded: ' in x:
+                x = LIMIT_AMOUNT.sub('N', x)
+            return x
+        if isinstance(x, list):
+            return [walk(y) for y in x]
+        if isinstance(x, dict):
+            return {k: walk(y, k) for k, y in x.items() if k != 'wall_ms'}
+        return x
+
+    return walk(v)
 
 
 def error_outcome(case: dict[str, Any], engine: str, e: BaseException) -> dict[str, Any]:
@@ -794,14 +859,14 @@ def main() -> int:
                 res = error_outcome(case, 'ref', e)
             d = outdir / case['id']
             d.mkdir(parents=True, exist_ok=True)
-            res = stable(res, str(fsroot))
+            res = stable(res, str(fsroot), bool(case.get('exact_strings')))
             (d / 'ref-py.json').write_text(json.dumps(res, indent=1, ensure_ascii=False) + '\n')
             if case.get('refmem'):
                 try:
                     rm = run_refmem(case)
                 except Exception as e:  # noqa: BLE001
                     rm = error_outcome(case, 'refmem', e)
-                rm = stable(rm, str(fsroot))
+                rm = stable(rm, str(fsroot), bool(case.get('exact_strings')))
                 (d / 'refmem-py.json').write_text(json.dumps(rm, indent=1, ensure_ascii=False) + '\n')
             print(f"ref-py {case['id']}: {'ERROR' if res['runner_error'] else 'ok'}", flush=True)
     return 0

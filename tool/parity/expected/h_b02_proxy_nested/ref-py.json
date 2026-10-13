@@ -9,9 +9,11 @@
     "t": "list",
     "items": [
      {
+      "id": 1,
       "t": "proxy",
       "class": "Foo",
       "dataclass": false,
+      "instance_id": "id#1",
       "attrs": [
        [
         "x",
@@ -32,19 +34,8 @@
          "v": "k"
         },
         {
-         "t": "proxy",
-         "class": "Foo",
-         "dataclass": false,
-         "attrs": [
-          [
-           "x",
-           {
-            "t": "int",
-            "v": "1"
-           }
-          ]
-         ],
-         "_raw": true
+         "t": "ref",
+         "id": 1
         }
        ]
       ]

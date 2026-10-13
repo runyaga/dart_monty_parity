@@ -59,3 +59,21 @@ dart2wasm, so `float_values` is PARTIAL there: FFI PRESENT 35/185, dart2js 35, d
 platform the manifest baseline was measured on) it is 36/35/35. `rows.json` and `baseline-current.json`
 record both under `platforms`; any other deviation fails. Removed when core canonicalises NaN to upstream's
 bits.
+
+## Worker engine: comparison rules
+
+The worker engine (`run.py --engine worker`; `score.py --assert-e0`) is compared by
+`tool/parity/worker_compare.py`, not by the core engine's `norm`, and tolerates no named exception:
+
+| Rule | Why |
+|---|---|
+| Each root batch (a step's value; a call's arguments and keyword arguments together) is canonicalised with one identity memo, by the oracle (`canon_batch`) and the runner (`identityCanonBatch`) alike, and a feed's inputs are built with one memo on both sides. Containers, named tuples and class proxies carry identity, and the walk goes into proxy attributes | sharing across the arguments of one call, or across the inputs of one feed, is what upstream preserves (`shared_value_batches`) |
+| Two values match when one bijection between the two sides' reference ids makes them equal, with set and frozenset members matched as multisets; a search revisits a pairing when something later contradicts it | each side numbers its references in its own walk order, and members that are structurally equal but distinct (tuples of distinct NaNs) cannot be told apart by sorting |
+| Class and instance id fields (`instance_id`, `class_id`) match through one bijection per outcome; the oracle labels them `id#1`, `id#2`, ... in order of first appearance | equal ids stay equal and distinct ids distinct, across steps too, while the uuids themselves vary per run |
+| Strings compare exactly: no uuid or number inside a string is rewritten (cases marked `exact_strings` keep them in the oracle too) | the core engine's rewrites hid a wrong id or a wrong count inside ordinary text |
+| A time zone's name is upstream's: read through `__getinitargs__()`, so an explicit name equal to the generated `UTC+hh:mm`, or `""`, stays, and `timezone.utc` has none; inputs test the name by presence, not truthiness | the oracle used to drop both, and to turn `""` into no name |
+| In a case marked `local_refusal`, a step whose upstream outcome is a host-side refusal (`HOST:<type>`: the host could not build the inputs, so nothing ran) matches a worker step refused locally with `ArgumentError`, whatever the two messages say | both hosts refuse before anything reaches the sandbox; the wording is each host language's |
+
+`tool/parity/test_worker_compare.py` checks the comparison on every committed expected outcome (each
+matches itself and a relabelled copy; every negative control that applies is caught) and on constructed
+graphs. The core engine's path keeps its rules; it does not compare the id fields, which it never did.

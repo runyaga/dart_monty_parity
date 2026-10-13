@@ -56,8 +56,9 @@ listed under `deltas`.
 
 --assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
 the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
-worker) against upstream's, every field compared, no exceptions tolerated. It
-fails unless every counted case is MATCH on every backend. A case listed
+worker) against upstream's, every field compared with worker_compare.py (shared
+objects and sandbox ids up to relabelling, strings exactly), no exceptions
+tolerated. It fails unless every counted case is MATCH on every backend. A case listed
 under `deferred` is shown as DEFERRED and not counted, and fails once it
 matches on every backend (it then leaves `deferred`); it must still have
 an outcome and an oracle on every backend. The case list must
@@ -72,6 +73,9 @@ import json
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script's directory off sys.path
+import worker_compare  # noqa: E402 (local module, same dir)
 
 ROOT = Path(__file__).resolve().parents[2]
 RULES = ROOT / 'tool/parity/rows.json'
@@ -98,7 +102,8 @@ def norm(v):
     if isinstance(v, dict):
         if v.get('t') == 'float':
             return {'t': 'float', 'bits': v.get('bits')}
-        d = {k: norm(x) for k, x in v.items() if not k.startswith('_')}
+        # Sandbox object ids are the worker comparison's (worker_compare.py); this path never compared them.
+        d = {k: norm(x) for k, x in v.items() if not k.startswith('_') and k not in worker_compare.ID_FIELDS}
         if d.get('t') in ('set', 'frozenset'):
             d['items'] = sorted(d['items'], key=lambda e: json.dumps(e, sort_keys=True))
         return d
@@ -233,6 +238,20 @@ def probe_status(row: str, rule: dict, backend: str, out: Path, expected: Path) 
     return row_status([c['class'] for c in cells]), cells
 
 
+# ------------------------------------------------------------------ worker engine
+def classify_worker(cid: str, backend: str, out: Path, expected: Path,
+                    local_refusal: bool = False, got: dict | None = None) -> tuple[str, list[str]]:
+    """A worker-engine case on [backend]: (class, differing codes), compared by worker_compare."""
+    ref = load(expected / cid / 'ref-py.json')
+    got = got if got is not None else load(out / cid / f'worker-{backend}.json')
+    if got is None or got.get('runner_error'):
+        return 'NO-OUTCOME', ['!']
+    if ref is None or ref.get('runner_error'):
+        return 'NO-ORACLE', ['?']
+    bad = worker_compare.compare(ref, got, local_refusal)
+    return ('MATCH' if not bad else 'DIVERGE'), bad
+
+
 # ------------------------------------------------------------------ main
 def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
               markdown: Path | None, json_out: Path | None) -> int:
@@ -243,8 +262,7 @@ def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[st
     if sorted(cases) != on_disk or set(deferred) - set(cases):
         sys.exit(f'{spec_path}: cases {sorted(cases)} (deferred {sorted(deferred)}) do not match '
                  f'tool/parity/cases/{spec["suite"]}: {on_disk}')
-    rule = {'compare': ALL_CODES}
-    table = {cid: {b: classify_case(cid, b, rule, outcomes, expected, engine) for b in backends} for cid in cases}
+    table = {cid: {b: (*classify_worker(cid, b, outcomes, expected), []) for b in backends} for cid in cases}
     counted = [c for c in cases if c not in deferred]
     lines = [f'E0 through the `{engine}` engine: {len(counted)} counted cases, {len(deferred)} deferred', '',
              '| case | ' + ' | '.join(backends) + ' |', '|---|' + '---|' * len(backends)]

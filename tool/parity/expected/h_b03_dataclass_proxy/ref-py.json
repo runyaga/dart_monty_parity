@@ -9,6 +9,7 @@
     "t": "proxy",
     "class": "P",
     "dataclass": true,
+    "instance_id": "id#1",
     "attrs": [
      [
       "x",
