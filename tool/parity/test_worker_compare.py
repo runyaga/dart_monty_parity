@@ -149,6 +149,20 @@ class Constructed(unittest.TestCase):
                          {'kwargs': {'instance_id': {'t': 'int', 'v': '1'}}})
         self.assertNotIn('instance_id', score.norm({'t': 'proxy', 'instance_id': 'u'}))
 
+    def test_an_oracle_outcome_with_rewritten_strings_is_no_oracle(self):
+        import tempfile  # noqa: PLC0415
+
+        import score  # noqa: PLC0415 (local module, same dir)
+        with tempfile.TemporaryDirectory() as d:
+            for side, name in (('exp', 'ref-py.json'), ('out', 'worker-vm.json')):
+                (Path(d) / side / 'c').mkdir(parents=True)
+                o = outcome({'t': 'str', 'v': '<uuid>'})
+                if side == 'exp':
+                    o['strings_rewritten'] = True
+                (Path(d) / side / 'c' / name).write_text(json.dumps(o))
+            self.assertEqual(score.classify_worker('c', 'vm', Path(d) / 'out', Path(d) / 'exp'),
+                             ('NO-ORACLE', ['strings_rewritten']))
+
     def test_uuid_text_in_a_string_is_compared(self):
         s = '12345678-1234-4234-8234-123456789abc'
         ref = outcome({'t': 'str', 'v': s})

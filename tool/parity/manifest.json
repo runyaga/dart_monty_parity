@@ -1,8 +1,8 @@
 {
  "generator": {
-  "sha256": "ec0df7e839aa78c97a404f1bb8e11eed04d789762f5d109d84f53c6dc648bb6c",
+  "sha256": "6ceca62cc0a4fc16856d7f01d3444f75619d1af7c8d14816f1dddafb2098b6f2",
   "files": {
-   "tool/parity/oracle/run_cases.py": "9f254bcf6e6fdb54a92c1c03b2207ea19519829ab4aa0363db2f6498f97f3658",
+   "tool/parity/oracle/run_cases.py": "d0c003ec589e79a641af4f4a953a32cf7daa4edcd196e4519718e67cd826d9bd",
    "tool/parity/oracle/run_probes.py": "a6738a2f5f5ec947f13f58b8add4f787b7fa66f8c85ddf2eaebfb379d159f712",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -2079,35 +2079,35 @@
    "suite": "limits",
    "case": "a9a9ba1f4cdd6f3dbd0bb47dd74b3cb51574ca6b3fb1313e11a30d47656a193b",
    "outcomes": {
-    "ref-py": "3187367316872526398aa202897fc855f6d2c87d9cc179524cc77f7882847255"
+    "ref-py": "14c49dc19063b9f86f875e8182a0fbb1d2d7475bf19884a535b90ec8183e2c79"
    }
   },
   "l05_mem_catch": {
    "suite": "limits",
    "case": "ff0d7c0fea2b472b1564b84ac6fd06a89dc8d59de1da6e38a1a7abd1dcfffa3d",
    "outcomes": {
-    "ref-py": "6406febd88a1848f8d29a26998484856706841cd70efb6e3605687ce1ccc8f3d"
+    "ref-py": "e57c8ffdae5118b3d927e740bd29ed68596eea4afb407613a04171ee23142a1b"
    }
   },
   "l06_feed_timeout": {
    "suite": "limits",
    "case": "68446748fa257715accf4bb5a46217bb74bbe9bbab7426ac6e9cb346688dc52d",
    "outcomes": {
-    "ref-py": "fa7a6af2225d5152fa56a7a9c3e46d7946ca943aeb1c8b0dfc1bf9f577251650"
+    "ref-py": "df282848bcac9a59d14e7b243c9afb657e6a1b4c39248d66520bdba5a3800298"
    }
   },
   "l07_feed_timeout_catch": {
    "suite": "limits",
    "case": "22ebeae07dc5a56dd59195f4d1563c29233ad9c041558e9c1cb30e41fca15ccf",
    "outcomes": {
-    "ref-py": "e8798e72ab1b9c9e738f3251dd691eb0304fa42b846cd946bd4c94c48e71453b"
+    "ref-py": "3894ddfb787a8e30955992b04d94aa0bc2443d2f9b366015172d4eb58552e8a3"
    }
   },
   "l08_feed_reset_after_timeout": {
    "suite": "limits",
    "case": "4f209ca09d2cd2dbc2ec47299f74d79175e10be70302de6771e371242b110ed9",
    "outcomes": {
-    "ref-py": "bf62e940681ccbb1b13984144cb18bca92eb09a268f64491e79b3f6713c86ece"
+    "ref-py": "38750b1e396122325aaa02fb59b55ffa77c100340d3fb3ce0566080bad1b3a5a"
    }
   },
   "l09_feed_reset_sum": {
@@ -2142,14 +2142,14 @@
    "suite": "limits",
    "case": "a27c1474f2890c429e40bee310a96998f3021e196d6c193f33dbd0f2b345cfd8",
    "outcomes": {
-    "ref-py": "4db86c3cbba2944959352f76ea32d1a87d4c56ec2be60ba692b6e9783d3bd4a2"
+    "ref-py": "d7fcff863bb555135d6528b97d567299e87443561fc5015841469c86fcd71b5e"
    }
   },
   "l15_total_sleep_catch": {
    "suite": "limits",
    "case": "dab5462b2bf433eb4a80f7f4690fe0ff62f8b092f6c95ed8e38130b1a6b507fb",
    "outcomes": {
-    "ref-py": "40bae73b7892433aa3e100a431b340fd3e67ae33bff67461f544998fe120756b"
+    "ref-py": "c8b1a51096d763f97f715076abc60cb01218db74c24920232b851dfdc8a692ac"
    }
   },
   "l16_sync_sleep": {
@@ -3475,7 +3475,7 @@
    "suite": "values",
    "case": "bd428b4b30ae851406d7566ca4f283a033f4706d7a1f7acbaf0511ce28c7b68c",
    "outcomes": {
-    "ref-py": "2925bb6057486afbb93aca5389bb150c96a8584ece66708ae90f3baae64ea46a"
+    "ref-py": "e192f4c85cc012cd14f9d8d98de706cb5f8e593d74174f93850b3e127ce6ff7c"
    }
   },
   "h_b05_std_type_proxy": {

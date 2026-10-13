@@ -140,7 +140,16 @@ def canon_batch(values: list[Any]) -> list[Any]:
             out['items'] = [[enc(k), enc(x)] for k, x in v.items()]
         elif isinstance(v, (set, frozenset)):
             out['t'] = 'set' if isinstance(v, set) else 'frozenset'
-            out['items'] = _sorted_members([enc(x) for x in v])
+            # Members are encoded (and so numbered) in an order that does not depend on the set's
+            # iteration order: by their label-free form. Members that tie there but encode
+            # differently (distinct objects that each carry a reference id) have no stable
+            # numbering, so the oracle refuses them rather than regenerate differently.
+            members = sorted(v, key=lambda x: _label_free(canon_batch([x])[0]))
+            out['items'] = [enc(x) for x in members]
+            for m1, m2, e1, e2 in zip(members, members[1:], out['items'], out['items'][1:]):
+                if _label_free(e1) == _label_free(e2) and json.dumps(e1) != json.dumps(e2):
+                    # Not a ValueError: a feed's handler would record that as a host refusal.
+                    raise RuntimeError('set members that differ only in their labels have no stable order')
         elif isinstance(v, tuple) and hasattr(v, '_fields'):
             out['t'] = 'namedtuple'
             m = type(v).__module__
@@ -155,31 +164,16 @@ def canon_batch(values: list[Any]) -> list[Any]:
     return [enc(v) for v in values]
 
 
-def _set_order(e: Any) -> str:
-    """A set member's sort key: its JSON text without sandbox ids, which differ from run to run."""
+def _label_free(e: Any) -> str:
+    """A canonical form's JSON text without what varies between runs: reference ids and sandbox ids."""
     def strip(x: Any) -> Any:
         if isinstance(x, dict):
-            return {k: strip(y) for k, y in x.items() if k not in ID_FIELDS}
+            return {k: strip(y) for k, y in x.items() if k not in ID_FIELDS and k != 'id'}
         if isinstance(x, list):
             return [strip(y) for y in x]
         return x
 
     return json.dumps(strip(e), sort_keys=True)
-
-
-def _sorted_members(items: list[Any]) -> list[Any]:
-    """Set members in a run-independent order.
-
-    Members that differ only in their sandbox ids would keep the set's iteration order, and with it
-    which id is labelled first; such a set fails here rather than regenerating differently. Upstream
-    cannot build one (its class proxies are unhashable).
-    """
-    keyed = sorted(((_set_order(e), e) for e in items), key=lambda p: p[0])
-    for (ka, ea), (kb, eb) in zip(keyed, keyed[1:]):
-        if ka == kb and json.dumps(ea, sort_keys=True) != json.dumps(eb, sort_keys=True):
-            # Not a ValueError: a feed's handler would record that as a host refusal, not a runner error.
-            raise RuntimeError('set members that differ only in sandbox ids have no stable order')
-    return [e for _, e in keyed]
 
 
 def canon_call(args: Any, kwargs: Any) -> tuple[list[Any], dict[str, Any]]:
@@ -844,25 +838,32 @@ def stable(v: Any, fsroot: str, exact: bool = False) -> Any:
     string as upstream returned it.
     """
     labels: dict[str, str] = {}
+    rewrote = False
 
     def walk(x: Any, key: str | None = None) -> Any:
+        nonlocal rewrote
         if isinstance(x, str):
             if key in ID_FIELDS:
                 return labels.setdefault(x, f'id#{len(labels) + 1}')
             x = x.replace(fsroot, '<fsroot>')
             if exact:
                 return x
-            x = UUID.sub('<uuid>', x)
-            if 'limit exceeded: ' in x:
-                x = LIMIT_AMOUNT.sub('N', x)
-            return x
+            y = UUID.sub('<uuid>', x)
+            if 'limit exceeded: ' in y:
+                y = LIMIT_AMOUNT.sub('N', y)
+            rewrote |= y != x
+            return y
         if isinstance(x, list):
             return [walk(y) for y in x]
         if isinstance(x, dict):
             return {k: walk(y, k) for k, y in x.items() if k != 'wall_ms'}
         return x
 
-    return walk(v)
+    out = walk(v)
+    if rewrote and isinstance(out, dict):
+        # The worker comparison compares strings exactly: it refuses an outcome rewritten here.
+        out['strings_rewritten'] = True
+    return out
 
 
 def error_outcome(case: dict[str, Any], engine: str, e: BaseException) -> dict[str, Any]:

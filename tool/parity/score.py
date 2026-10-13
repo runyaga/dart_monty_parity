@@ -250,6 +250,8 @@ def classify_worker(cid: str, backend: str, out: Path, expected: Path,
         return 'NO-OUTCOME', ['!']
     if ref is None or ref.get('runner_error'):
         return 'NO-ORACLE', ['?']
+    if ref.get('strings_rewritten'):
+        return 'NO-ORACLE', ['strings_rewritten']  # mark the case exact_strings to compare it
     bad = worker_compare.compare(ref, got, local_refusal)
     if 'budget' in bad:
         return 'NO-VERDICT', bad  # the search ran out: neither a match nor evidence of a difference

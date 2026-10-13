@@ -24,7 +24,9 @@ tolerated.
 from __future__ import annotations
 
 import copy
+import json
 import re
+from collections import Counter
 from typing import Any
 
 ID_FIELDS = ('instance_id', 'class_id')
@@ -136,6 +138,36 @@ def _cons_all(items: Any, tail: Any) -> Any:
     return tail
 
 
+def _plain(x: Any) -> str | None:
+    """A member's comparison key when nothing in it is labelled (no reference or sandbox id); else None."""
+    def strip(y: Any) -> Any:
+        if isinstance(y, dict):
+            if 'id' in y or any(k in y for k in ID_FIELDS):
+                raise LookupError
+            if y.get('t') == 'float':
+                return {'t': 'float', 'bits': y.get('bits')}
+            return {k: strip(z) for k, z in y.items() if not k.startswith('_')}
+        if isinstance(y, list):
+            return [strip(z) for z in y]
+        return y
+
+    try:
+        return json.dumps(strip(x), sort_keys=True)
+    except LookupError:
+        return None
+
+
+def _without_plain_pairs(xs: list[Any], ys: list[Any]) -> tuple[list | None, list]:
+    """Pairs off the members that carry no label by their exact text, which needs no search.
+
+    (None, []) when those differ; else the labelled members left on each side.
+    """
+    kx, ky = [_plain(x) for x in xs], [_plain(y) for y in ys]
+    if Counter(k for k in kx if k is not None) != Counter(k for k in ky if k is not None):
+        return None, []
+    return [x for x, k in zip(xs, kx) if k is None], [y for y, k in zip(ys, ky) if k is None]
+
+
 def _solve(tasks: list[tuple[str, list, list]], st: State) -> State | None:
     """A state under which every root batch matches, or None.
 
@@ -181,6 +213,10 @@ def _solve(tasks: list[tuple[str, list, list]], st: State) -> State | None:
             elif item[0] == 'msgo':  # set members as a multiset
                 _, g, xs, ys = item
                 if len(xs) != len(ys):
+                    failed = True
+                    break
+                xs, ys = _without_plain_pairs(xs, ys)
+                if xs is None:
                     failed = True
                     break
                 if xs:
