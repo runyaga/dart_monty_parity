@@ -723,11 +723,9 @@ def evidence_shape_problems(cid: str, allowed: dict) -> list[str]:
     return problems
 
 
-_STR = re.compile(r"""'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)\"""")
-
-
 def _without_comments(src: str) -> str:
-    """[src] with Dart `//` and `/* */` comments blanked (string literals, raw and triple-quoted, are kept)."""
+    """[src] with `//` and nested `/* */` comments blanked (Dart and Rust); string literals are kept: raw
+    (`r'..'`), triple-quoted, and escaped ones."""
     out, i, n = [], 0, len(src)
     while i < n:
         c = src[i]
@@ -737,40 +735,63 @@ def _without_comments(src: str) -> str:
             out.append(' ' * (j - i))
             i = j
         elif src.startswith('/*', i):
-            j = src.find('*/', i + 2)
-            j = n if j < 0 else j + 2
+            depth, j = 1, i + 2
+            while j < n and depth:
+                if src.startswith('/*', j):
+                    depth, j = depth + 1, j + 2
+                elif src.startswith('*/', j):
+                    depth, j = depth - 1, j + 2
+                else:
+                    j += 1
             out.append(''.join(ch if ch == '\n' else ' ' for ch in src[i:j]))
             i = j
         elif c in '\'"':
-            raw = i > 0 and src[i - 1] == 'r' and (i < 2 or not (src[i - 2].isalnum() or src[i - 2] == '_'))
-            q = src[i:i + 3] if src.startswith(c * 3, i) else c
-            j = i + len(q)
-            while j < n and not src.startswith(q, j):
-                if src[j] == '\\' and not raw:
-                    j += 1
-                elif src[j] == '\n' and len(q) == 1:
-                    break
-                j += 1
-            out.append(src[i:j + len(q)])
-            i = j + len(q)
+            end = _literal_end(src, i)
+            out.append(src[i:end])
+            i = end
         else:
             out.append(c)
             i += 1
     return ''.join(out)
 
 
+def _literal_end(src: str, i: int) -> int:
+    """Where the string literal whose opening quote is at [i] ends (an unterminated one ends at the line or file end)."""
+    n = len(src)
+    raw = i > 0 and src[i - 1] == 'r' and (i < 2 or not (src[i - 2].isalnum() or src[i - 2] == '_'))
+    q = src[i:i + 3] if src.startswith(src[i] * 3, i) else src[i]
+    j = i + len(q)
+    while j < n and not src.startswith(q, j):
+        if src[j] == '\\' and not raw:
+            j += 1
+        elif src[j] == '\n' and len(q) == 1:
+            return j
+        j += 1
+    return min(j + len(q), n)
+
+
+def _literal_value(src: str, i: int) -> tuple[str, int]:
+    """(the value, the end) of the string literal at [i], which starts at its `r` prefix or its quote."""
+    raw = src[i] == 'r'
+    q0 = i + 1 if raw else i
+    q = src[q0:q0 + 3] if src.startswith(src[q0] * 3, q0) else src[q0]
+    end = _literal_end(src, q0)
+    body = src[q0 + len(q):end - len(q)]
+    return (body if raw else re.sub(r'\\(.)', r'\1', body, flags=re.S)), end
+
+
 def declared_titles(path: str, src: str) -> list[str]:
     """The titles a source file declares: Dart `test(`, `group(` and `testWidgets(` (adjacent string literals
     joined, as Dart joins them) or Rust `#[test]` functions. Imports, comments and other text declare none."""
+    src = _without_comments(src)
     if path.endswith('.rs'):
         return re.findall(r'#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+(\w+)', src)
     out = []
-    src = _without_comments(src)
     for m in re.finditer(r'\b(?:test|group|testWidgets)\(\s*', src):
         pos, parts = m.end(), []
-        while (lit := _STR.match(src, pos)):
-            parts.append(re.sub(r'\\(.)', r'\1', lit.group(1) if lit.group(1) is not None else lit.group(2)))
-            pos = lit.end()
+        while pos < len(src) and (src[pos] in '\'"' or (src[pos] == 'r' and src[pos + 1:pos + 2] in ('\'', '"'))):
+            value, pos = _literal_value(src, pos)
+            parts.append(value)
             while pos < len(src) and src[pos].isspace():
                 pos += 1
         if parts:

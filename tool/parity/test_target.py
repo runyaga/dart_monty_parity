@@ -138,6 +138,10 @@ class TargetTest(unittest.TestCase):
     def test_declared_titles_reads_dart_and_rust(self) -> None:
         dart = "test('a', () {});\n  testWidgets(\"b\" 'c', (t) async {});\nfinal x = test_helper('not');\n// test('in a comment is still read', () {})\n"
         self.assertEqual(score.declared_titles('t.dart', dart)[:2], ['a', 'bc'])
+        # Nested block comments, raw and triple-quoted titles, and Rust comments.
+        self.assertEqual(score.declared_titles('t.dart', "/* o /* i */ test('gone', () {}); */ test('kept', () {});"), ['kept'])
+        self.assertEqual(score.declared_titles('t.dart', "test(r'raw // t', () {}); test('''m\nl''', () {});"), ['raw // t', 'm\nl'])
+        self.assertEqual(score.declared_titles('t.rs', '// #[test] fn a() {}\n/* #[test] fn b() {} */\n#[test]\nfn c() {}'), ['c'])
         rust = '#[test]\nfn one() {}\n\n#[test]\n#[ignore]\nasync fn two() {}\nfn not_a_test() {}\n'
         self.assertEqual(score.declared_titles('t.rs', rust), ['one', 'two'])
 
