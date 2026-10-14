@@ -80,7 +80,7 @@ final class _PoolCaseSession implements CaseSession {
     String code, {
     required Map<String, MontyValue> inputs,
     required Map<String, ProtoExternalFunction> externals,
-    required ProtoOsCallHandler onOsCall,
+    required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   }) => _session.feedRun(
     code,

@@ -276,10 +276,8 @@ _probes = {
         return const MontyInt(5);
       }),
       'g': coroutine(
-        (args, kwargs) async => throw const OsCallException(
-          'bad',
-          pythonExceptionType: 'ValueError',
-        ),
+        (args, kwargs) async =>
+            throw const ExternalException('ValueError', 'bad'),
       ),
     };
     for (final (code, name) in _eagerAutoCodes) {
@@ -655,17 +653,15 @@ _probes = {
     },
   ),
   // The host function raises ValueError, the session's way today (core's
-  // OsCallException naming the type); the sandbox catches it.
+  // ExternalException naming the type); the sandbox catches it.
   'api_ext_result_callback': (t, shared, _) => shared.withSession(
     (s) => _run(
       t,
       () => s.feedRun(
         _extResultCode,
         externals: {
-          'f': (args, kwargs) => throw const OsCallException(
-            'bad',
-            pythonExceptionType: 'ValueError',
-          ),
+          'f': (args, kwargs) =>
+              throw const ExternalException('ValueError', 'bad'),
         },
       ),
     ),

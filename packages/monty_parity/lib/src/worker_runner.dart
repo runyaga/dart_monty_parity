@@ -21,6 +21,7 @@ import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
+import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/canon.dart';
@@ -48,7 +49,7 @@ abstract interface class CaseSession {
     String code, {
     required Map<String, MontyValue> inputs,
     required Map<String, ProtoExternalFunction> externals,
-    required ProtoOsCallHandler onOsCall,
+    required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   });
 
@@ -154,8 +155,9 @@ Future<Map<String, Object?>> runEngineCase(
           onOsCall: (name, args, kwargs) {
             os.add(_callRecord(name, args, kwargs));
             final a = script.next(name, isOs: true);
+            if (a == null) throw const OsCallNotHandledException();
 
-            return a == null ? null : _answer(a, name, host);
+            return _answer(a, name, host);
           },
           onPrint: (stream, text) => prints.add((stream, text)),
         );
@@ -224,7 +226,7 @@ final class _ProtoCaseSession implements CaseSession {
     String code, {
     required Map<String, MontyValue> inputs,
     required Map<String, ProtoExternalFunction> externals,
-    required ProtoOsCallHandler onOsCall,
+    required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   }) async {
     final result = await _session.feed(
@@ -343,10 +345,7 @@ MontyValue _input(
 /// A scripted answer [a] for the call to [name], as the driver takes it.
 MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
   if (a == null) {
-    throw OsCallException(
-      "name '$name' is not defined",
-      pythonExceptionType: 'NameError',
-    );
+    throw ExternalException('NameError', "name '$name' is not defined");
   }
   if (a['return'] case final Map<Object?, Object?> ret) {
     return canonToMonty(ret.cast(), host, null, _workerExtra);
@@ -357,9 +356,9 @@ MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
   }
   final r = ((a['raise'] as Map?) ?? const {}).cast<String, Object?>();
   if (r.isEmpty) throw UnsupportedError('scripted answer $a');
-  throw OsCallException(
+  throw ExternalException(
+    (r['type'] as String?) ?? 'Exception',
     (r['message'] as String?) ?? '',
-    pythonExceptionType: r['type'] as String?,
   );
 }
 

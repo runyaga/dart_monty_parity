@@ -1,0 +1,16 @@
+{
+ "id": "w_os_raise_empty_message",
+ "code": "from pathlib import Path\ntry:\n  Path('/x').read_text()\nexcept BaseException as e:\n  r = (type(e).__name__, repr(e), e.args)\nr",
+ "os": {
+  "Path.read_text": [
+   {
+    "raise": {
+     "type": "ValueError",
+     "message": ""
+    }
+   }
+  ]
+ },
+ "note": "host_code: a raised exception always carries its message argument, empty when none was given",
+ "exact_strings": true
+}

@@ -1,0 +1,6 @@
+{
+ "id": "w_os_decline",
+ "code": "from pathlib import Path\ntry:\n  Path('/x').read_text()\nexcept BaseException as e:\n  r = (type(e).__name__, repr(e), e.args)\nr",
+ "note": "host_code: an OS handler that declines leaves the call to the runtime's default",
+ "exact_strings": true
+}

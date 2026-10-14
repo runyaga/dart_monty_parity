@@ -1,0 +1,16 @@
+{
+ "id": "w_os_raise_type",
+ "code": "from pathlib import Path\ntry:\n  Path('/x').read_text()\nexcept BaseException as e:\n  r = (type(e).__name__, repr(e), e.args)\nr",
+ "os": {
+  "Path.read_text": [
+   {
+    "raise": {
+     "type": "PermissionError",
+     "message": "denied"
+    }
+   }
+  ]
+ },
+ "note": "host_code: an OS handler raising a chosen type raises that type, with its message as the one argument",
+ "exact_strings": true
+}

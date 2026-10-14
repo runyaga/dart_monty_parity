@@ -1,0 +1,16 @@
+{
+ "id": "w_ext_raise_type",
+ "code": "try:\n  f()\nexcept BaseException as e:\n  r = (type(e).__name__, repr(e), e.args)\nr",
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "KeyError",
+     "message": "k"
+    }
+   }
+  ]
+ },
+ "note": "host_code: an external function raising a chosen type raises that type with its message",
+ "exact_strings": true
+}

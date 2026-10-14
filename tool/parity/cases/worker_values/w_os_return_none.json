@@ -1,0 +1,15 @@
+{
+ "id": "w_os_return_none",
+ "code": "from pathlib import Path\nPath('/x').read_text()",
+ "os": {
+  "Path.read_text": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "note": "host_code: an OS handler returning None answers None; it is not a decline",
+ "exact_strings": true
+}
