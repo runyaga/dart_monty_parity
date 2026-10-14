@@ -472,11 +472,73 @@ def sp_print_raise(pool: pm.Monty, t: T) -> None:
 
 
 @probe
+def sp_async_gather_overlap(pool: pm.Monty, t: T) -> None:
+    """Gathered async host functions run concurrently: each waits until both have started (a barrier with a 10 s
+    watchdog), which a driver that awaited one call before starting the next could never pass."""
+    async def main() -> None:
+        started: list[int] = []
+        both = asyncio.Event()
+
+        async def af(n: int) -> int:
+            started.append(n)
+            t.add({'ev': 'handler', 'who': 'af', 'args': [canon(n)]})
+            if len(started) == 2:
+                both.set()
+            await asyncio.wait_for(both.wait(), 10)
+            return n * 10
+
+        async with pm.AsyncMonty() as p, p.checkout() as s:
+            try:
+                v = await s.feed_run('import asyncio\nawait asyncio.gather(af(1), af(2))', external_lookup={'af': af})
+                t.add({'ev': 'complete', 'value': canon(v)})
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+
+    asyncio.run(main())
+
+
+@probe
+def sp_eager_coroutine_auto(pool: pm.Monty, t: T) -> None:
+    """A coroutine host function resumed automatically. A call the sandbox awaits at once (allow_eager_await) is
+    awaited in place, its value or its exception delivered; one stored first gets a pending future, settled when
+    the sandbox awaits it."""
+    async def f() -> int:
+        await asyncio.sleep(0.01)
+        return 5
+
+    async def g() -> int:
+        raise ValueError('bad')
+
+    async def main() -> None:
+        async with pm.AsyncMonty() as p, p.checkout() as s:
+            for code, ext in EAGER_AUTO_CODES:
+                try:
+                    x = await s.feed_start(code, external_lookup={ext: {'f': f, 'g': g}[ext]})
+                    t.add({'ev': 'eager', 'value': x.allow_eager_await})
+                    while not isinstance(x, pm.MontyComplete):
+                        x = await x.resume_auto()
+                        if not isinstance(x, pm.MontyComplete):
+                            t.add({'ev': 'suspend', 'kind': 'future' if hasattr(x, 'pending_call_ids') else 'call'})
+                    t.add({'ev': 'complete', 'value': canon(x.output)})
+                except Exception as e:  # noqa: BLE001 - recorded
+                    t.add(err_ev(e))
+
+    asyncio.run(main())
+
+
+EAGER_AUTO_CODES = (
+    ('r = await f()\nr', 'f'),
+    ('try:\n    r = await g()\nexcept ValueError as e:\n    r = "caught " + str(e)\nr', 'g'),
+    ('t = f()\nr = await t\nr', 'f'),
+)
+
+
+@probe
 def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
     """Gathered `asyncio.sleep`s overlap under the async binding. Each task records who has started by the time
-    its sleep ends: all three ([3, 1, 2] three times), as when the sleeps run through the futures protocol. And
-    the gather of 1.2 s, 0.4 s and 0.8 s sleeps takes about the longest, not the 2.4 s sum: it waits at least
-    1.1 s and under 2 s, a 0.8 s margin either side for a slow runner."""
+    its sleep ends: all three ([3, 1, 2] three times), as when the sleeps run through the futures protocol;
+    sleeps waited one after another would give [3], [3, 1], [3, 1, 2]. And the gather waits at least 1.1 s
+    (its longest sleep is 1.2 s): a lower bound only, which no scheduling delay can break."""
     code = ("import asyncio\nstarted = []\nasync def a(n):\n    started.append(n)\n"
             "    await asyncio.sleep(0.4 * n)\n    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))")
 
@@ -489,7 +551,7 @@ def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
                 t.add(err_ev(e))
                 return
             took = time.monotonic() - start
-            t.add({'ev': 'complete', 'value': canon(value), 'waited': took >= 1.1, 'overlapped': took < 2.0})
+            t.add({'ev': 'complete', 'value': canon(value), 'waited': took >= 1.1})
 
     asyncio.run(main())
 
@@ -564,12 +626,26 @@ def sp_oversized_answer(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_oversized_resume(pool: pm.Monty, t: T) -> None:
-    """A manual resume too large to send fails, and the snapshot is spent: a retry and the next feed are refused."""
+    """A manual resume too large to send fails, and the snapshot is spent: a retry and the next feed are refused.
+    Each refusal's kind is recorded, so a session that died or finished instead of staying suspended diverges."""
     with pool.checkout() as s:
         x = t.step(lambda: s.feed_start('f()'))
         t.step(lambda: x.resume({'return_value': b'\0' * OVERSIZED}))
         t.step(lambda: x.resume({'return_value': 1}))
+        refusal_kind(t)
         run(t, lambda: s.feed_run('3'))
+        refusal_kind(t)
+
+
+def refusal_kind(t: T) -> None:
+    """Records what the last event refused, by its message: a spent snapshot, a feed while a suspension is
+    pending, or anything else."""
+    last = t.events[-1] if t.events else {}
+    msg = str(last.get('msg', '')) if last.get('ev') == 'refused' else ''
+    kind = ('spent' if 'already been resumed' in msg else
+            'pending' if 'suspension is awaiting an answer' in msg else
+            'other')
+    t.add({'ev': 'refusal_kind', 'kind': kind})
 
 
 # ------------------------------------------------------- API surface

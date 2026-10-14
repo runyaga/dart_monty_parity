@@ -61,8 +61,7 @@
      }
     ]
    },
-   "waited": true,
-   "overlapped": true
+   "waited": true
   }
  ],
  "runner_error": null

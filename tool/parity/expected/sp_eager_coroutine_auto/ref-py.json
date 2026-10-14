@@ -1,0 +1,45 @@
+{
+ "probe": "sp_eager_coroutine_auto",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "eager",
+   "value": true
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "5"
+   }
+  },
+  {
+   "ev": "eager",
+   "value": true
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "caught bad"
+   }
+  },
+  {
+   "ev": "eager",
+   "value": false
+  },
+  {
+   "ev": "suspend",
+   "kind": "future"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "5"
+   }
+  }
+ ],
+ "runner_error": null
+}

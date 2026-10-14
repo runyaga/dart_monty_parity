@@ -36,24 +36,26 @@ Future<Map<String, Object?>> runSessionCase(
 );
 
 /// Case limits -> the session's [SessionConfig]: the worker engine's, plus
-/// the suspension budget the session enforces. A limit the session has no
-/// field for is recorded under `unsupported`.
+/// the suspension and sleep budgets the session enforces. A limit the
+/// session has no field for is recorded under `unsupported`.
 SessionConfig sessionConfig(
   Map<String, Object?> c,
   Map<String, Object?> unsupported,
 ) {
+  const own = {'max_suspensions', 'max_total_sleep_secs'};
   final limits = ((c['limits'] as Map?) ?? const {}).cast<String, Object?>();
   final suspensions = limits['max_suspensions'] as int?;
+  final sleep = limits['max_total_sleep_secs'] as num?;
   final worker = workerConfig({
     ...c,
     'limits': {
       for (final MapEntry(:key, :value) in limits.entries)
-        if (key != 'max_suspensions') key: value,
+        if (!own.contains(key)) key: value,
     },
   }, unsupported);
 
   final base = worker.limits;
-  if (suspensions == null) return worker;
+  if (suspensions == null && sleep == null) return worker;
 
   return SessionConfig(
     limits: ResourceLimits(
@@ -61,6 +63,9 @@ SessionConfig sessionConfig(
       maxRecursionDepth: base?.maxRecursionDepth,
       maxFeedDuration: base?.maxFeedDuration,
       maxSuspensions: suspensions,
+      maxTotalSleep: sleep == null
+          ? null
+          : Duration(microseconds: (sleep * 1e6).round()),
     ),
   );
 }

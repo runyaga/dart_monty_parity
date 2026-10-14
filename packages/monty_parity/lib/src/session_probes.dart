@@ -12,12 +12,14 @@
 // Implementation imports are the point of this engine: it measures core's
 // internal session path before that path has a public API.
 // ignore_for_file: implementation_imports
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
-    hide MontyError, MontySyntaxError, MontyTypingError;
+    hide MontyComplete, MontyError, MontySyntaxError, MontyTypingError;
 import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
+import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
@@ -40,36 +42,8 @@ const _pending = <String, String>{
   'sp_collect_string': _needsCollectors,
   'sp_collect_streams': _needsCollectors,
   'sp_collect_overflow': _needsCollectors,
-  'k_function': _needsStart,
-  'k_os': _needsStart,
-  'k_os_not_handled': _needsStart,
-  'k_name': _needsStart,
-  'k_future': _needsStart,
-  'abortctl_future': _needsStart,
-  'pos_utf8': _needsStart,
-  'pos_earlier_feed': _needsStart,
-  'pos_eval': _needsStart,
-  'inputs_typed': _needsStart,
-  'auto_interleave': _needsStart,
-  'abandon': _needsStart,
-  'api_futures_gather': _needsStart,
-  'api_futures_error': _needsStart,
-  'api_ext_result_resume': _needsStart,
-  'api_eager_coroutine': _needsStart,
-  'api_ext_args_values': _needsStart,
-  'api_ext_args_identity': _needsStart,
-  'async_gather': 'needs futures in feedRun (C1-4)',
-  'sp_async_sleep_order': 'needs futures in feedRun (C1-4)',
   'api_fork_session': 'needs dump and load (C1-5)',
-  'sp_oversized_resume': _needsStart,
-  'sp_futures_partial': _needsStart,
-  'sp_resume_validated': _needsStart,
 };
-
-const _needsStart = 'needs feedStart and snapshots (C1-4)';
-
-/// A print callback for feeds whose prints a probe does not look at.
-void _quietPrint(String stream, String text) {}
 
 const _needsCollectors = 'needs CollectString and CollectStreams (cutover)';
 
@@ -129,6 +103,399 @@ final Map<
   Future<void> Function(_T t, MontyPool shared, StartPool start)
 >
 _probes = {
+  // ------------------------------------------- suspensions, step by step
+  'k_function': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart("g = 1\ny = f(2, k='é')\ny"));
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
+  }),
+  'k_os': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart(_readCode));
+    await _step(
+      t,
+      () => _fn(x).resume(const ExternalReturnValue(MontyString('hi'))),
+    );
+  }),
+  'k_os_not_handled': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart(_readCode));
+    await _step(t, () => _fn(x).resumeNotHandled());
+  }),
+  'k_name': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart('total = 1 + missing\ntotal'));
+    await _step(
+      t,
+      () => (x! as NameLookupSnapshot).resume(value: const MontyInt(41)),
+    );
+  }),
+  'k_future': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(
+      t,
+      () => s.feedStart(
+        'async def m():\n    a = await f(1)\n    return a + 1\nawait m()',
+      ),
+    );
+    final y = await _step(t, () => _fn(x).resume(const ExternalFuture()));
+    final futures = y! as FutureSnapshot;
+    await _step(
+      t,
+      () => futures.resume({
+        futures.pendingCallIds.first: const ExternalReturnValue(MontyInt(9)),
+      }),
+    );
+  }),
+  'pos_utf8': (t, shared, _) => shared.withSession(
+    (s) => _step(t, () => s.feedStart("x = 'é'\ny = add(x, 2)")),
+  ),
+  'pos_earlier_feed': (t, shared, _) => shared.withSession((s) async {
+    await s.feedRun(
+      'def helper(n):\n    return fetch(n)',
+      printCallback: _quiet,
+    );
+    await _step(t, () => s.feedStart('helper(3)'));
+  }),
+  'pos_eval': (t, shared, _) => shared.withSession(
+    (s) => _step(t, () => s.feedStart("eval('  1 + fetch()')")),
+  ),
+  'inputs_typed': (t, shared, _) => shared.withSession((s) async {
+    const shared = MontyList([MontyInt(1)]);
+    final x = await _step(
+      t,
+      () => s.feedStart(
+        'f(b, n, s)\n',
+        inputs: {
+          'b': MontyBytes(Uint8List.fromList([0, 255])),
+          'n': MontyBigInt(BigInt.two.pow(70)),
+          's': const MontyList([shared, shared]),
+        },
+      ),
+    );
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyNone())));
+  }),
+  'auto_interleave': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 2),
+    (p) async {
+      ProtoExternalFunction handler(String who, int times) => (args, kwargs) {
+        t.add({
+          'ev': 'handler',
+          'who': who,
+          'args': [identityCanon(args.first)],
+        });
+
+        return MontyInt((args.first as MontyInt).value * times);
+      };
+      final s1 = await p.checkout();
+      final s2 = await p.checkout();
+      try {
+        const code = 'r = [h(1), h(2)]\nr';
+        final a = await _step(
+          t,
+          () => s1.feedStart(code, externals: {'h': handler('A', 10)}),
+        );
+        final b = await _step(
+          t,
+          () => s2.feedStart(code, externals: {'h': handler('B', 100)}),
+        );
+        final a2 = await _step(t, () => _fn(a).resumeAuto());
+        // Spent: refused before the handler runs.
+        await _step(t, () => _fn(a).resumeAuto());
+        var b2 = await _step(t, () => _fn(b).resumeAuto());
+        await _step(
+          t,
+          () => _fn(a2).resume(const ExternalReturnValue(MontyInt(7))),
+        );
+        while (b2 != null && b2 is! SessionComplete) {
+          final next = b2;
+          b2 = await _step(t, () => _fn(next).resumeAuto());
+        }
+      } finally {
+        await s1.close();
+        await s2.close();
+      }
+    },
+  ),
+  'async_gather': (t, shared, _) => shared.withSession(
+    (s) => _run(
+      t,
+      () => s.feedRun(
+        'import asyncio\nawait asyncio.gather(af(1), af(2))',
+        printCallback: _quiet,
+        externals: {
+          'af': coroutine((args, kwargs) async {
+            final n = (args.first as MontyInt).value;
+            t.add({
+              'ev': 'handler',
+              'who': 'af',
+              'args': [identityCanon(args.first)],
+            });
+            await Future<void>.delayed(Duration(milliseconds: 10 * (3 - n)));
+
+            return MontyInt(n * 10);
+          }),
+        },
+      ),
+    ),
+  ),
+  // Gathered async host functions run concurrently: each waits until both
+  // have started (a barrier with a 10 s watchdog), which a driver that
+  // awaited one call before starting the next could never pass.
+  'sp_async_gather_overlap': (t, shared, _) => shared.withSession((s) {
+    final started = <int>[];
+    final both = Completer<void>();
+
+    return _run(
+      t,
+      () => s.feedRun(
+        'import asyncio\nawait asyncio.gather(af(1), af(2))',
+        printCallback: _quiet,
+        externals: {
+          'af': coroutine((args, kwargs) async {
+            final n = (args.first as MontyInt).value;
+            started.add(n);
+            t.add({
+              'ev': 'handler',
+              'who': 'af',
+              'args': [identityCanon(args.first)],
+            });
+            if (started.length == 2) both.complete();
+            await both.future.timeout(const Duration(seconds: 10));
+
+            return MontyInt(n * 10);
+          }),
+        },
+      ),
+    );
+  }),
+  // A coroutine resumed automatically: awaited in place when the sandbox
+  // awaits the call at once, its value or exception delivered; a call
+  // stored first gets a pending future, settled when it is awaited.
+  'sp_eager_coroutine_auto': (t, shared, _) => shared.withSession((s) async {
+    final fns = <String, ProtoExternalFunction>{
+      'f': coroutine((args, kwargs) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        return const MontyInt(5);
+      }),
+      'g': coroutine(
+        (args, kwargs) async => throw const OsCallException(
+          'bad',
+          pythonExceptionType: 'ValueError',
+        ),
+      ),
+    };
+    for (final (code, name) in _eagerAutoCodes) {
+      try {
+        var x = await s.feedStart(code, externals: {name: fns[name]!});
+        t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
+        while (x is! SessionComplete) {
+          x = await _resumeAuto(x);
+          if (x is! SessionComplete) {
+            t.add({
+              'ev': 'suspend',
+              'kind': x is FutureSnapshot ? 'future' : 'call',
+            });
+          }
+        }
+        t.add({'ev': 'complete', 'value': identityCanon(x.output)});
+      } on MontyRuntimeError catch (e) {
+        t.add(_errEv(e.exception, e.traceback));
+      } on MontySyntaxError catch (e) {
+        t.add(_errEv(e.exception, e.traceback));
+      }
+    }
+  }),
+  // Gathered asyncio.sleeps overlap: every task has started its sleep
+  // before any sleep ends (sleeps waited one after another would give [3],
+  // [3, 1], [3, 1, 2]), and the gather waits at least its longest sleep, a
+  // lower bound no scheduling delay can break.
+  'sp_async_sleep_order': (t, shared, _) => shared.withSession((s) async {
+    final clock = Stopwatch()..start();
+    try {
+      final value = await s.feedRun(
+        'import asyncio\nstarted = []\nasync def a(n):\n'
+        '    started.append(n)\n    await asyncio.sleep(0.4 * n)\n'
+        '    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))',
+        printCallback: _quiet,
+      );
+      final took = clock.elapsed;
+      t.add({
+        'ev': 'complete',
+        'value': identityCanon(value),
+        'waited': took >= const Duration(milliseconds: 1100),
+      });
+    } on MontyRuntimeError catch (e) {
+      t.add(_errEv(e.exception, e.traceback));
+    } on MontySyntaxError catch (e) {
+      t.add(_errEv(e.exception, e.traceback));
+    }
+  }),
+  'abortctl_future': (t, shared, _) => shared.withSession((s) async {
+    await s.feedRun('g = 1', printCallback: _quiet);
+    var x = await _step(
+      t,
+      () => s.feedStart(
+        'async def m():\n    try:\n        return await f(1)\n'
+        '    except BaseException as e:\n        return "caught"\nawait m()',
+      ),
+    );
+    x = await _step(t, () => _fn(x).resume(const ExternalFuture()));
+    final futures = x! as FutureSnapshot;
+    await _step(
+      t,
+      () => futures.resume({
+        futures.pendingCallIds.first: const ExternalException(
+          'RuntimeError',
+          'aborted',
+        ),
+      }),
+    );
+    await _step(t, () => s.feedStart('g'));
+  }),
+  'abandon': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart('g = 2\nf(1)'));
+    await _step(t, () => s.feedStart('g'));
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
+    await _step(t, () => s.feedStart('g'));
+  }),
+  // ------------------------------------------- results and arguments
+  'api_ext_result_resume': (t, shared, _) => shared.withSession((s) async {
+    Future<void> complete(Future<MontySnapshot> Function() f) async => t.add({
+      'ev': 'complete',
+      'value': identityCanon((await f() as SessionComplete).output),
+    });
+    await complete(
+      () async => _fn(
+        await s.feedStart(_extResultCode),
+      ).resume(const ExternalReturnValue(MontyInt(5))),
+    );
+    await complete(
+      () async => _fn(
+        await s.feedStart(_extResultCode),
+      ).resume(const ExternalException('ValueError', 'bad')),
+    );
+    final snap = _fn(await s.feedStart('r = await f()\nr'));
+    final fut = await snap.resume(const ExternalFuture()) as FutureSnapshot;
+    await complete(
+      () => fut.resume({snap.callId: const ExternalReturnValue(MontyInt(7))}),
+    );
+    await complete(
+      () async =>
+          _fn(await s.feedStart(_extResultCode, externals: {})).resumeAuto(),
+    );
+  }),
+  'api_ext_args_values': (t, shared, _) => shared.withSession((s) async {
+    final snap = _fn(await s.feedStart(_extArgsCode));
+    t.add({
+      'ev': 'suspend',
+      'name': snap.functionName,
+      'args': [for (final a in snap.args) identityCanon(a)],
+      'kwargs': {
+        for (final MapEntry(:key, :value) in snap.kwargs.entries)
+          key: identityCanon(value),
+      },
+    });
+    await snap.resume(const ExternalReturnValue(MontyNone()));
+  }),
+  'api_ext_args_identity': (t, shared, _) => shared.withSession((s) async {
+    final snap = _fn(await s.feedStart(_extArgsCode));
+    t.add({
+      'ev': 'identity',
+      'shared': identical(snap.args[2], snap.args[3]),
+    });
+    await snap.resume(const ExternalReturnValue(MontyNone()));
+  }),
+  'api_futures_gather': (t, shared, _) => shared.withSession((s) async {
+    var snap = await s.feedStart(
+      'import asyncio\nr = await asyncio.gather(f(1), f(2))\nr',
+    );
+    final ids = <int>[];
+    while (snap is FunctionSnapshot) {
+      ids.add(snap.callId);
+      snap = await snap.resume(const ExternalFuture());
+    }
+    final futures = snap as FutureSnapshot;
+    t.add({'ev': 'pending', 'count': futures.pendingCallIds.length});
+    final done = await futures.resume({
+      ids[0]: const ExternalReturnValue(MontyInt(10)),
+      ids[1]: const ExternalReturnValue(MontyInt(20)),
+    });
+    t.add({
+      'ev': 'complete',
+      'value': identityCanon((done as SessionComplete).output),
+    });
+  }),
+  'api_futures_error': (t, shared, _) => shared.withSession((s) async {
+    final snap = _fn(
+      await s.feedStart(
+        'try:\n    r = await f(1)\nexcept ValueError as e:\n'
+        '    r = "caught ValueError: " + str(e)\n'
+        'except RuntimeError as e:\n'
+        '    r = "caught RuntimeError: " + str(e)\nr',
+      ),
+    );
+    final fut = await snap.resume(const ExternalFuture()) as FutureSnapshot;
+    final done = await fut.resume({
+      snap.callId: const ExternalException('ValueError', 'boom'),
+    });
+    t.add({
+      'ev': 'complete',
+      'value': identityCanon((done as SessionComplete).output),
+    });
+  }),
+  'api_eager_coroutine': (t, shared, _) => shared.withSession((s) async {
+    final a = _fn(await s.feedStart('r = f()\nr'));
+    t.add({'ev': 'eager', 'sync_call': a.allowEagerAwait});
+    await a.resume(const ExternalReturnValue(MontyInt(1)));
+    final b = _fn(await s.feedStart('r = await f()\nr'));
+    t.add({'ev': 'eager', 'await_call': b.allowEagerAwait});
+  }),
+  'sp_futures_partial': (t, shared, _) => shared.withSession((s) async {
+    var x = await _step(
+      t,
+      () => s.feedStart(
+        'import asyncio\nr = await asyncio.gather(f(1), f(2))\nr',
+      ),
+    );
+    final ids = [_fn(x).callId];
+    x = await _step(t, () => _fn(x).resume(const ExternalFuture()));
+    ids.add(_fn(x).callId);
+    // Upstream reports pending ids in hash order: compared sorted.
+    final y = await _fn(x).resume(const ExternalFuture()) as FutureSnapshot;
+    t.add({
+      'ev': 'futures',
+      'pending': [...y.pendingCallIds]..sort(),
+    });
+    final z =
+        await y.resume({ids.last: const ExternalReturnValue(MontyInt(20))})
+            as FutureSnapshot;
+    t.add({
+      'ev': 'futures',
+      'pending': [...z.pendingCallIds]..sort(),
+    });
+    await _step(
+      t,
+      () => z.resume({ids.first: const ExternalReturnValue(MontyInt(10))}),
+    );
+  }),
+  'sp_resume_validated': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart('f()'));
+    await _step(
+      t,
+      () => _fn(x).resume(const ExternalException('NotAnExceptionType')),
+    );
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
+  }),
+  'sp_oversized_resume': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart('f()'));
+    await _step(
+      t,
+      () =>
+          _fn(x).resume(ExternalReturnValue(MontyBytes(Uint8List(_oversized)))),
+    );
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(1))));
+    _refusalKind(t);
+    await _run(t, () => s.feedRun('3'));
+    _refusalKind(t);
+  }),
   'sp_checkout_script_name': (t, shared, _) => shared.withSession(
     (s) async {
       await _run(t, () => s.feedRun('__file__'));
@@ -379,7 +746,7 @@ _probes = {
   ),
   'sp_print_raise': (t, shared, _) => shared.withSession(
     (s) async {
-      await s.feedRun('x = 1', printCallback: _quietPrint);
+      await s.feedRun('x = 1', printCallback: _quiet);
       await _failed(
         t,
         () => s.feedRun(
@@ -443,6 +810,110 @@ Future<void> _withPool(
     await pool.close();
   }
 }
+
+const _readCode = "from pathlib import Path\nPath('/x').read_text()";
+
+/// run_probes.py's `EXT_ARGS_CODE`.
+const _extArgsCode = "a = [1]\nf(1, 'a', a, a, k=3, m={'x': 1.5}, n=None)";
+
+/// A print callback for feeds whose prints a probe does not look at.
+void _quiet(String stream, String text) {}
+
+/// The snippets of `sp_eager_coroutine_auto`, each with the host function
+/// it calls, as run_probes.py's `EAGER_AUTO_CODES`.
+const _eagerAutoCodes = [
+  ('r = await f()\nr', 'f'),
+  (
+    'try:\n    r = await g()\nexcept ValueError as e:\n'
+        '    r = "caught " + str(e)\nr',
+    'g',
+  ),
+  ('t = f()\nr = await t\nr', 'f'),
+];
+
+/// [snapshot] resumed automatically.
+Future<MontySnapshot> _resumeAuto(MontySnapshot snapshot) => switch (snapshot) {
+  FunctionSnapshot() => snapshot.resumeAuto(),
+  FutureSnapshot() => snapshot.resumeAuto(),
+  NameLookupSnapshot() => snapshot.resumeAuto(),
+  SessionComplete() => throw StateError('the feed is complete'),
+};
+
+/// Records what the last event refused, as run_probes.py's `refusal_kind`:
+/// a spent snapshot, a feed while a suspension is pending, or anything else.
+void _refusalKind(_T t) {
+  final last = t.events.isEmpty ? const <String, Object?>{} : t.events.last;
+  final msg = last['ev'] == 'refused' ? '${last['msg']}' : '';
+  final kind = msg.contains('already been resumed')
+      ? 'spent'
+      : msg.contains('suspension is awaiting an answer')
+      ? 'pending'
+      : 'other';
+  t.add({'ev': 'refusal_kind', 'kind': kind});
+}
+
+/// [snapshot] as the function snapshot the probe expects.
+FunctionSnapshot _fn(MontySnapshot? snapshot) => snapshot! as FunctionSnapshot;
+
+/// Records what [step] reached, as run_probes.py's `T.step` does: the
+/// snapshot or completion, a sandbox exception as `error`, anything else as
+/// `refused`. Returns the snapshot, or null after an error.
+Future<MontySnapshot?> _step(
+  _T t,
+  Future<MontySnapshot> Function() step,
+) async {
+  try {
+    final snapshot = await step();
+    t.add(_evOf(snapshot));
+
+    return snapshot;
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on MontySyntaxError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on Object catch (e) {
+    t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+  }
+
+  return null;
+}
+
+/// run_probes.py's `ev_of`.
+_Ev _evOf(MontySnapshot snapshot) => switch (snapshot) {
+  SessionComplete(:final output) => {
+    'ev': 'complete',
+    'value': identityCanon(output),
+  },
+  FunctionSnapshot() => {
+    'ev': 'suspend',
+    'kind': snapshot.isOsFunction ? 'os' : 'function',
+    'name': snapshot.functionName,
+    'args': [for (final a in snapshot.args) identityCanon(a)],
+    'kwargs': {
+      for (final MapEntry(:key, :value) in snapshot.kwargs.entries)
+        key: identityCanon(value),
+    },
+    'position': _pos(snapshot.position),
+  },
+  NameLookupSnapshot() => {
+    'ev': 'suspend',
+    'kind': 'name',
+    'name': snapshot.variableName,
+    'position': _pos(snapshot.position),
+  },
+  FutureSnapshot() => {
+    'ev': 'suspend',
+    'kind': 'future',
+    'pending': snapshot.pendingCallIds,
+    'position': _pos(snapshot.position),
+  },
+};
+
+Map<String, Object?> _pos(SourceRange r) => {
+  'filename': r.filename,
+  'start': r.start,
+  'end': r.end,
+};
 
 /// Records a feed's value as `complete`, or its error: a sandbox exception
 /// as `error`, anything else as `refused`.
