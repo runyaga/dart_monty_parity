@@ -1,0 +1,37 @@
+{
+ "id": "w_graph_shared_diamond_ret",
+ "code": "x = get()\n(x[0] is x[1], x[0][0] is x[1][0], x)",
+ "externals": {
+  "get": [
+   {
+    "return": {
+     "t": "tuple",
+     "items": [
+      {
+       "t": "list",
+       "id": 1,
+       "items": [
+        {
+         "t": "list",
+         "id": 2,
+         "items": [
+          {
+           "t": "int",
+           "v": "1"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "t": "ref",
+       "id": 1
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "note": "unstable_graph_access: a graph that shares a node (a diamond) is valid: a callback return keeps the shared list, built once and read back by reference",
+ "exact_strings": true
+}

@@ -1,0 +1,9 @@
+{
+ "id": "w_tzdb_new_york",
+ "code": "from datetime import datetime\nsummer = datetime(2024, 7, 1, 12).astimezone()\nwinter = datetime(2024, 1, 1, 12).astimezone()\n(summer.isoformat(), summer.tzname(), winter.isoformat(), winter.tzname())",
+ "os_policy": {
+  "timezone": "America/New_York"
+ },
+ "note": "timezone_database: a second zone with DST (America/New_York: EDT in July, EST in January)",
+ "exact_strings": true
+}

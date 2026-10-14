@@ -157,7 +157,7 @@ jobs:
           python3 -I tool/parity/score.py /tmp/parity \
             --json /tmp/parity/score.json --markdown /tmp/parity/score.md \
             --assert-current tool/parity/baseline-current.json \
-            --target tool/parity/m3-target.json
+            --target tool/parity/m3-target.json --core core
       - name: Publish the scorecard
         if: success() || failure()
         run: '[ -f /tmp/parity/score.md ] && cat /tmp/parity/score.md >> "$GITHUB_STEP_SUMMARY" || true'

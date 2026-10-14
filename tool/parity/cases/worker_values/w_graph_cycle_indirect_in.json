@@ -1,0 +1,30 @@
+{
+ "id": "w_graph_cycle_indirect_in",
+ "code": "x",
+ "inputs": {
+  "x": {
+   "t": "list",
+   "id": 1,
+   "items": [
+    {
+     "t": "dict",
+     "id": 2,
+     "items": [
+      [
+       {
+        "t": "str",
+        "v": "k"
+       },
+       {
+        "t": "ref",
+        "id": 1
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "note": "unstable_graph_access: a cycle through two containers (a list holding a dict that holds the list) is not a valid graph (a node's child must lie below it): the input is refused (ValueError: Circular reference detected); nothing runs",
+ "exact_strings": true
+}

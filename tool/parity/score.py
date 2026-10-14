@@ -64,6 +64,9 @@ is PRESENT there or an `allowed` entry (an approved exception: its kind, status,
 accepts the status it has; an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
 Shown, never fatal, unless --assert-target (landed at the cut). The file itself must be consistent (every
 in-scope row in exactly one list, a valid `allowed`): an inconsistent file exits non-zero either way.
+An `allowed` entry may carry `evidenced_by` ({path, tests, exercises} items: the core tests that evidence a
+row no binding exposes); `--core DIR` checks each named file exists in that core checkout and holds each test
+title, and a mismatch exits non-zero like an inconsistent file.
 
 --assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
 the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
@@ -85,6 +88,8 @@ equal the files in tool/parity/cases/<suite>.
                backend; fails once it matches (it then moves to pre_cutover)
   cutover      shown, not asserted (measured on the cutover candidate), but it
                must have an outcome and an oracle on every backend
+  also         not a set: cases another row's set owns, that this row maps too
+               (a case is scored once, in its own set)
 
 Every case file in the worker suite must be in exactly one set. Each negative
 control in `worker.controls` mutates a pre-cutover case's real worker outcome
@@ -320,6 +325,8 @@ def worker_sets(rules_doc: dict) -> tuple[dict[str, tuple[str, str]], list[str]]
     problems = []
     for row, rule in rules_doc['rows'].items():
         for kind, cases in (rule.get('worker') or {}).items():
+            if kind == 'also':
+                continue  # read below: a mapping, not a set
             if kind not in ('pre_cutover', 'diverge', 'cutover'):
                 problems.append(f'{row}: unknown worker set {kind!r}')
                 continue
@@ -327,7 +334,39 @@ def worker_sets(rules_doc: dict) -> tuple[dict[str, tuple[str, str]], list[str]]
                 if cid in where:
                     problems.append(f'{cid} is in {where[cid]} and in {(row, kind)}')
                 where[cid] = (row, kind)
+    # `also`: cases another row's set owns, that this row maps too (a case is scored once, in its own set).
+    for row, rule in rules_doc['rows'].items():
+        also = (rule.get('worker') or {}).get('also', [])
+        if not isinstance(also, list) or not also or len(set(also)) != len(also):
+            if 'also' in (rule.get('worker') or {}):
+                problems.append(f'{row}: worker `also` must be a non-empty list of distinct cases')
+            continue
+        for cid in also:
+            if cid not in where:
+                problems.append(f'{row}: worker `also` names {cid}, which is in no row\'s worker set')
+            elif where[cid][0] == row:
+                problems.append(f'{row}: worker `also` names {cid}, which the row already owns')
     return where, problems
+
+
+def recorded_divergence(rec: dict, cls: str, bad: list[str], got: dict | None) -> bool:
+    """Whether a worker outcome [got] diverges from upstream exactly as the record [rec] says.
+
+    It must DIVERGE in exactly rec['differs'], and its first step must carry the recorded worker value
+    (`worker_value`) and, when the record has one, the recorded worker exception (`worker_exception`:
+    type, message, traceback and data compared)."""
+    if cls != 'DIVERGE' or bad != rec['differs'] or got is None:
+        return False
+    steps = [dict(st) for st in got.get('steps') or []]
+    if steps:
+        if 'worker_value' in rec:
+            steps[0]['value'] = rec['worker_value']
+        if 'worker_exception' in rec:
+            steps[0]['exception'] = rec['worker_exception']
+    codes = ['V'] + (['Et', 'Em', 'Ef', 'Ed'] if 'worker_exception' in rec else [])
+    if 'worker_value' not in rec and 'worker_exception' not in rec:
+        return False
+    return worker_compare.compare({'steps': steps}, got, codes=codes) == []
 
 
 def assert_worker(outcomes: Path, expected: Path, backends: list[str],
@@ -361,6 +400,10 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
                 cells = [table[cid][b][0] + (f' `{"".join(table[cid][b][1])}`' if table[cid][b][1] else '')
                          for b in backends]
                 lines.append(f'| {row} | {cid} | {kind} | ' + ' | '.join(cells) + ' |')
+    for row, rule in doc['rows'].items():
+        for cid in (rule.get('worker') or {}).get('also', []):
+            cells = [table[cid][b][0] for b in backends if cid in table]
+            lines.append(f'| {row} | {cid} | also ({where[cid][0]}) | ' + ' | '.join(cells) + ' |')
     lines.append('')
     rc = 0
     def ran_every_feed(cid: str, b: str) -> bool:
@@ -374,14 +417,8 @@ def assert_worker(outcomes: Path, expected: Path, backends: list[str],
 
     def as_recorded(cid: str, b: str) -> bool:
         """A recorded divergence differs in exactly its recorded fields, with the recorded worker value."""
-        rec = spec['diverge'][cid]
         cls, bad = table[cid][b]
-        got = load(outcomes / cid / f'worker-{b}.json')
-        if cls != 'DIVERGE' or bad != rec['differs'] or got is None:
-            return False
-        want = {'steps': [{**s, 'value': rec['worker_value'] if i == 0 else s.get('value')}
-                          for i, s in enumerate(got.get('steps') or [])]}
-        return worker_compare.compare(want, got, codes=['V']) == []
+        return recorded_divergence(spec['diverge'][cid], cls, bad, load(outcomes / cid / f'worker-{b}.json'))
 
     for b in backends:
         pre = [c for c, (_, k) in where.items() if k == 'pre_cutover']
@@ -653,6 +690,51 @@ def target_problems(target: dict, in_scope: dict[str, dict]) -> list[str]:
         covered = set(allowed.get('backends') or [])
         if not allowed.get('status') or not covered or covered - set(row.get('backends', [])):
             problems.append(f'{cid}: `allowed` needs the status it accepts and a non-empty list of backends the row is a target on')
+        problems += evidence_shape_problems(cid, allowed)
+    return problems
+
+
+def evidence_shape_problems(cid: str, allowed: dict) -> list[str]:
+    """An `allowed` entry may say a core test evidences the row: `evidenced_by`, a non-empty list of
+    {path, tests, exercises}: the core file (relative to the core checkout), the titles of the tests in it
+    (each a substring of a test title in that file) and what behaviour of the row they exercise."""
+    if 'evidenced_by' not in allowed:
+        return []
+    ev = allowed['evidenced_by']
+    if not isinstance(ev, list) or not ev:
+        return [f'{cid}: `evidenced_by` must be a non-empty list']
+    problems = []
+    for i, e in enumerate(ev):
+        where = f'{cid}: evidenced_by[{i}]'
+        if not isinstance(e, dict) or set(e) != {'path', 'tests', 'exercises'}:
+            problems.append(f'{where} must be an object with exactly path, tests and exercises')
+            continue
+        if not isinstance(e['path'], str) or not e['path'] or e['path'].startswith('/') or '..' in e['path'].split('/'):
+            problems.append(f'{where}: `path` must be a relative path inside the core checkout')
+        tests = e['tests']
+        if not isinstance(tests, list) or not tests or not all(isinstance(t, str) and t.strip() for t in tests):
+            problems.append(f'{where}: `tests` must be a non-empty list of test titles')
+        if not isinstance(e['exercises'], str) or not e['exercises'].strip():
+            problems.append(f'{where}: `exercises` must say what behaviour the tests exercise')
+    return problems
+
+
+def evidence_core_problems(target: dict, core: Path) -> list[str]:
+    """Check every `evidenced_by` against a core checkout: the file exists and holds each named test title.
+
+    A title matches as a substring of the file's source with Dart adjacent-string splits joined, so a title
+    that runs over two source lines still matches."""
+    problems = []
+    for cid, row in target['rows'].items():
+        for e in (row.get('allowed') or {}).get('evidenced_by', []):
+            f = core / e['path']
+            if not f.is_file():
+                problems.append(f'{cid}: evidence file {e["path"]} does not exist in the core checkout')
+                continue
+            src = re.sub(r"'\s*\n\s*'", '', f.read_text())
+            for t in e['tests']:
+                if t not in src:
+                    problems.append(f'{cid}: no test titled {t!r} in {e["path"]}')
     return problems
 
 
@@ -779,12 +861,15 @@ def main() -> int:
                     help="score the C1 gate through the session engine instead (default tool/parity/c1-gate.json)")
     ap.add_argument('--target', type=Path, nargs='?', const=TARGET,
                     help='also score the M3 parity target (default tool/parity/m3-target.json): shown, not fatal')
+    ap.add_argument('--core', type=Path, help="--target: also check every `allowed` entry's `evidenced_by` against this core checkout")
     ap.add_argument('--assert-target', action='store_true', help='--target: fail on any row that is not PRESENT or allowed')
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
     if a.assert_target and not a.target:
         sys.exit('--assert-target needs --target')
+    if a.core and not a.target:
+        sys.exit('--core needs --target')
     if a.target and (a.assert_e0 or a.assert_gate or a.assert_worker):
         sys.exit('--target scores the core engine\'s rows; it cannot join --assert-e0, --assert-gate or --assert-worker')
     if a.engine and not a.assert_e0:
@@ -913,6 +998,8 @@ def main() -> int:
     if a.target:
         target = json.loads(a.target.read_text())
         problems = target_problems(target, in_scope)
+        if a.core:
+            problems += evidence_core_problems(target, a.core)
         if problems:
             sys.exit(f'{a.target}: ' + '; '.join(problems))
         col = {'vm': 'baseline_ffi'}
