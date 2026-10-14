@@ -14,9 +14,9 @@
 // ignore_for_file: implementation_imports
 import 'dart:typed_data';
 
-import 'package:dart_monty_core/dart_monty_core.dart';
-import 'package:dart_monty_core/src/worker/monty_channel.dart'
-    show MontyCrashedError;
+import 'package:dart_monty_core/dart_monty_core.dart'
+    hide MontyError, MontySyntaxError, MontyTypingError;
+import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
@@ -267,7 +267,6 @@ _probes = {
           await s.feedRun('while True:\n    pass');
           t.add({'ev': 'complete'});
           // The crash is the outcome measured here.
-          // ignore: avoid_catching_errors
         } on MontyCrashedError {
           final at = clock.elapsed;
           t.add({
@@ -336,8 +335,10 @@ _probes = {
             waited >= const Duration(milliseconds: 250) &&
             waited < const Duration(seconds: 5),
       });
-    } on MontyScriptError catch (e) {
-      t.add(_errEv(e));
+    } on MontyRuntimeError catch (e) {
+      t.add(_errEv(e.exception, e.traceback));
+    } on MontySyntaxError catch (e) {
+      t.add(_errEv(e.exception, e.traceback));
     }
   }),
   // With a long flush interval, output is held until a host call or the
@@ -448,8 +449,10 @@ Future<void> _withPool(
 Future<void> _run(_T t, Future<MontyValue> Function() feed) async {
   try {
     t.add({'ev': 'complete', 'value': identityCanon(await feed())});
-  } on MontyScriptError catch (e) {
-    t.add(_errEv(e));
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on MontySyntaxError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
   } on Object catch (e) {
     t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
   }
@@ -533,18 +536,15 @@ Future<void> _failed(_T t, Future<MontyValue> Function() feed) async {
   }
 }
 
-_Ev _errEv(MontyScriptError e) {
-  final exception = e.exception;
-  final last = exception == null || exception.traceback.isEmpty
-      ? null
-      : exception.traceback.last;
+_Ev _errEv(MontyExceptionValue exception, List<Frame> traceback) {
+  final last = traceback.isEmpty ? null : traceback.last;
 
   return {
     'ev': 'error',
-    'type': exception?.excType ?? e.excType,
-    'message': exception?.message ?? e.message,
+    'type': exception.excType,
+    'message': exception.message,
     'tb_last': last == null
         ? null
-        : {'line': last.startLine, 'function': last.frameName},
+        : {'line': last.line, 'function': last.functionName},
   };
 }

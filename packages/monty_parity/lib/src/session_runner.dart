@@ -16,6 +16,7 @@ import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// Runs case [c] on [backend] through a session checked out of [pool].
@@ -51,11 +52,16 @@ SessionConfig sessionConfig(
     },
   }, unsupported);
 
+  final base = worker.limits;
+  if (suspensions == null) return worker;
+
   return SessionConfig(
-    maxMemoryBytes: worker.maxMemoryBytes,
-    maxRecursionDepth: worker.maxRecursionDepth,
-    maxFeedDuration: worker.maxFeedDuration,
-    maxSuspensions: suspensions,
+    limits: ResourceLimits(
+      maxMemory: base?.maxMemory,
+      maxRecursionDepth: base?.maxRecursionDepth,
+      maxFeedDuration: base?.maxFeedDuration,
+      maxSuspensions: suspensions,
+    ),
   );
 }
 
