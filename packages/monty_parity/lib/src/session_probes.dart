@@ -238,7 +238,12 @@ _probes = {
   },
   'sp_request_timeout': (t, _, start) => _withPool(
     start,
-    const PoolOptions(requestTimeout: Duration(milliseconds: 500)),
+    // One slot, so the next checkout needs the killed worker's slot back.
+    const PoolOptions(
+      requestTimeout: Duration(milliseconds: 500),
+      maxProcesses: 1,
+      checkoutTimeout: Duration(seconds: 10),
+    ),
     (p) async {
       await p.withSession((s) async {
         await _run(t, () => s.feedRun('sum(range(1000))'));

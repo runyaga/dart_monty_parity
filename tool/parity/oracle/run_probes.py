@@ -355,7 +355,8 @@ def sp_request_timeout(pool: pm.Monty, t: T) -> None:
         time.sleep(0.8)
         return 1
 
-    with pm.Monty(request_timeout=0.5) as p:
+    # One slot, so the next checkout needs the killed worker's slot back.
+    with pm.Monty(request_timeout=0.5, max_processes=1, checkout_timeout=10) as p:
         with p.checkout() as s:
             run(t, lambda: s.feed_run('sum(range(1000))'))
             # Host code is not a turn: a callback longer than the deadline is not timed out.
@@ -424,11 +425,12 @@ def sp_collect_string(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_collect_streams(pool: pm.Monty, t: T) -> None:
-    """`CollectStreams` keeps (stream, text) pairs, adjacent text on one stream coalesced."""
-    with pool.checkout() as s:
+    """`CollectStreams` keeps (stream, text) pairs. With no flush interval each line is its own delivery, and
+    upstream keeps each as its own pair (measured: adjacent stdout lines are not merged)."""
+    with pool.checkout(print_flush_interval=0) as s:
         c = pm.CollectStreams()
-        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n1",
-                                  print_callback=c))
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+                                  "print('d')\n1", print_callback=c))
         t.add({'ev': 'collected', 'output': [list(p) for p in c.output]})
 
 
