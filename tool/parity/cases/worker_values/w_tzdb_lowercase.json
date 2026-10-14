@@ -1,0 +1,9 @@
+{
+ "id": "w_tzdb_lowercase",
+ "code": "from datetime import datetime\nd = datetime(2024, 7, 1, 12).astimezone()\n(d.isoformat(), d.tzname())",
+ "os_policy": {
+  "timezone": "europe/london"
+ },
+ "note": "timezone_database: zone names are matched without regard to case (upstream resolves europe/london as Europe/London)",
+ "exact_strings": true
+}

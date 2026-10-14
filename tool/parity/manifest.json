@@ -1,8 +1,8 @@
 {
  "generator": {
-  "sha256": "ca136f09569426fcc1fcdac00d6d59711f15341be7cf7e14880c38161e33b734",
+  "sha256": "fa73aac552f604780d7b8573033f3837097948beb95520e57d11a4a844694a89",
   "files": {
-   "tool/parity/oracle/run_cases.py": "8489625ca5f0d4a10c71f2a8cc2bbd53970e914533ee6fea9f912f8956e0f0cb",
+   "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
    "tool/parity/oracle/run_probes.py": "bb2b8100330bc43fa6e200789e7b2b5f71211e80feaa9e35e75bd82db7320062",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -4409,6 +4409,27 @@
     "ref-py": "ed5484f183d6c2cc9a7f8473811b4e30844a3e127388ef1730f1b4bcd7990eeb"
    }
   },
+  "w_graph_cycle_indirect_in": {
+   "suite": "worker_values",
+   "case": "4205c8e0131fb565a5ccdda88307a2b7f06181e16ce3122e5769a9760527d49a",
+   "outcomes": {
+    "ref-py": "5a5f4424a9442c1a63ff938f179500f8ea8bc4df86a66942739a1959f24eec1f"
+   }
+  },
+  "w_graph_cycle_ret": {
+   "suite": "worker_values",
+   "case": "09403c83c4e93a4ad2b0814a3c699c9128207d77ca85b56d9321a0a0697b32be",
+   "outcomes": {
+    "ref-py": "693f76cc361c6d5e59f63ca252641d7fdcb1a7b4938078705bef5d793337a6ea"
+   }
+  },
+  "w_graph_shared_diamond_ret": {
+   "suite": "worker_values",
+   "case": "6e77c398c9c9c7570fce3c459d7c75e26274c43b6fca8e6f248c503c8d403d0a",
+   "outcomes": {
+    "ref-py": "29460dbbd37e34327c657487aaa2195e45e95f045ff307d1caebb6af49c48210"
+   }
+  },
   "w_lossy_key_collision": {
    "suite": "worker_values",
    "case": "b3a83cfec223b0d68557a49256b0f9fdd9826bc13107f346e2ceca98cd235ed6",
@@ -4610,6 +4631,48 @@
    "case": "20a005a2ff63b19a83712552dd08999920fa0939878c09931b70b492be758b72",
    "outcomes": {
     "ref-py": "388b3a068d5ee8fcd76f29fcad63282fb2b7cf37d75d46ed06bfa517b6aaf625"
+   }
+  },
+  "w_tzdb_kolkata": {
+   "suite": "worker_values",
+   "case": "5aa44d8308d36fa5964e79a1bed5e7ad41e63a3037f3e7f40b8b608911503aa6",
+   "outcomes": {
+    "ref-py": "92ce831a7186ad323b6015b1633d131ea9e67b9dbd831f8b786bf55a661c673a"
+   }
+  },
+  "w_tzdb_london": {
+   "suite": "worker_values",
+   "case": "224795c2b6f1d20f914a353e5fb527f77bbd54869de692f7d015cf4628b11dc8",
+   "outcomes": {
+    "ref-py": "6c34623f9a007920e4bdc8c5e2d9bba0abd6efeaf7ae25bba39469a7f6ded229"
+   }
+  },
+  "w_tzdb_lowercase": {
+   "suite": "worker_values",
+   "case": "88e9dddb732645579840a0e6b21007ee62e8f14ad995d36f5c4985184be35ab0",
+   "outcomes": {
+    "ref-py": "04015d1a40d4b3d86c2afac17a3053e80f27e00677e6dd62fc163b3b4f0427d1"
+   }
+  },
+  "w_tzdb_new_york": {
+   "suite": "worker_values",
+   "case": "47643442099a7e4aa0e5d8fdca99c162cb0dc0dd866a538ae9c846e7ab0894b8",
+   "outcomes": {
+    "ref-py": "0249ea29b876bf448a5aa16389568dd10ac39f7da29bf63692337cdf8749aae6"
+   }
+  },
+  "w_tzdb_unknown": {
+   "suite": "worker_values",
+   "case": "06c9ea4b1d59268bbdb207637175efb4a32e07cf11161e398f8b00d7d3bef996",
+   "outcomes": {
+    "ref-py": "cce1fef8da1c6fed6dd0be59ee4a5051d5a0c48f06e1daec7f470002551be5b3"
+   }
+  },
+  "w_tzdb_utc_name": {
+   "suite": "worker_values",
+   "case": "4dcdf10d28ac6084d372acc61bce6a1456637d4e6ce3071b02bb096eea19d12f",
+   "outcomes": {
+    "ref-py": "6f3c411f2b86fa51c6663c08970900d0d6384434b42f36122aff2aa562417b4a"
    }
   }
  },

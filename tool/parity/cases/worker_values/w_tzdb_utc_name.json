@@ -1,0 +1,9 @@
+{
+ "id": "w_tzdb_utc_name",
+ "code": "from datetime import datetime\nd = datetime(2024, 7, 1, 12).astimezone()\n(d.isoformat(), d.tzname())",
+ "os_policy": {
+  "timezone": "UTC"
+ },
+ "note": "timezone_database: the name UTC is the database's UTC zone, named UTC (upstream's default is the lowercase utc)",
+ "exact_strings": true
+}

@@ -2299,6 +2299,41 @@
      "sp_print_raise_suspended"
     ]
    }
+  },
+  "protocol_value_arena": {
+   "worker": {
+    "also": [
+     "w_batch_inputs",
+     "w_batch_call_args",
+     "w_batch_proxy_args",
+     "w_batch_instance_ids",
+     "w_refuse_uuid"
+    ]
+   },
+   "note": "PT1 maps the shared_value_batches cases (worker `also`). w_refuse_uuid is an auxiliary refusal (a host cannot build a class proxy), not shared-node evidence."
+  },
+  "unstable_graph_access": {
+   "worker": {
+    "pre_cutover": [
+     "w_graph_cycle_indirect_in",
+     "w_graph_shared_diamond_ret"
+    ],
+    "diverge": [
+     "w_graph_cycle_ret"
+    ]
+   }
+  },
+  "timezone_database": {
+   "worker": {
+    "pre_cutover": [
+     "w_tzdb_london",
+     "w_tzdb_new_york",
+     "w_tzdb_kolkata",
+     "w_tzdb_lowercase",
+     "w_tzdb_utc_name",
+     "w_tzdb_unknown"
+    ]
+   }
   }
  },
  "rescored": {
@@ -2440,6 +2475,14 @@
    {
     "case": "w_tz_empty_name_in",
     "mutation": "empty-zone-name-to-none"
+   },
+   {
+    "case": "w_tzdb_london",
+    "mutation": "string-digits"
+   },
+   {
+    "case": "w_graph_shared_diamond_ret",
+    "mutation": "copy-shared-root"
    }
   ],
   "divergences": [
@@ -2458,6 +2501,13 @@
      "text_and_bytes"
     ],
     "what": "core's validation and conversion use the platform's Unicode tables for Rust {:?} escaping in error messages, str.isidentifier() and repr() printability; measured against upstream over every code point, the only differences are characters that one side's Unicode version assigns and the other's does not (CPython 3.12 has Unicode 15.0). Reachable through a KeyError argument with an unpaired surrogate, which goes out as its repr (w_exc_unicode_version_in), and otherwise only through names and malformed arenas"
+   },
+   {
+    "name": "timezone-refusal-wording",
+    "rows": [
+     "timezone_database"
+    ],
+    "what": "an unknown IANA zone name is refused at checkout by both: upstream raises ValueError \"unknown timezone 'Not/AZone'\" before any feed runs; core's session open raises ArgumentError \"protocol violation: invalid os_policy: invalid value for SandboxTimeZone.named: unknown timezone 'Not/AZone'\" (the worker's refusal of Configure). The case is a `local_refusal`, which matches on the refusal and ignores the type and wording, so the difference in type and message is recorded here, not asserted"
    }
   ],
   "diverge": {
@@ -2481,6 +2531,27 @@
        "t": "exception",
        "type": "KeyError",
        "arg": "'\ud83e\udee9\\ud800'"
+      }
+     ]
+    }
+   },
+   "w_graph_cycle_ret": {
+    "why": "traceback-frames: a host callback returns a cyclic list. Upstream raises ValueError 'Circular reference detected' in the sandbox with no traceback frames; core raises the same type and message, with the call's frame `x = get()` in the traceback",
+    "differs": [
+     "Ef"
+    ],
+    "worker_exception": {
+     "type": "ValueError",
+     "message": "Circular reference detected",
+     "traceback": [
+      {
+       "filename": "<python-input-0>",
+       "line": 1,
+       "column": 5,
+       "end_line": 1,
+       "end_column": 10,
+       "function": "<module>",
+       "source_line": "x = get()"
       }
      ]
     }

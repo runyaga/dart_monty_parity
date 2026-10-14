@@ -1,0 +1,28 @@
+{
+ "id": "w_graph_cycle_ret",
+ "code": "x = get()\nx",
+ "externals": {
+  "get": [
+   {
+    "return": {
+     "t": "tuple",
+     "id": 1,
+     "items": [
+      {
+       "t": "list",
+       "id": 2,
+       "items": [
+        {
+         "t": "ref",
+         "id": 2
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "note": "unstable_graph_access: a host callback returns a cyclic list: the return is not a valid graph, so it is refused as a conversion error in the sandbox",
+ "exact_strings": true
+}

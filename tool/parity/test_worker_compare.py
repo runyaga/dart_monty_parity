@@ -21,6 +21,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script's directory off sys.path
+import score  # noqa: E402
 import worker_compare as wc  # noqa: E402
 
 EXPECTED = Path(__file__).resolve().parent / 'expected'
@@ -197,6 +198,72 @@ class Constructed(unittest.TestCase):
         self.assertNotEqual(wc.compare(ref, got), [])  # not a local_refusal case
         ran = outcome({'t': 'none'})
         self.assertNotEqual(wc.compare(ref, ran, local_refusal=True), [])
+
+
+class WorkerSets(unittest.TestCase):
+    def doc(self) -> dict:
+        return json.loads(score.RULES.read_text())
+
+    def test_the_committed_sets_are_consistent(self):
+        where, problems = score.worker_sets(self.doc())
+        self.assertEqual(problems, [])
+        # protocol_value_arena maps shared_value_batches' cases; each is scored once, in its owner's set.
+        also = self.doc()['rows']['protocol_value_arena']['worker']['also']
+        self.assertEqual(also, self.doc()['rows']['shared_value_batches']['worker']['pre_cutover'])
+        self.assertTrue(all(where[c] == ('shared_value_batches', 'pre_cutover') for c in also))
+
+    def test_a_case_in_two_sets_is_still_reported_and_an_also_must_name_an_owned_case(self):
+        d = self.doc()
+        d['rows']['protocol_value_arena']['worker'] = {'pre_cutover': ['w_batch_inputs']}
+        self.assertIn('w_batch_inputs is in', '; '.join(score.worker_sets(d)[1]))
+        d = self.doc()
+        d['rows']['protocol_value_arena']['worker']['also'] = ['no_such_case']
+        self.assertIn('in no row', '; '.join(score.worker_sets(d)[1]))
+        d['rows']['protocol_value_arena']['worker']['also'] = []
+        self.assertIn('non-empty list', '; '.join(score.worker_sets(d)[1]))
+        for bad in ([{}], [[1]], [1]):  # a malformed member is reported, not a crash
+            d['rows']['protocol_value_arena']['worker']['also'] = bad
+            self.assertIn('non-empty list', '; '.join(score.worker_sets(d)[1]))
+        d['rows']['shared_value_batches']['worker']['also'] = ['w_batch_inputs']
+        self.assertIn('already owns', '; '.join(score.worker_sets(d)[1]))
+
+
+class RecordedDivergence(unittest.TestCase):
+    EXC = {'type': 'ValueError', 'message': 'm', 'traceback': [{'line': 1}]}
+    REC = {'differs': ['Ef'], 'worker_exception': EXC}
+
+    def outcome(self, exc: dict) -> dict:
+        return {'steps': [{'value': None, 'exception': exc, 'prints': [], 'os_calls': [], 'ext_calls': [],
+                           'host_calls': []}]}
+
+    def test_a_divergence_as_recorded_holds(self):
+        self.assertTrue(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], self.outcome(self.EXC)))
+
+    def test_any_other_exception_a_match_or_another_field_does_not(self):
+        got = self.outcome({**self.EXC, 'traceback': [{'line': 2}]})
+        self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], got))
+        self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Em'], self.outcome(self.EXC)))
+        self.assertFalse(score.recorded_divergence(self.REC, 'MATCH', [], self.outcome(self.EXC)))
+        self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], None))
+        self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], self.outcome({**self.EXC, 'message': 'x'})))
+
+    def test_a_run_that_did_not_run_is_no_divergence(self):
+        rec = {'differs': ['steps'], 'worker_exception': self.EXC}
+        self.assertFalse(score.recorded_divergence(rec, 'DIVERGE', ['steps'], {'steps': []}))
+        self.assertFalse(score.recorded_divergence({'differs': [], 'worker_exception': self.EXC}, 'DIVERGE', [],
+                                                   self.outcome(self.EXC)))
+        self.assertFalse(score.recorded_divergence({'differs': ['Ef'], 'worker_exception': {'traceback': []}},
+                                                   'DIVERGE', ['Ef'], self.outcome(self.EXC)))
+
+    def test_a_record_must_say_what_the_worker_returns(self):
+        self.assertFalse(score.recorded_divergence({'differs': ['Ef']}, 'DIVERGE', ['Ef'], self.outcome(self.EXC)))
+
+    def test_a_recorded_value_still_works(self):
+        got = {'steps': [{'value': {'t': 'int', 'v': '2'}, 'exception': None, 'prints': [], 'os_calls': [],
+                          'ext_calls': [], 'host_calls': []}]}
+        rec = {'differs': ['V'], 'worker_value': {'t': 'int', 'v': '2'}}
+        self.assertTrue(score.recorded_divergence(rec, 'DIVERGE', ['V'], got))
+        self.assertFalse(score.recorded_divergence({**rec, 'worker_value': {'t': 'int', 'v': '3'}}, 'DIVERGE', ['V'], got))
 
 
 if __name__ == '__main__':

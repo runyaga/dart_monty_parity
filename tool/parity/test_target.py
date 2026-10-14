@@ -5,7 +5,8 @@ usage: python3 -I tool/parity/test_target.py
 
   - the committed file partitions the 185 in-scope manifest rows into target rows and excluded rows;
   - every exclusion names a clause, and the area clauses and the mount clause hold as the rule states them;
-  - an `allowed` entry is one of the three kinds the design allows, with a reason and a cite;
+  - an `allowed` entry is one of the three kinds the design allows, with a reason and a cite, and an `evidenced_by`
+    (the core tests that evidence the row) is well formed; PT1's six entries are the only ones;
   - the scorer passes a target row PRESENT on every backend it must be, shows (and counts) a row that is not,
     accepts a row an `allowed` entry covers, and fails an `allowed` entry whose row is now PRESENT;
   - a file that lists a row twice, or drops one, or carries an `allowed` entry of another kind, is reported.
@@ -35,7 +36,11 @@ class TargetTest(unittest.TestCase):
         self.cases = score.case_index()
 
     def statuses(self, status: str = 'PRESENT') -> dict:
-        return {cid: {b: (status, 'measured') for b in BACKENDS} for cid in self.target['rows']}
+        """Every row [status] on every backend, except a row with an `allowed` entry, which has the status it accepts."""
+        def cell(row: dict, b: str) -> tuple[str, str]:
+            allowed = row.get('allowed') or {}
+            return (allowed['status'], 'recorded') if b in allowed.get('backends', []) else (status, 'measured')
+        return {cid: {b: cell(row, b) for b in BACKENDS} for cid, row in self.target['rows'].items()}
 
     def test_committed_file_is_consistent(self) -> None:
         self.assertEqual(score.target_problems(self.target, self.in_scope), [])
@@ -74,11 +79,82 @@ class TargetTest(unittest.TestCase):
                 self.assertIn(allowed['kind'], score.ALLOWED_KINDS, cid)
                 self.assertTrue(allowed['reason'] and allowed['cite'], cid)
 
+    def test_pt1_allowed_entries(self) -> None:
+        """PT1: J08's two N/A rows and J10's four protocol rows carry an owner-exception, citing PT1; J10's name core tests."""
+        j08 = ['host_callback_authority', 'cpython_value_adapter']
+        j10 = ['protocol_frame_io', 'protocol_worker_state_machine', 'wire_domain_conversion',
+               'protocol_version_compatibility_check']
+        for cid in j08 + j10:
+            allowed = self.target['rows'][cid]['allowed']
+            self.assertEqual((allowed['kind'], allowed['status'], allowed['backends']), ('owner-exception', 'N/A', BACKENDS), cid)
+            self.assertIn('PT1', allowed['cite'], cid)
+            self.assertEqual('evidenced_by' in allowed, cid in j10, cid)
+        for cid in j10:
+            paths = [e['path'] for e in self.target['rows'][cid]['allowed']['evidenced_by']]
+            self.assertTrue(any(p.startswith('test/') for p in paths), cid)
+        # No other row has an allowance, and none is still open.
+        self.assertEqual(sorted(c for c, r in self.target['rows'].items() if r.get('allowed')), sorted(j08 + j10))
+        self.assertFalse([c for c, r in self.target['rows'].items() if r.get('open')])
+
+    def test_evidenced_by_is_validated(self) -> None:
+        t = copy.deepcopy(self.target)
+        a = t['rows']['protocol_frame_io']['allowed']
+        for bad in ([], [{'path': 'x'}], [{'path': '/etc/passwd', 'tests': ['t'], 'exercises': 'e'}],
+                    [{'path': '../x', 'tests': ['t'], 'exercises': 'e'}],
+                    [{'path': 'x', 'tests': [], 'exercises': 'e'}], [{'path': 'x', 'tests': ['t'], 'exercises': ''}], 'x'):
+            a['evidenced_by'] = bad
+            self.assertTrue(score.target_problems(t, self.in_scope), bad)
+
+    def test_evidence_is_checked_against_a_core_checkout(self) -> None:
+        import tempfile  # noqa: PLC0415
+
+        t = copy.deepcopy(self.target)
+        a = t['rows']['protocol_frame_io']['allowed']
+        a['evidenced_by'] = [{'path': 'test/a_test.dart', 'tests': ["one title split", 'absent'], 'exercises': 'e'}]
+        with tempfile.TemporaryDirectory() as d:
+            core = Path(d)
+            mine = lambda ps: [p for p in ps if p.startswith('protocol_frame_io:')]  # noqa: E731 (the other rows' files are absent too)
+            self.assertIn('does not exist', '\n'.join(mine(score.evidence_core_problems(t, core))))
+            (core / 'test').mkdir()
+            (core / 'test/a_test.dart').write_text(
+                "import 'absent.dart'; // absent\ntest('one title '\n    'split', () {});\ngroup(\"a \\\"quoted\\\" group\", () {});\n")
+            problems = mine(score.evidence_core_problems(t, core))
+            self.assertEqual(len(problems), 1)
+            self.assertIn("'absent'", problems[0])
+            # Text that declares no test (an import, a comment) is not a title; a group's title is.
+            a['evidenced_by'][0]['tests'] = ['absent.dart']
+            self.assertEqual(len(mine(score.evidence_core_problems(t, core))), 1)
+            # A test commented out, in either comment form, declares nothing.
+            (core / 'test/a_test.dart').write_text("// test('deleted evidence', () {});\n/* test('deleted evidence', () {}); */\n"
+                                                    "test('kept // not a comment', () {});\n")
+            a['evidenced_by'][0]['tests'] = ['deleted evidence']
+            self.assertEqual(len(mine(score.evidence_core_problems(t, core))), 1)
+            a['evidenced_by'][0]['tests'] = ['kept // not a comment']
+            self.assertEqual(mine(score.evidence_core_problems(t, core)), [])
+            (core / 'test/a_test.dart').write_text("group(\"a \\\"quoted\\\" group\", () {});\n")
+            a['evidenced_by'][0]['tests'] = ['a "quoted" group']
+            self.assertEqual(mine(score.evidence_core_problems(t, core)), [])
+
+    def test_declared_titles_reads_dart_and_rust(self) -> None:
+        dart = "test('a', () {});\n  testWidgets(\"b\" 'c', (t) async {});\nfinal x = test_helper('not');\n// test('in a comment is still read', () {})\n"
+        self.assertEqual(score.declared_titles('t.dart', dart)[:2], ['a', 'bc'])
+        # Nested block comments, raw and triple-quoted titles, and Rust comments.
+        self.assertEqual(score.declared_titles('t.dart', "/* o /* i */ test('gone', () {}); */ test('kept', () {});"), ['kept'])
+        self.assertEqual(score.declared_titles('t.dart', "test(r'raw // t', () {}); test('''m\nl''', () {});"), ['raw // t', 'm\nl'])
+        self.assertEqual(score.declared_titles('t.rs', '// #[test] fn a() {}\n/* #[test] fn b() {} */\n#[test]\nfn c() {}'), ['c'])
+        rust = '#[test]\nfn one() {}\n\n#[test]\n#[ignore]\nasync fn two() {}\nfn not_a_test() {}\n'
+        self.assertEqual(score.declared_titles('t.rs', rust), ['one', 'two'])
+
+    def test_an_allowed_entry_without_backends_is_still_rejected(self) -> None:
+        t = copy.deepcopy(self.target)
+        del t['rows']['protocol_frame_io']['allowed']['backends']
+        self.assertIn('non-empty list of backends', '\n'.join(score.target_problems(t, self.in_scope)))
+
     def test_all_present_passes_and_a_stale_allowed_entry_fails(self) -> None:
         lines, fails = score.score_target(self.target, self.statuses(), BACKENDS)
         self.assertEqual(fails, 0)
         t = copy.deepcopy(self.target)
-        cid = next(c for c, r in t['rows'].items() if len(r['backends']) == 3)
+        cid = next(c for c, r in t['rows'].items() if len(r['backends']) == 3 and not r.get('allowed'))
         t['rows'][cid]['allowed'] = {'kind': 'owner-exception', 'status': 'N/A', 'backends': BACKENDS,
                                      'reason': 'r', 'cite': 'c'}
         self.assertEqual(score.target_problems(t, self.in_scope), [])

@@ -121,7 +121,25 @@ Future<Map<String, Object?>> runEngineCase(
   }
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
-  final session = await open(config);
+  final CaseSession session;
+  try {
+    session = await open(config);
+    // The session's settings are refused before any worker runs a feed (an
+    // unknown timezone name): the refusal is the case's one step, as the
+    // oracle records a refused checkout.
+    // ignore: avoid_catching_errors
+  } on ArgumentError catch (e) {
+    final step = newStep();
+    step['exception'] = {
+      'type': 'ArgumentError',
+      'message': '${e.message}',
+      'traceback': <Object?>[],
+    };
+    step['thrown'] = 'ArgumentError';
+    steps.add(step);
+
+    return out;
+  }
   try {
     final feeds =
         (c['feeds'] as List?)?.cast<String>() ?? [c['code']! as String];
@@ -318,6 +336,7 @@ OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
 
   return OsPolicy(
     datetime: mode('datetime'),
+    timezone: mode('timezone'),
     sleep: mode('sleep'),
     processTime: mode('process_time'),
     randomStart: mode('random_start'),

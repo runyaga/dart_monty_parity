@@ -736,8 +736,16 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
     feeds = case.get('feeds') or [case['code']]
     restore_before = set(case.get('restore_before') or [])
     used: dict[str, int] = {}
-    cm = pool.checkout(**checkout_kw)
-    session = cm.__enter__()
+    try:
+        cm = pool.checkout(**checkout_kw)
+        session = cm.__enter__()
+    except ValueError as e:
+        # The host refuses the checkout's policy (an unknown timezone name): no session, so no feed runs.
+        out['steps'].append({'value': None, 'exception': {'type': 'HOST:ValueError', 'message': str(e), 'traceback': []},
+                             'prints': [], 'os_calls': [], 'ext_calls': [], 'name_lookups': [], 'host_calls': [],
+                             'usage': None, 'checkout_refused': True})
+        out['unsupported']['usage'] = 'pydantic_monty exposes no per-feed resource usage'
+        return out
     try:
         for n, code in enumerate(feeds):
             if n in restore_before:

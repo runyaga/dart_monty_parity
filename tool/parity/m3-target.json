@@ -1,5 +1,5 @@
 {
- "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends.",
+ "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends. An `allowed` entry may carry `evidenced_by`: the core tests that evidence a row no binding exposes ({path, tests, exercises}; score.py --target --core DIR checks each file and test title exists). The owner's P-t decisions (PT1, 2026-10-14) are applied: J08's host_callback_authority and cpython_value_adapter are allowed N/A; J10's four protocol rows are allowed N/A, each evidenced by core's worker-channel tests and E0; protocol_value_arena, unstable_graph_access and timezone_database are mapped to worker cases (tool/parity/rows.json, `worker`).",
  "clauses": {
   "A1": {
    "text": "area filesystem: mounts and the memory filesystem are M6 (C0a)",
@@ -359,8 +359,7 @@
    ],
    "judgement": [
     "J11"
-   ],
-   "open": true
+   ]
   },
   "os_environment": {
    "area": "os_calls",
@@ -560,8 +559,7 @@
    ],
    "judgement": [
     "J08"
-   ],
-   "open": true
+   ]
   },
   "boundary_uuid": {
    "area": "values",
@@ -1039,8 +1037,7 @@
    ],
    "judgement": [
     "J08"
-   ],
-   "open": true
+   ]
   },
   "protocol_frame_io": {
    "area": "protocol",
@@ -1052,7 +1049,61 @@
    "judgement": [
     "J10"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "No binding exposes framing and no python-binding oracle compares it. Core evidences the row with its own worker-channel tests: the frame codec and decode budget in Dart (pure Dart, so on all three backends), the VM channel against a fake worker process, the web connection against a fake port, and one round trip through the real worker; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). Not covered by a named test: a body of exactly the maximum size is never fed (only its length prefix).",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
+    "evidenced_by": [
+     {
+      "path": "test/unit/worker/frame_test.dart",
+      "tests": [
+       "a frame is the body length, little-endian, then the body",
+       "a body over the maximum is refused before anything is framed",
+       "a stream ending inside a body is truncated",
+       "an all-ones prefix is refused, not allocated",
+       "MAX_FRAME_LEN is accepted and one more byte is not"
+      ],
+      "exercises": "the Dart frame codec: the 4-byte little-endian prefix, an outbound body over the maximum refused, a stream cut inside a body truncated, an oversize prefix refused; the maximum is exercised as a length prefix only (pure Dart: VM, dart2js, dart2wasm)"
+     },
+     {
+      "path": "test/unit/worker/frame_scan_test.dart",
+      "tests": [
+       "one slot over the budget: rejected before anything is reserved",
+       "is upstream DEFAULT_MAX_DECODE_BYTES"
+      ],
+      "exercises": "the Dart frame scanner's decode budget: upstream's DEFAULT_MAX_DECODE_BYTES and a boundary frame that charges one slot over it, refused before anything is reserved"
+     },
+     {
+      "path": "test/integration/worker/process_channel_test.dart",
+      "tests": [
+       "an oversize length prefix desynchronises: worker killed",
+       "a torn frame is vanished, naming the truncation"
+      ],
+      "exercises": "ProcessChannel (VM) against a fake worker process: a torn frame or an oversize prefix from the worker is a typed crash"
+     },
+     {
+      "path": "test/unit/worker/worker_connection_test.dart",
+      "tests": [
+       "a torn reply is a vanished crash",
+       "an oversized request is refused before it is posted"
+      ],
+      "exercises": "the web connection against a fake port: a torn reply is a crash; an oversized request is refused before it is posted and the channel stays usable"
+     },
+     {
+      "path": "test/integration/worker/real_worker_test.dart",
+      "tests": [
+       "Configure, Feed 1 + 1, Shutdown"
+      ],
+      "exercises": "framed requests and replies over the real worker executable (VM): Configure, Feed and Shutdown round trip"
+     }
+    ]
+   }
   },
   "protocol_worker_state_machine": {
    "area": "protocol",
@@ -1064,7 +1115,85 @@
    "judgement": [
     "J10"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Upstream runs the worker dispatcher in Rust (Child, SessionBudget, dispatch_frame); no binding exposes it and no python-binding oracle compares it. Core evidences the row with its worker-channel tests: the real worker executable (the Configure, Feed, Shutdown lifecycle, in-band errors, and the suspension and sleep budgets), the VM channel and web connection against fakes (fatal, shutdown, one turn at a time), the Dart budget accounting, and the driver over a scripted channel; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). The budgets are counted in Dart (the pool session) and an exceeded budget reaches the worker as AbortFeed, so the budget tests establish that accounting and the worker's handling of the abort, not the Rust SessionBudget's own enforcement. The Rust dispatcher is reached only through the real-worker tests and E0.",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
+    "evidenced_by": [
+     {
+      "path": "test/integration/worker/real_worker_test.dart",
+      "tests": [
+       "Configure, Feed 1 + 1, Shutdown",
+       "a Python exception is in-band; the worker survives",
+       "deadline kill, then a fresh worker answers"
+      ],
+      "exercises": "the real worker executable (VM): the Configure, Feed, Shutdown lifecycle; a Python exception is in-band and the worker survives; after a host-side kill (a timer) a fresh worker answers"
+     },
+     {
+      "path": "test/integration/worker/pool_session_io_test.dart",
+      "tests": [
+       "past 1000 host calls the feed fails in the sandbox"
+      ],
+      "exercises": "the real worker (VM) through a pool session: past 1000 suspensions the pool session counts the budget in Dart and aborts the feed with a RuntimeError in the sandbox, and the session runs on"
+     },
+     {
+      "path": "test/integration/worker/monty_snapshot_io_test.dart",
+      "tests": [
+       "the sleep budget: charged before waiting, uncatchable, refused"
+      ],
+      "exercises": "the real worker (VM): the Dart-side sleep budget charges a sleep before waiting and aborts the feed past the limit with a TimeoutError the sandbox cannot catch (the test checks the exceptions and the results that follow, not that a refused sleep never waited)"
+     },
+     {
+      "path": "test/integration/worker/process_channel_test.dart",
+      "tests": [
+       "Shutdown: the worker exits 0; close is idempotent",
+       "a FatalError then exit 4 is fatal, with its message",
+       "one turn at a time"
+      ],
+      "exercises": "ProcessChannel (VM) against a fake worker: ordinary Shutdown, a FatalError then exit 4, and a second concurrent turn refused by the channel"
+     },
+     {
+      "path": "test/unit/worker/worker_connection_test.dart",
+      "tests": [
+       "FatalError is a fatal crash and kills the Worker",
+       "a Shutdown outcome closes the channel after the turn",
+       "one turn at a time"
+      ],
+      "exercises": "the web connection against a fake port: the same transitions, driven by injected events"
+     },
+     {
+      "path": "test/unit/worker/session_budget_test.dart",
+      "tests": [
+       "the suspension past the limit aborts; the count is kept",
+       "a smaller suspension limit is adopted; a larger one is not",
+       "a sleep past the sleep limit aborts uncharged",
+       "a sleep is charged at most the system-sleep maximum"
+      ],
+      "exercises": "the Dart session-budget accounting: the suspension limit and its abort, a reply that only tightens the limit, a sleep past the sleep limit aborting uncharged, a sleep charged at most the system-sleep maximum; unit tests, no worker"
+     },
+     {
+      "path": "test/unit/worker/proto_session_test.dart",
+      "tests": [
+       "a FatalError mid-feed is a crash",
+       "any other answer kills the worker: a protocol violation"
+      ],
+      "exercises": "the driver over a scripted channel (no worker): a FatalError is a typed crash, an answer out of turn kills the worker"
+     },
+     {
+      "path": "native/worker/tests/smoke.rs",
+      "tests": [
+       "configure_feed_shutdown"
+      ],
+      "exercises": "the Rust worker executable's own test: framed Configure, Feed, result and Shutdown acknowledged with exit 0"
+     }
+    ]
+   }
   },
   "wire_domain_conversion": {
    "area": "protocol",
@@ -1076,7 +1205,72 @@
    "judgement": [
     "J10"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Rust-domain/protobuf conversion and validation is not exposed by any binding. Core evidences the row with its arena and host-answer tests (Dart conversion, against upstream-generated golden bytes and local tables), the driver over a scripted channel, and real-worker conversions of integers and floats; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). Not covered by a named test: the Rust side's semantic-validation failures (ProtoConvertError) of malformed wire values. The named real-worker tests and E0 convert valid values; the refusals cited here (a malformed arena, temporal ranges, malformed instance ids) are Dart-side validation.",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
+    "evidenced_by": [
+     {
+      "path": "test/unit/worker/arena_test.dart",
+      "tests": [
+       "a node referenced three times is one Dart object (E0 s04)",
+       "bigint: sign and big-endian magnitude",
+       "a malformed arena is a FormatException",
+       "a value that contains itself is refused"
+      ],
+      "exercises": "arena decode and encode in Dart: sharing (E0 s04), the bigint arm, a malformed arena refused, a self-containing value refused"
+     },
+     {
+      "path": "test/unit/worker/arena_writer_kinds_test.dart",
+      "tests": [
+       "every kind the worker accepts round-trips",
+       "temporal ranges, as the worker states them",
+       "class and instance ids must be uuids"
+      ],
+      "exercises": "the Dart writer and reader round-trip the value kinds the group lists (ellipsis, NotImplemented, dates and times, timedelta, timezones, exceptions, builtin types and functions, a file handle, a named tuple, a class instance) and refuse temporal values out of range and malformed instance ids"
+     },
+     {
+      "path": "test/unit/worker/proto_wire_test.dart",
+      "tests": [
+       "the same messages built in Dart encode to upstream bytes",
+       "upstream's Complete reads as values, sharing kept"
+      ],
+      "exercises": "a Feed and a Complete built in Dart encode to upstream's golden bytes, and upstream's decode to values with sharing; the other codecs are not covered here"
+     },
+     {
+      "path": "test/unit/worker/host_answers_test.dart",
+      "tests": [
+       "every call, as OsFunctionCall::to_args gives it",
+       "any throw but ExternalException raises Exception with its text"
+      ],
+      "exercises": "OS-call arguments against a local table of OsFunctionCall::to_args, and a host throw converted to the Python exception it raises; unit tests, no worker"
+     },
+     {
+      "path": "test/unit/worker/proto_session_test.dart",
+      "tests": [
+       "typed inputs travel as one arena (E0 s01)",
+       "a function call gets args, kwargs and its return (E0 s10)",
+       "an OS call reaches the handler with upstream name and a path (E0 s11)"
+      ],
+      "exercises": "serialized inputs, callback arguments and results, and OS calls inspected over a scripted channel (no worker)"
+     },
+     {
+      "path": "test/integration/worker/real_worker_test.dart",
+      "tests": [
+       "integers across the i64 range decode exactly",
+       "integers at the i64 edges reach Python exactly",
+       "a NaN's sign survives Python -> Dart -> Python"
+      ],
+      "exercises": "values converted by the real worker (VM): integers across the i64 range, both ways, and a NaN sign"
+     }
+    ]
+   }
   },
   "protocol_version_compatibility_check": {
    "area": "protocol",
@@ -1088,7 +1282,57 @@
    "judgement": [
     "J10"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "The declared check (current and minimum 5) is not exposed by a binding. Core evidences the row with tests that send the protocol version on Configure and refuse a skewed worker: the real worker accepts 5 and refuses 999 with a FatalError and exit 4; the web channels refuse a worker that reports 4 or none before any request. Not covered by a named test: a version below the minimum sent to the real worker (the Rust check), which the web handshake tests replace with a fabricated ready message.",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
+    "evidenced_by": [
+     {
+      "path": "test/integration/worker/real_worker_test.dart",
+      "tests": [
+       "protocol version skew: FatalError, exit 4",
+       "Configure, Feed 1 + 1, Shutdown"
+      ],
+      "exercises": "the real worker (VM): protocol version 5 is accepted; 999 is a FatalError and exit 4"
+     },
+     {
+      "path": "test/unit/worker/worker_connection_test.dart",
+      "tests": [
+       "protocol skew is refused before any request, as fatal",
+       "a ready reply without a protocol is skew"
+      ],
+      "exercises": "the web connection refuses a ready message reporting protocol 4, or none, before any request"
+     },
+     {
+      "path": "test/unit/worker/worker_channel_web_test.dart",
+      "tests": [
+       "a protocol mismatch is refused before Configure"
+      ],
+      "exercises": "a stand-in Web Worker reporting protocol 4 is refused before Configure (dart2js and dart2wasm)"
+     },
+     {
+      "path": "test/unit/worker/proto_session_test.dart",
+      "tests": [
+       "Configure carries the protocol version, name and limits",
+       "a FatalError answer (version skew) is a crash"
+      ],
+      "exercises": "Configure carries the version; a scripted version-skew FatalError is a typed crash"
+     },
+     {
+      "path": "test/unit/worker/pool_session_test.dart",
+      "tests": [
+       "a refused Configure frees the slot and throws"
+      ],
+      "exercises": "a scripted refused Configure frees its pool slot and throws (the pool, not the version check)"
+     }
+    ]
+   }
   },
   "binding_exposure_policy": {
    "area": "binding_helpers",
@@ -1108,7 +1352,17 @@
    "judgement": [
     "J08"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "The optional PyO3 bridge that links libpython (python binding only, no js cite): a CPython-specific adapter with no Dart analogue. The owner approved N/A for this row.",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)"
+   }
   },
   "resource_failure_disposal": {
    "area": "security",
@@ -1131,7 +1385,17 @@
    "judgement": [
     "J08"
    ],
-   "open": true
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Callback authority and host allocations are embedder responsibilities that upstream documents and does not implement as behaviour: there is nothing for a binding to do or for a parity case to observe. The owner approved N/A for this row.",
+    "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)"
+   }
   },
   "install_dependencies": {
    "area": "pool",

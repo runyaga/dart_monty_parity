@@ -1,0 +1,10 @@
+{
+ "id": "w_tzdb_unknown",
+ "code": "1 + 1",
+ "os_policy": {
+  "timezone": "Not/AZone"
+ },
+ "local_refusal": true,
+ "note": "timezone_database: a name the database does not hold is refused when the session is checked out (ValueError: unknown timezone); no feed runs",
+ "exact_strings": true
+}
