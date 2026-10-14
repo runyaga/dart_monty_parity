@@ -63,8 +63,7 @@ Future<void> _freshWorkerAnswers({bool forceNoJspi = false}) async {
 Future<MontyCrashedError> _crashOf(Future<Object?> future) async {
   try {
     await future;
-    // The error under test: a dead worker is reported as an Error.
-    // ignore: avoid_catching_errors
+    // The error under test: a dead worker.
   } on MontyCrashedError catch (e) {
     return e;
   }

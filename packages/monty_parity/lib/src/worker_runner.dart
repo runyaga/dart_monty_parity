@@ -17,8 +17,10 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:dart_monty_core/dart_monty_core.dart';
+import 'package:dart_monty_core/dart_monty_core.dart'
+    hide MontyError, MontySyntaxError, MontyTypingError;
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
+import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/canon.dart';
@@ -149,18 +151,15 @@ Future<Map<String, Object?>> runEngineCase(
         );
         step['value'] = identityCanon(value);
         host.rawOutputs.add(value);
-      } on MontyScriptError catch (e) {
-        step['exception'] = e.exception != null
-            ? exceptionC(e.exception!)
-            : {
-                'type': e.excType,
-                'message': e.message,
-                'traceback': <Object?>[],
-              };
-        step['thrown'] = e.runtimeType.toString();
+      } on MontyRuntimeError catch (e) {
+        step['exception'] = raisedC(e.exception, e.traceback);
+        step['thrown'] = 'MontyRuntimeError';
         host.rawOutputs.add(null);
-        // A dead worker is reported as an Error; it is an outcome here.
-        // ignore: avoid_catching_errors
+      } on MontySyntaxError catch (e) {
+        step['exception'] = raisedC(e.exception, e.traceback);
+        step['thrown'] = 'MontySyntaxError';
+        host.rawOutputs.add(null);
+        // A dead worker is an outcome here.
       } on MontyCrashedError catch (e) {
         // The worker is gone: no later feed can run.
         step['exception'] = {
@@ -452,3 +451,25 @@ List<Object?> identityCanonBatch(List<MontyValue> roots) {
 
   return [for (final r in roots) enc(r)];
 }
+
+/// A raised exception as the worker engine records it: core's error
+/// family's exception and traceback, in [exceptionC]'s shape.
+Map<String, Object?> raisedC(
+  MontyExceptionValue exception,
+  List<Frame> traceback,
+) => {
+  'type': exception.excType,
+  'message': exception.message,
+  'traceback': [
+    for (final f in traceback)
+      {
+        'filename': f.filename,
+        'line': f.line,
+        'column': f.column,
+        'end_line': f.endLine,
+        'end_column': f.endColumn,
+        'function': f.functionName,
+        'source_line': f.sourceLine,
+      },
+  ],
+};
