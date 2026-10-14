@@ -14,7 +14,7 @@ Event vocabulary: suspend{kind,name,args,kwargs,position,pending},
 complete{value}, error{type,message,tb_last}, refused{}, handler{who,args},
 unsupported{what}, plus probe-specific observation events; the pool and print
 probes (`sp_*`) add print{stream,text}, checkout{}, checkout_refused{waited}, release{},
-crashed{at_deadline} and failed{callback_error}.
+crashed{at_deadline}, failed{callback_error} and complete's waited.
 """
 
 from __future__ import annotations
@@ -284,8 +284,8 @@ def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
         try:
             async with p.checkout():
                 t.add({'ev': 'checkout'})
-        except Exception:  # noqa: BLE001 - recorded: whether it waited, not the host's error type
-            t.add({'ev': 'checkout_refused', 'waited': time.monotonic() - start >= 0.25})
+        except Exception:  # noqa: BLE001 - recorded: whether it waited its timeout, not the host's error type
+            t.add({'ev': 'checkout_refused', 'waited': 0.25 <= time.monotonic() - start < 2})
 
     async def main() -> None:
         async with pm.AsyncMonty(max_processes=1, checkout_timeout=10) as p:
@@ -342,6 +342,19 @@ def sp_request_timeout(pool: pm.Monty, t: T) -> None:
             run(t, lambda: s.feed_run('1'))
         with p.checkout() as s:
             run(t, lambda: s.feed_run('1 + 1'))
+
+
+@probe
+def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
+    """A system `time.sleep` is waited, not skipped: 0.3 s passes before the feed ends."""
+    with pool.checkout() as s:
+        start = time.monotonic()
+        try:
+            value = s.feed_run('import time\ntime.sleep(0.3)\n1')
+        except Exception as e:  # noqa: BLE001 - recorded
+            t.add(err_ev(e))
+            return
+        t.add({'ev': 'complete', 'value': canon(value), 'waited': 0.25 <= time.monotonic() - start < 5})
 
 
 @probe

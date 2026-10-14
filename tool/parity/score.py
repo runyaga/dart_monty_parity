@@ -502,9 +502,11 @@ def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) ->
     from probes_compare import judge  # noqa: PLC0415 (local module, same dir)
 
     got = load(out / pid / f'session-{backend}.json')
-    if got is not None and got.get('unimplemented'):
+    ref = load(expected / pid / 'ref-py.json')
+    # A runner error or a missing oracle outranks `unimplemented`.
+    if got is not None and got.get('unimplemented') and not got.get('runner_error') and ref is not None:
         return 'PENDING', [str(got['unimplemented'])]
-    cls, why, _ = judge(pid, load(expected / pid / 'ref-py.json'), got, {})
+    cls, why, _ = judge(pid, ref, got, {})
     return cls, why
 
 

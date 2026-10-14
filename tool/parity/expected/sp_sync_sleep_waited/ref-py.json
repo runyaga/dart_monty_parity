@@ -1,0 +1,16 @@
+{
+ "probe": "sp_sync_sleep_waited",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   },
+   "waited": true
+  }
+ ],
+ "runner_error": null
+}

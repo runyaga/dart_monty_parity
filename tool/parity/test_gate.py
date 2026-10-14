@@ -114,6 +114,13 @@ class GateTest(unittest.TestCase):
         gate['landed'] = []
         self.assertEqual(self.assert_gate(gate), 0)
 
+    def test_unimplemented_with_a_runner_error_fails(self) -> None:
+        kind, pid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
+                         if x[0] == 'probes' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        self.write(pid, 'vm', {'probe': pid, 'engine': 'session', 'backend': 'vm', 'events': [],
+                               'runner_error': 'worker processes left running', 'unimplemented': 'not yet'})
+        self.assertEqual(self.assert_gate(), 1)
+
     def test_position_is_compared(self) -> None:
         ref = json.loads((EXPECTED / 'k_function' / 'ref-py.json').read_text())
         got = copy.deepcopy(ref)

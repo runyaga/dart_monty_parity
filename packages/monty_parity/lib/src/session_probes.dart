@@ -265,6 +265,22 @@ _probes = {
     );
     await _run(t, () => s.feedRun('2'));
   }),
+  'sp_sync_sleep_waited': (t, shared, _) => shared.withSession((s) async {
+    final clock = Stopwatch()..start();
+    try {
+      final value = await s.feedRun('import time\ntime.sleep(0.3)\n1');
+      final waited = clock.elapsed;
+      t.add({
+        'ev': 'complete',
+        'value': identityCanon(value),
+        'waited':
+            waited >= const Duration(milliseconds: 250) &&
+            waited < const Duration(seconds: 5),
+      });
+    } on MontyScriptError catch (e) {
+      t.add(_errEv(e));
+    }
+  }),
   'sp_print_lines': (t, shared, _) => shared.withSession(
     (s) => _run(
       t,
@@ -352,16 +368,19 @@ Future<void> _enter(_T t, MontyPool pool) async {
 }
 
 /// Records whether [pool] grants a checkout (returned at once), or refuses
-/// it after waiting at least 250 ms.
+/// it after waiting its 300 ms timeout (between 250 ms and 2 s).
 Future<void> _enterTimed(_T t, MontyPool pool) async {
   final clock = Stopwatch()..start();
   final PoolSession s;
   try {
     s = await pool.checkout();
   } on Object {
+    final waited = clock.elapsed;
     t.add({
       'ev': 'checkout_refused',
-      'waited': clock.elapsed >= const Duration(milliseconds: 250),
+      'waited':
+          waited >= const Duration(milliseconds: 250) &&
+          waited < const Duration(seconds: 2),
     });
 
     return;
