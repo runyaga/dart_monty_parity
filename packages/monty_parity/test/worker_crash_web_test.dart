@@ -113,7 +113,7 @@ void main() {
       final crash = await _crashOf(session.feed(_deepCompare));
       expect(crash.cause, CrashCause.vanished);
       // Chrome's text for a wasm stack overflow.
-      expect(crash.message, contains('RangeError'));
+      expect(crash.detail, contains('RangeError'));
       expect(channel.isAlive, isFalse);
       await _freshWorkerAnswers(forceNoJspi: noJspi);
     });
