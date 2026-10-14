@@ -2309,7 +2309,8 @@
      "w_batch_instance_ids",
      "w_refuse_uuid"
     ]
-   }
+   },
+   "note": "PT1 maps the shared_value_batches cases (worker `also`). w_refuse_uuid is an auxiliary refusal (a host cannot build a class proxy), not shared-node evidence."
   },
   "unstable_graph_access": {
    "worker": {
@@ -2506,7 +2507,7 @@
     "rows": [
      "timezone_database"
     ],
-    "what": "an unknown IANA zone name is refused at checkout by both: upstream raises ValueError \"unknown timezone 'Not/AZone'\" before any worker starts; core's session open raises ArgumentError \"protocol violation: invalid os_policy: invalid value for SandboxTimeZone.named: unknown timezone 'Not/AZone'\" (the worker's refusal of Configure). The case is a `local_refusal`, which matches on the refusal and ignores the type and wording, so the difference in type and message is recorded here, not asserted"
+    "what": "an unknown IANA zone name is refused at checkout by both: upstream raises ValueError \"unknown timezone 'Not/AZone'\" before any feed runs; core's session open raises ArgumentError \"protocol violation: invalid os_policy: invalid value for SandboxTimeZone.named: unknown timezone 'Not/AZone'\" (the worker's refusal of Configure). The case is a `local_refusal`, which matches on the refusal and ignores the type and wording, so the difference in type and message is recorded here, not asserted"
    }
   ],
   "diverge": {

@@ -116,10 +116,22 @@ class TargetTest(unittest.TestCase):
             mine = lambda ps: [p for p in ps if p.startswith('protocol_frame_io:')]  # noqa: E731 (the other rows' files are absent too)
             self.assertIn('does not exist', '\n'.join(mine(score.evidence_core_problems(t, core))))
             (core / 'test').mkdir()
-            (core / 'test/a_test.dart').write_text("test('one title '\n    'split', () {});\n")
+            (core / 'test/a_test.dart').write_text(
+                "import 'absent.dart'; // absent\ntest('one title '\n    'split', () {});\ngroup(\"a \\\"quoted\\\" group\", () {});\n")
             problems = mine(score.evidence_core_problems(t, core))
             self.assertEqual(len(problems), 1)
             self.assertIn("'absent'", problems[0])
+            # Text that declares no test (an import, a comment) is not a title; a group's title is.
+            a['evidenced_by'][0]['tests'] = ['absent.dart']
+            self.assertEqual(len(mine(score.evidence_core_problems(t, core))), 1)
+            a['evidenced_by'][0]['tests'] = ['a "quoted" group']
+            self.assertEqual(mine(score.evidence_core_problems(t, core)), [])
+
+    def test_declared_titles_reads_dart_and_rust(self) -> None:
+        dart = "test('a', () {});\n  testWidgets(\"b\" 'c', (t) async {});\nfinal x = test_helper('not');\n// test('in a comment is still read', () {})\n"
+        self.assertEqual(score.declared_titles('t.dart', dart)[:2], ['a', 'bc'])
+        rust = '#[test]\nfn one() {}\n\n#[test]\n#[ignore]\nasync fn two() {}\nfn not_a_test() {}\n'
+        self.assertEqual(score.declared_titles('t.rs', rust), ['one', 'two'])
 
     def test_an_allowed_entry_without_backends_is_still_rejected(self) -> None:
         t = copy.deepcopy(self.target)

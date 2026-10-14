@@ -337,9 +337,10 @@ def worker_sets(rules_doc: dict) -> tuple[dict[str, tuple[str, str]], list[str]]
     # `also`: cases another row's set owns, that this row maps too (a case is scored once, in its own set).
     for row, rule in rules_doc['rows'].items():
         also = (rule.get('worker') or {}).get('also', [])
-        if not isinstance(also, list) or not also or len(set(also)) != len(also):
+        if (not isinstance(also, list) or not also or not all(isinstance(c, str) for c in also)
+                or len(set(also)) != len(also)):
             if 'also' in (rule.get('worker') or {}):
-                problems.append(f'{row}: worker `also` must be a non-empty list of distinct cases')
+                problems.append(f'{row}: worker `also` must be a non-empty list of distinct case ids')
             continue
         for cid in also:
             if cid not in where:
@@ -357,15 +358,18 @@ def recorded_divergence(rec: dict, cls: str, bad: list[str], got: dict | None) -
     type, message, traceback and data compared)."""
     if cls != 'DIVERGE' or bad != rec['differs'] or got is None:
         return False
+    if not rec['differs'] or not set(rec['differs']) <= set(worker_compare.ALL_CODES):
+        return False  # a run that did not run (no outcome, missing steps) is not a divergence
     steps = [dict(st) for st in got.get('steps') or []]
-    if steps:
-        if 'worker_value' in rec:
-            steps[0]['value'] = rec['worker_value']
-        if 'worker_exception' in rec:
-            steps[0]['exception'] = rec['worker_exception']
-    codes = ['V'] + (['Et', 'Em', 'Ef', 'Ed'] if 'worker_exception' in rec else [])
-    if 'worker_value' not in rec and 'worker_exception' not in rec:
+    if not steps or ('worker_value' not in rec and 'worker_exception' not in rec):
         return False
+    if 'worker_value' in rec:
+        steps[0]['value'] = rec['worker_value']
+    if 'worker_exception' in rec:
+        if not isinstance(rec['worker_exception'], dict) or not rec['worker_exception'].get('type'):
+            return False
+        steps[0]['exception'] = rec['worker_exception']
+    codes = ['V'] + (['Et', 'Em', 'Ef', 'Ed'] if 'worker_exception' in rec else [])
     return worker_compare.compare({'steps': steps}, got, codes=codes) == []
 
 
@@ -719,11 +723,33 @@ def evidence_shape_problems(cid: str, allowed: dict) -> list[str]:
     return problems
 
 
-def evidence_core_problems(target: dict, core: Path) -> list[str]:
-    """Check every `evidenced_by` against a core checkout: the file exists and holds each named test title.
+_STR = re.compile(r"""'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)\"""")
 
-    A title matches as a substring of the file's source with Dart adjacent-string splits joined, so a title
-    that runs over two source lines still matches."""
+
+def declared_titles(path: str, src: str) -> list[str]:
+    """The titles a source file declares: Dart `test(`, `group(` and `testWidgets(` (adjacent string literals
+    joined, as Dart joins them) or Rust `#[test]` functions. Imports and other text declare none; a test
+    commented out with `//` is read as declared (the check is a guard against a wrong title, not a parser)."""
+    if path.endswith('.rs'):
+        return re.findall(r'#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+(\w+)', src)
+    out = []
+    for m in re.finditer(r'\b(?:test|group|testWidgets)\(\s*', src):
+        pos, parts = m.end(), []
+        while (lit := _STR.match(src, pos)):
+            parts.append(re.sub(r'\\(.)', r'\1', lit.group(1) if lit.group(1) is not None else lit.group(2)))
+            pos = lit.end()
+            while pos < len(src) and src[pos].isspace():
+                pos += 1
+        if parts:
+            out.append(''.join(parts))
+    return out
+
+
+def evidence_core_problems(target: dict, core: Path) -> list[str]:
+    """Check every `evidenced_by` against a core checkout: the file exists and declares each named test.
+
+    A named title must be a substring of a title the file declares (see declared_titles); text elsewhere in
+    the file (a comment, an import) does not count."""
     problems = []
     for cid, row in target['rows'].items():
         for e in (row.get('allowed') or {}).get('evidenced_by', []):
@@ -731,10 +757,10 @@ def evidence_core_problems(target: dict, core: Path) -> list[str]:
             if not f.is_file():
                 problems.append(f'{cid}: evidence file {e["path"]} does not exist in the core checkout')
                 continue
-            src = re.sub(r"'\s*\n\s*'", '', f.read_text())
+            titles = declared_titles(e['path'], f.read_text())
             for t in e['tests']:
-                if t not in src:
-                    problems.append(f'{cid}: no test titled {t!r} in {e["path"]}')
+                if not any(t in d for d in titles):
+                    problems.append(f'{cid}: no test titled {t!r} is declared in {e["path"]}')
     return problems
 
 
@@ -998,7 +1024,7 @@ def main() -> int:
     if a.target:
         target = json.loads(a.target.read_text())
         problems = target_problems(target, in_scope)
-        if a.core:
+        if a.core and not problems:  # the core check reads the entries the shape check has just vetted
             problems += evidence_core_problems(target, a.core)
         if problems:
             sys.exit(f'{a.target}: ' + '; '.join(problems))

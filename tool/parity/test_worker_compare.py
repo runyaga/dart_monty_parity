@@ -221,6 +221,9 @@ class WorkerSets(unittest.TestCase):
         self.assertIn('in no row', '; '.join(score.worker_sets(d)[1]))
         d['rows']['protocol_value_arena']['worker']['also'] = []
         self.assertIn('non-empty list', '; '.join(score.worker_sets(d)[1]))
+        for bad in ([{}], [[1]], [1]):  # a malformed member is reported, not a crash
+            d['rows']['protocol_value_arena']['worker']['also'] = bad
+            self.assertIn('non-empty list', '; '.join(score.worker_sets(d)[1]))
         d['rows']['shared_value_batches']['worker']['also'] = ['w_batch_inputs']
         self.assertIn('already owns', '; '.join(score.worker_sets(d)[1]))
 
@@ -243,6 +246,14 @@ class RecordedDivergence(unittest.TestCase):
         self.assertFalse(score.recorded_divergence(self.REC, 'MATCH', [], self.outcome(self.EXC)))
         self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], None))
         self.assertFalse(score.recorded_divergence(self.REC, 'DIVERGE', ['Ef'], self.outcome({**self.EXC, 'message': 'x'})))
+
+    def test_a_run_that_did_not_run_is_no_divergence(self):
+        rec = {'differs': ['steps'], 'worker_exception': self.EXC}
+        self.assertFalse(score.recorded_divergence(rec, 'DIVERGE', ['steps'], {'steps': []}))
+        self.assertFalse(score.recorded_divergence({'differs': [], 'worker_exception': self.EXC}, 'DIVERGE', [],
+                                                   self.outcome(self.EXC)))
+        self.assertFalse(score.recorded_divergence({'differs': ['Ef'], 'worker_exception': {'traceback': []}},
+                                                   'DIVERGE', ['Ef'], self.outcome(self.EXC)))
 
     def test_a_record_must_say_what_the_worker_returns(self):
         self.assertFalse(score.recorded_divergence({'differs': ['Ef']}, 'DIVERGE', ['Ef'], self.outcome(self.EXC)))
