@@ -11,6 +11,13 @@
    }
   },
   {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
    "ev": "crashed",
    "at_deadline": true
   },

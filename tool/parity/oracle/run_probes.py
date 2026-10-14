@@ -320,11 +320,17 @@ def sp_pool_close(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_request_timeout(pool: pm.Monty, t: T) -> None:
-    """A turn within `request_timeout` (0.5 s) runs; one past it is killed at the deadline, as a crash, and
-    finishes the session; the next checkout runs."""
+    """A turn within `request_timeout` (0.5 s) runs, and so does a host callback longer than it; a turn past it is
+    killed at the deadline, as a crash, and finishes the session; the next checkout runs."""
+    def slow() -> int:
+        time.sleep(0.8)
+        return 1
+
     with pm.Monty(request_timeout=0.5) as p:
         with p.checkout() as s:
             run(t, lambda: s.feed_run('sum(range(1000))'))
+            # Host code is not a turn: a callback longer than the deadline is not timed out.
+            run(t, lambda: s.feed_run('slow() + 1', external_lookup={'slow': slow}))
             start = time.monotonic()
             try:
                 s.feed_run('while True:\n    pass')
@@ -379,20 +385,19 @@ def sp_print_raise(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
-    """Gathered `asyncio.sleep`s overlap under the async binding: tasks finish in delay order, and the gather
-    takes about the longest delay, not the sum."""
+    """Gathered `asyncio.sleep`s overlap under the async binding: tasks finish in delay order (3, 1, 2 started
+    in that order finish 1, 2, 3), which sleeps waited one after another could not give."""
     code = ("import asyncio\norder = []\nasync def a(n):\n    await asyncio.sleep(0.1 * n)\n"
             "    order.append(n)\n    return n\nr = await asyncio.gather(a(3), a(1), a(2))\n(r, order)")
 
     async def main() -> None:
         async with pm.AsyncMonty() as p, p.checkout() as s:
-            start = time.monotonic()
             try:
                 value = await s.feed_run(code)
             except Exception as e:  # noqa: BLE001 - recorded
                 t.add(err_ev(e))
                 return
-            t.add({'ev': 'complete', 'value': canon(value), 'overlapped': time.monotonic() - start < 0.5})
+            t.add({'ev': 'complete', 'value': canon(value)})
 
     asyncio.run(main())
 

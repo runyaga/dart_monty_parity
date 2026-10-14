@@ -188,6 +188,21 @@ _probes = {
     (p) async {
       await p.withSession((s) async {
         await _run(t, () => s.feedRun('sum(range(1000))'));
+        // Host code is not a turn: a callback longer than the deadline is
+        // not timed out.
+        await _run(
+          t,
+          () => s.feedRun(
+            'slow() + 1',
+            externals: {
+              'slow': (args, kwargs) async {
+                await Future<void>.delayed(const Duration(milliseconds: 800));
+
+                return const MontyInt(1);
+              },
+            },
+          ),
+        );
         final clock = Stopwatch()..start();
         try {
           await s.feedRun('while True:\n    pass');
