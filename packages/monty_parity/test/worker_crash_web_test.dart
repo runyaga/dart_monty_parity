@@ -63,8 +63,7 @@ Future<void> _freshWorkerAnswers({bool forceNoJspi = false}) async {
 Future<MontyCrashedError> _crashOf(Future<Object?> future) async {
   try {
     await future;
-    // The error under test: a dead worker is reported as an Error.
-    // ignore: avoid_catching_errors
+    // The error under test: a dead worker.
   } on MontyCrashedError catch (e) {
     return e;
   }
@@ -114,7 +113,7 @@ void main() {
       final crash = await _crashOf(session.feed(_deepCompare));
       expect(crash.cause, CrashCause.vanished);
       // Chrome's text for a wasm stack overflow.
-      expect(crash.message, contains('RangeError'));
+      expect(crash.detail, contains('RangeError'));
       expect(channel.isAlive, isFalse);
       await _freshWorkerAnswers(forceNoJspi: noJspi);
     });
