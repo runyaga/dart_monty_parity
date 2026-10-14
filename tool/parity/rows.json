@@ -2084,7 +2084,8 @@
   "pool_capacity": {
    "session": {
     "probes": [
-     "sp_checkout_timeout"
+     "sp_checkout_timeout",
+     "sp_capacity_two"
     ]
    }
   },
@@ -2105,7 +2106,8 @@
   "print_flush_interval": {
    "session": {
     "probes": [
-     "sp_print_lines"
+     "sp_print_lines",
+     "sp_print_batched"
     ]
    }
   },

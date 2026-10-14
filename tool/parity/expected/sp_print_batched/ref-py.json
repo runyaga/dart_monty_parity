@@ -1,0 +1,30 @@
+{
+ "probe": "sp_print_batched",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "a\nb\n"
+  },
+  {
+   "ev": "handler",
+   "who": "f",
+   "args": []
+  },
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "c\n"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "4"
+   }
+  }
+ ],
+ "runner_error": null
+}

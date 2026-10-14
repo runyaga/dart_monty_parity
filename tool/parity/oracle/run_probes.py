@@ -303,6 +303,28 @@ def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
 
 
 @probe
+def sp_capacity_two(pool: pm.Monty, t: T) -> None:
+    """Two workers: two checkouts are held at once, a third waits until one is returned."""
+    async def main() -> None:
+        async with pm.AsyncMonty(max_processes=2, checkout_timeout=10) as p:
+            async with p.checkout() as s1, p.checkout() as s2:
+                t.add({'ev': 'complete', 'value': canon(await s1.feed_run('1'))})
+                t.add({'ev': 'complete', 'value': canon(await s2.feed_run('2'))})
+
+                async def third() -> None:
+                    async with p.checkout() as s3:
+                        t.add({'ev': 'checkout'})
+                        t.add({'ev': 'complete', 'value': canon(await s3.feed_run('3'))})
+
+                waiting = asyncio.ensure_future(third())
+                await asyncio.sleep(0.1)
+                t.add({'ev': 'release'})
+            await waiting
+
+    asyncio.run(main())
+
+
+@probe
 def sp_pool_close(pool: pm.Monty, t: T) -> None:
     """A session outlives its pool's close; the closed pool refuses a checkout."""
     p = pm.Monty(max_processes=2)
@@ -367,6 +389,21 @@ def sp_print_lines(pool: pm.Monty, t: T) -> None:
 
         run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
                                   "print('d', end='')\n5", print_callback=cb))
+
+
+@probe
+def sp_print_batched(pool: pm.Monty, t: T) -> None:
+    """With a long flush interval, output is held until a host call or the end of the run, then delivered."""
+    def f() -> int:
+        t.add({'ev': 'handler', 'who': 'f', 'args': []})
+        return 1
+
+    with pool.checkout(print_flush_interval=10) as s:
+        def cb(stream: str, text: str) -> None:
+            t.add({'ev': 'print', 'stream': stream, 'text': text})
+
+        run(t, lambda: s.feed_run("print('a')\nprint('b')\nf()\nprint('c')\n4", print_callback=cb,
+                                  external_lookup={'f': f}))
 
 
 def _print_failure(t: T, code: str, **kw: Any) -> Any:

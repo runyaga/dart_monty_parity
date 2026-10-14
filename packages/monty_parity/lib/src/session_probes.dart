@@ -163,6 +163,31 @@ _probes = {
       (p) => p.withSession((_) => _enterTimed(t, p)),
     );
   },
+  // Two workers: two checkouts are held at once, a third waits until one
+  // is returned.
+  'sp_capacity_two': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 2, checkoutTimeout: Duration(seconds: 10)),
+    (p) async {
+      final s1 = await p.checkout();
+      final s2 = await p.checkout();
+      Future<void>? waiting;
+      try {
+        await _run(t, () => s1.feedRun('1'));
+        await _run(t, () => s2.feedRun('2'));
+        waiting = p.withSession((s3) async {
+          t.add({'ev': 'checkout'});
+          await _run(t, () => s3.feedRun('3'));
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        t.add({'ev': 'release'});
+      } finally {
+        await s2.close();
+        await s1.close();
+      }
+      await waiting;
+    },
+  ),
   'sp_pool_close': (t, _, start) async {
     final p = await start(const PoolOptions(maxProcesses: 2));
     final PoolSession s;
@@ -283,6 +308,26 @@ _probes = {
       t.add(_errEv(e));
     }
   }),
+  // With a long flush interval, output is held until a host call or the
+  // end of the run, then delivered.
+  'sp_print_batched': (t, shared, _) => shared.withSession(
+    (s) => _run(
+      t,
+      () => s.feedRun(
+        "print('a')\nprint('b')\nf()\nprint('c')\n4",
+        printCallback: (stream, text) =>
+            t.add({'ev': 'print', 'stream': stream, 'text': text}),
+        externals: {
+          'f': (args, kwargs) {
+            t.add({'ev': 'handler', 'who': 'f', 'args': <Object?>[]});
+
+            return const MontyInt(1);
+          },
+        },
+      ),
+    ),
+    options: const SessionConfig(printFlushInterval: Duration(seconds: 10)),
+  ),
   'sp_print_lines': (t, shared, _) => shared.withSession(
     (s) => _run(
       t,
