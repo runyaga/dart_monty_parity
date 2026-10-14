@@ -53,6 +53,8 @@ const _pending = <String, String>{
   'sp_async_sleep_order': 'needs futures in feedRun (C1-4)',
   'api_fork_session': 'needs dump and load (C1-5)',
   'sp_oversized_resume': _needsStart,
+  'sp_futures_partial': _needsStart,
+  'sp_resume_validated': _needsStart,
 };
 
 const _needsStart = 'needs feedStart and snapshots (C1-4)';
@@ -318,7 +320,17 @@ _probes = {
         () => s.feedRun(
           "print('a')\nf(1)",
           printCallback: _raising(t),
-          externals: {'f': (args, kwargs) => args.first},
+          externals: {
+            'f': (args, kwargs) {
+              t.add({
+                'ev': 'handler',
+                'who': 'f',
+                'args': [identityCanon(args.first)],
+              });
+
+              return args.first;
+            },
+          },
         ),
       );
       await _run(t, () => s.feedRun('8'));

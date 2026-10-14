@@ -1908,7 +1908,8 @@
      "k_function",
      "k_os",
      "k_future",
-     "k_name"
+     "k_name",
+     "sp_resume_validated"
     ]
    }
   },
@@ -1958,7 +1959,8 @@
    "session": {
     "probes": [
      "k_future",
-     "abortctl_future"
+     "abortctl_future",
+     "sp_futures_partial"
     ]
    }
   },

@@ -121,6 +121,24 @@ class GateTest(unittest.TestCase):
                                'runner_error': 'worker processes left running', 'unimplemented': 'not yet'})
         self.assertEqual(self.assert_gate(), 1)
 
+    def test_unimplemented_against_a_failed_oracle_fails(self) -> None:
+        kind, pid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
+                         if x[0] == 'probes' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        for b in BACKENDS:
+            self.write(pid, b, {'probe': pid, 'engine': 'session', 'backend': b, 'events': [],
+                                'runner_error': None, 'unimplemented': 'not yet'})
+        expected = Path(tempfile.mkdtemp(prefix='parity-gate-expected-'))
+        try:
+            shutil.copytree(EXPECTED, expected, dirs_exist_ok=True)
+            (expected / pid / 'ref-py.json').write_text(json.dumps({'probe': pid, 'events': [],
+                                                                    'runner_error': 'oracle failed'}))
+            self.spec.write_text(json.dumps(self.gate))
+            with contextlib.redirect_stdout(io.StringIO()):
+                rc = score.assert_gate(self.spec, self.out, expected, BACKENDS, None, None)
+            self.assertEqual(rc, 1)
+        finally:
+            shutil.rmtree(expected)
+
     def test_position_is_compared(self) -> None:
         ref = json.loads((EXPECTED / 'k_function' / 'ref-py.json').read_text())
         got = copy.deepcopy(ref)

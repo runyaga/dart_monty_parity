@@ -417,10 +417,37 @@ def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_print_raise_suspended(pool: pm.Monty, t: T) -> None:
-    """A raising print callback in a feed that then suspends: the feed fails and the session is finished."""
+    """A raising print callback in a feed that then suspends: the feed fails, the call is never made, and the
+    session is finished."""
+    def f(x: Any) -> Any:
+        t.add({'ev': 'handler', 'who': 'f', 'args': [canon(x)]})
+        return x
+
     with pool.checkout(print_flush_interval=0) as s:
-        _print_failure(t, "print('a')\nf(1)", external_lookup={'f': lambda x: x})(s)
+        _print_failure(t, "print('a')\nf(1)", external_lookup={'f': f})(s)
         run(t, lambda: s.feed_run('8'))
+
+
+@probe
+def sp_futures_partial(pool: pm.Monty, t: T) -> None:
+    """Pending futures settle one at a time: the one left is reported again, then settles."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('import asyncio\nr = await asyncio.gather(f(1), f(2))\nr'))
+        ids = [x.call_id]
+        x = t.step(lambda: x.resume({'future': ...}))
+        ids.append(x.call_id)
+        y = t.step(lambda: x.resume({'future': ...}))
+        z = t.step(lambda: y.resume({ids[1]: {'return_value': 20}}))
+        t.step(lambda: z.resume({ids[0]: {'return_value': 10}}))
+
+
+@probe
+def sp_resume_validated(pool: pm.Monty, t: T) -> None:
+    """An answer refused on its checks leaves the snapshot unspent: the same snapshot then resumes."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('f()'))
+        t.step(lambda: x.resume({'exc_type': 'NotAnExceptionType'}))
+        t.step(lambda: x.resume({'return_value': 5}))
 
 
 # One byte past the frame limit (MAX_FRAME_LEN, 256 MiB): a request carrying it cannot be sent.

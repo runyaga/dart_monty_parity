@@ -1,0 +1,32 @@
+{
+ "probe": "sp_resume_validated",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 3
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "TypeError",
+   "msg": "Unknown exception type: 'NotAnExceptionType'"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "5"
+   }
+  }
+ ],
+ "runner_error": null
+}

@@ -1,0 +1,83 @@
+{
+ "probe": "sp_futures_partial",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 40,
+    "end": 44
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "2"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 46,
+    "end": 50
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "future",
+   "pending": [
+    1,
+    0
+   ],
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 19,
+    "end": 51
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "future",
+   "pending": [
+    0
+   ],
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 19,
+    "end": 51
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "10"
+     },
+     {
+      "t": "int",
+      "v": "20"
+     }
+    ]
+   }
+  }
+ ],
+ "runner_error": null
+}

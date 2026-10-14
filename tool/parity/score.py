@@ -504,7 +504,8 @@ def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) ->
     got = load(out / pid / f'session-{backend}.json')
     ref = load(expected / pid / 'ref-py.json')
     # A runner error or a missing oracle outranks `unimplemented`.
-    if got is not None and got.get('unimplemented') and not got.get('runner_error') and ref is not None:
+    usable_ref = ref is not None and not ref.get('runner_error')
+    if got is not None and got.get('unimplemented') and not got.get('runner_error') and usable_ref:
         return 'PENDING', [str(got['unimplemented'])]
     cls, why, _ = judge(pid, ref, got, {})
     return cls, why
