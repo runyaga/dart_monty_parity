@@ -2114,7 +2114,8 @@
     "probes": [
      "sp_print_lines",
      "sp_print_raise",
-     "sp_print_raise_suspended"
+     "sp_print_raise_suspended",
+     "sp_print_raise_then_error"
     ]
    }
   },

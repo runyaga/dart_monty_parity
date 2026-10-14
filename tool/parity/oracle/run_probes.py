@@ -416,6 +416,15 @@ def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
 
 
 @probe
+def sp_print_raise_then_error(pool: pm.Monty, t: T) -> None:
+    """A raising print callback, then a sandbox exception in the same feed: the callback's failure wins, and the
+    session stays usable."""
+    with pool.checkout(print_flush_interval=0) as s:
+        _print_failure(t, "print('a')\nraise ValueError('sandbox')")(s)
+        run(t, lambda: s.feed_run('9'))
+
+
+@probe
 def sp_print_raise_suspended(pool: pm.Monty, t: T) -> None:
     """A raising print callback in a feed that then suspends: the feed fails, the call is never made, and the
     session is finished."""

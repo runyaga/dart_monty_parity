@@ -313,6 +313,19 @@ _probes = {
     },
     options: const SessionConfig(printFlushInterval: Duration.zero),
   ),
+  'sp_print_raise_then_error': (t, shared, _) => shared.withSession(
+    (s) async {
+      await _failed(
+        t,
+        () => s.feedRun(
+          "print('a')\nraise ValueError('sandbox')",
+          printCallback: _raising(t),
+        ),
+      );
+      await _run(t, () => s.feedRun('9'));
+    },
+    options: const SessionConfig(printFlushInterval: Duration.zero),
+  ),
   'sp_print_raise_suspended': (t, shared, _) => shared.withSession(
     (s) async {
       await _failed(
