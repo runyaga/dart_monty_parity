@@ -760,7 +760,7 @@
      "sp_async_sleep_order"
     ],
     "not_run": {
-     "b14_async_sleep_callhost": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy"
+     "b14_async_sleep_callhost": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy"
     }
    }
   },
@@ -816,8 +816,8 @@
      "sp_sync_sleep_waited"
     ],
     "not_run": {
-     "b14_sleep_callhost": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy",
-     "b14_sleep_zero": "its os_policy has no session field until C3-2 designs OsPolicy; the session engine would run it without the policy"
+     "b14_sleep_callhost": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy",
+     "b14_sleep_zero": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy"
     }
    }
   },
