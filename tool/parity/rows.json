@@ -1660,6 +1660,15 @@
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "worker": {
+    "pre_cutover": [
+     "w_os_raise_type",
+     "w_os_raise_empty_message",
+     "w_os_return_none",
+     "w_os_decline",
+     "w_ext_raise_type"
+    ]
    }
   },
   "structured_exception_data": {

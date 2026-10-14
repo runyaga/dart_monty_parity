@@ -13,6 +13,7 @@
 // internal session path before that path has a public API.
 // ignore_for_file: implementation_imports
 import 'package:dart_monty_core/dart_monty_core.dart';
+import 'package:dart_monty_core/src/worker/host_answers.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
@@ -80,7 +81,7 @@ final class _PoolCaseSession implements CaseSession {
     String code, {
     required Map<String, MontyValue> inputs,
     required Map<String, ProtoExternalFunction> externals,
-    required ProtoOsCallHandler onOsCall,
+    required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   }) => _session.feedRun(
     code,
