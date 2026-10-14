@@ -63,7 +63,13 @@ void main() {
       for (final id in parityProbes) {
         Map<String, Object?> res;
         try {
-          res = await runSessionProbe(id, backend, pool, start);
+          res = await runSessionProbe(
+            id,
+            backend,
+            pool,
+            start,
+            () => opened.length,
+          );
         } on Object catch (e, st) {
           res = {
             'probe': id,

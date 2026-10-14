@@ -1,0 +1,19 @@
+{
+ "probe": "sp_collect_string",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "collected",
+   "output": "a\nb\n"
+  }
+ ],
+ "runner_error": null
+}

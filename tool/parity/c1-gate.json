@@ -45,7 +45,9 @@
   "host_lazy_attributes": "cutover",
   "host_class_value": "cutover",
   "host_constructor_policy": "cutover",
-  "host_value_conversion_hook": "cutover"
+  "host_value_conversion_hook": "cutover",
+  "collect_print_string": "cutover",
+  "collect_print_streams": "cutover"
  },
  "core_gated": {
   "C1-3b": "print stall and backpressure (pool_async_print_delivery) and close while busy (pool_cancellation_disposal) have no upstream behaviour to compare: upstream's sinks and cancellation are its binding's own, and a Dart close of a busy session is a recorded divergence. dart_monty_core's own tests gate them."

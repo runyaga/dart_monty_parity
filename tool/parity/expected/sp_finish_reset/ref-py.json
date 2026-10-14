@@ -18,6 +18,10 @@
     "line": 1,
     "function": "<module>"
    }
+  },
+  {
+   "ev": "reused",
+   "same_worker": true
   }
  ],
  "runner_error": null

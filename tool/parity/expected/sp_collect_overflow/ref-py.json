@@ -1,0 +1,26 @@
+{
+ "probe": "sp_collect_overflow",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "collected",
+   "output": ""
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  }
+ ],
+ "runner_error": null,
+ "strings_rewritten": true
+}

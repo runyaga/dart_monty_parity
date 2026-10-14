@@ -15,6 +15,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dart_monty_core/src/worker/channel_factory.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/process_channel.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
@@ -33,6 +34,7 @@ Future<void> main(List<String> args) async {
         ...a.substring(flag.length).split(',').where((p) => p.isNotEmpty),
   ];
   var failed = false;
+  var spawned = 0;
   final pool = await MontyPool.start(
     options: const PoolOptions(maxProcesses: 1),
   );
@@ -67,7 +69,15 @@ Future<void> main(List<String> args) async {
         id,
         'vm',
         pool,
-        (options) => MontyPool.start(options: options),
+        (options) => MontyPool.startWith(
+          options,
+          open: () {
+            spawned++;
+
+            return openChannel(workerLocation: options.workerLocation);
+          },
+        ),
+        () => spawned,
       );
     } on Object catch (e, st) {
       res = {

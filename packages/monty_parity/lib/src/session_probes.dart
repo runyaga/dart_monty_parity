@@ -26,11 +26,20 @@ import 'package:monty_parity/src/worker_runner.dart';
 /// Starts a pool with [options] for one probe; the probe closes it.
 typedef StartPool = Future<MontyPool> Function(PoolOptions options);
 
+/// How many workers the runner's pools have started so far.
+typedef SpawnCount = int Function();
+
+/// The running probe's [SpawnCount].
+SpawnCount _spawned = () => 0;
+
 /// One transcript event.
 typedef _Ev = Map<String, Object?>;
 
 /// What a probe the session cannot run yet waits for, by probe id.
 const _pending = <String, String>{
+  'sp_collect_string': _needsCollectors,
+  'sp_collect_streams': _needsCollectors,
+  'sp_collect_overflow': _needsCollectors,
   'k_function': _needsStart,
   'k_os': _needsStart,
   'k_os_not_handled': _needsStart,
@@ -62,6 +71,8 @@ const _needsStart = 'needs feedStart and snapshots (C1-4)';
 /// A print callback for feeds whose prints a probe does not look at.
 void _quietPrint(String stream, String text) {}
 
+const _needsCollectors = 'needs CollectString and CollectStreams (cutover)';
+
 /// One byte past the frame limit (256 MiB): run_probes.py's `OVERSIZED`.
 const int _oversized = 256 * 1024 * 1024 + 1;
 
@@ -77,14 +88,17 @@ final class _T {
   void add(_Ev e) => events.add(e);
 }
 
-/// Runs probe [id] on [backend]: [shared] is the run's one-worker pool, and
-/// [start] opens any pool a probe configures itself.
+/// Runs probe [id] on [backend]: [shared] is the run's one-worker pool,
+/// [start] opens any pool a probe configures itself, and [spawned] counts
+/// the workers [start]'s pools have started.
 Future<Map<String, Object?>> runSessionProbe(
   String id,
   String backend,
   MontyPool shared,
   StartPool start,
+  SpawnCount spawned,
 ) async {
+  _spawned = spawned;
   final out = <String, Object?>{
     'probe': id,
     'engine': 'session',
@@ -122,14 +136,17 @@ _probes = {
     },
     options: const SessionConfig(scriptName: 'job.py'),
   ),
-  'sp_finish_reset': (t, _, start) => _withPool(
-    start,
-    const PoolOptions(maxProcesses: 1),
-    (p) async {
+  // The second checkout gets the same worker back: one worker started in
+  // all.
+  'sp_finish_reset': (t, _, start) {
+    final before = _spawned();
+
+    return _withPool(start, const PoolOptions(maxProcesses: 1), (p) async {
       await p.withSession((s) => _run(t, () => s.feedRun('x = 1\nx')));
       await p.withSession((s) => _run(t, () => s.feedRun('x')));
-    },
-  ),
+      t.add({'ev': 'reused', 'same_worker': _spawned() - before == 1});
+    });
+  },
   // One worker, held: a checkout waits for it and gets it once it is
   // returned (a 10 s timeout, so no race); held again under a 0.3 s
   // timeout, a checkout waits it out and is refused.

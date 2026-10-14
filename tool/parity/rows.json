@@ -2135,6 +2135,21 @@
      "sp_oversized_answer"
     ]
    }
+  },
+  "collect_print_string": {
+   "session": {
+    "probes": [
+     "sp_collect_string",
+     "sp_collect_overflow"
+    ]
+   }
+  },
+  "collect_print_streams": {
+   "session": {
+    "probes": [
+     "sp_collect_streams"
+    ]
+   }
   }
  },
  "rescored": {

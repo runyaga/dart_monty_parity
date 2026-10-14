@@ -267,12 +267,14 @@ def sp_checkout_script_name(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_finish_reset(pool: pm.Monty, t: T) -> None:
-    """One worker: the second checkout gets it back Reset, without the first one's globals."""
+    """One worker: the second checkout gets the same worker back, Reset, without the first one's globals."""
     with pm.Monty(max_processes=1) as p:
         with p.checkout() as s:
             run(t, lambda: s.feed_run('x = 1\nx'))
+            first = s.worker_pid
         with p.checkout() as s:
             run(t, lambda: s.feed_run('x'))
+            t.add({'ev': 'reused', 'same_worker': s.worker_pid == first})
 
 
 @probe
@@ -406,6 +408,35 @@ def sp_print_batched(pool: pm.Monty, t: T) -> None:
                                   external_lookup={'f': f}))
 
 
+@probe
+def sp_collect_string(pool: pm.Monty, t: T) -> None:
+    """`CollectString` gathers both streams into one string."""
+    with pool.checkout() as s:
+        c = pm.CollectString()
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b', file=sys.stderr)\n1", print_callback=c))
+        t.add({'ev': 'collected', 'output': c.output})
+
+
+@probe
+def sp_collect_streams(pool: pm.Monty, t: T) -> None:
+    """`CollectStreams` keeps (stream, text) pairs, adjacent text on one stream coalesced."""
+    with pool.checkout() as s:
+        c = pm.CollectStreams()
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n1",
+                                  print_callback=c))
+        t.add({'ev': 'collected', 'output': [list(p) for p in c.output]})
+
+
+@probe
+def sp_collect_overflow(pool: pm.Monty, t: T) -> None:
+    """A collector past its cap fails the feed with `MemoryError`; the session stays usable."""
+    with pool.checkout() as s:
+        c = pm.CollectString(max_bytes=4)
+        run(t, lambda: s.feed_run("print('hello world')\n1", print_callback=c))
+        t.add({'ev': 'collected', 'output': c.output})
+        run(t, lambda: s.feed_run('2'))
+
+
 def _print_failure(t: T, code: str, **kw: Any) -> Any:
     """Feeds [code] with a print callback that raises `cb boom` at once; records the failure, not its type."""
     def bad(stream: str, text: str) -> None:
@@ -436,8 +467,9 @@ def sp_print_raise(pool: pm.Monty, t: T) -> None:
 @probe
 def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
     """Gathered `asyncio.sleep`s overlap under the async binding: tasks finish in delay order (3, 1, 2 started
-    in that order finish 1, 2, 3), which sleeps waited one after another could not give."""
-    code = ("import asyncio\norder = []\nasync def a(n):\n    await asyncio.sleep(0.1 * n)\n"
+    in that order finish 1, 2, 3), which sleeps waited one after another could not give. The delays are 0.5 s
+    apart, so a slow round trip between the three starts cannot reorder them."""
+    code = ("import asyncio\norder = []\nasync def a(n):\n    await asyncio.sleep(0.5 * n)\n"
             "    order.append(n)\n    return n\nr = await asyncio.gather(a(3), a(1), a(2))\n(r, order)")
 
     async def main() -> None:
