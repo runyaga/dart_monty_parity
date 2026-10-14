@@ -38,29 +38,17 @@
    }
   },
   {
-   "ev": "suspend",
-   "kind": "future",
+   "ev": "futures",
    "pending": [
-    1,
-    0
-   ],
-   "position": {
-    "filename": "<python-input-0>",
-    "start": 19,
-    "end": 51
-   }
+    0,
+    1
+   ]
   },
   {
-   "ev": "suspend",
-   "kind": "future",
+   "ev": "futures",
    "pending": [
     0
-   ],
-   "position": {
-    "filename": "<python-input-0>",
-    "start": 19,
-    "end": 51
-   }
+   ]
   },
   {
    "ev": "complete",

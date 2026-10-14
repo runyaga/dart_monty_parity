@@ -445,8 +445,11 @@ def sp_futures_partial(pool: pm.Monty, t: T) -> None:
         ids = [x.call_id]
         x = t.step(lambda: x.resume({'future': ...}))
         ids.append(x.call_id)
-        y = t.step(lambda: x.resume({'future': ...}))
-        z = t.step(lambda: y.resume({ids[1]: {'return_value': 20}}))
+        # Upstream reports pending ids in hash order, which varies run to run: compared sorted.
+        y = x.resume({'future': ...})
+        t.add({'ev': 'futures', 'pending': sorted(y.pending_call_ids)})
+        z = y.resume({ids[1]: {'return_value': 20}})
+        t.add({'ev': 'futures', 'pending': sorted(z.pending_call_ids)})
         t.step(lambda: z.resume({ids[0]: {'return_value': 10}}))
 
 
