@@ -13,6 +13,7 @@ import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/process_channel.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_locator.dart';
 import 'package:test/test.dart';
 
@@ -36,7 +37,7 @@ Future<(ProtoSession, ProcessChannel)> _open(SessionConfig config) async {
 /// A fresh worker answers `1 + 1`.
 Future<void> _freshWorkerAnswers() async {
   final (session, _) = await _open(
-    const SessionConfig(maxMemoryBytes: _maxMemory),
+    const SessionConfig(limits: ResourceLimits(maxMemory: _maxMemory)),
   );
   final r = await session.feed('1 + 1');
   expect(r.value, isA<MontyInt>().having((v) => v.value, 'value', 2));
@@ -77,7 +78,7 @@ void main() {
   test('deadline kill is MontyCrashedError(killed); a fresh worker '
       'answers', () async {
     final (session, channel) = await _open(
-      const SessionConfig(maxMemoryBytes: _maxMemory),
+      const SessionConfig(limits: ResourceLimits(maxMemory: _maxMemory)),
     );
     final spinning = session.feed('while True:\n    pass');
     Timer(const Duration(milliseconds: 300), channel.kill);
@@ -91,8 +92,10 @@ void main() {
       'abort on stderr; a fresh worker answers', () async {
     final (session, channel) = await _open(
       const SessionConfig(
-        maxMemoryBytes: 512 * 1024 * 1024,
-        maxRecursionDepth: 100000000,
+        limits: ResourceLimits(
+          maxMemory: 512 * 1024 * 1024,
+          maxRecursionDepth: 100000000,
+        ),
       ),
     );
     final crash = await _crashOf(session.feed(_deepCompare));

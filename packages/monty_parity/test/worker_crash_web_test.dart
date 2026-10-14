@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_channel.dart';
 import 'package:test/test.dart';
 
@@ -50,7 +51,7 @@ Future<(ProtoSession, WorkerChannel)> _open(
 /// A fresh Worker answers `1 + 1`.
 Future<void> _freshWorkerAnswers({bool forceNoJspi = false}) async {
   final (session, _) = await _open(
-    const SessionConfig(maxMemoryBytes: _maxMemory),
+    const SessionConfig(limits: ResourceLimits(maxMemory: _maxMemory)),
     forceNoJspi: forceNoJspi,
   );
   final r = await session.feed('1 + 1');
@@ -86,7 +87,7 @@ void main() {
   test('deadline kill is MontyCrashedError(killed); a fresh Worker '
       'answers ($backend)', () async {
     final (session, channel) = await _open(
-      const SessionConfig(maxMemoryBytes: _maxMemory),
+      const SessionConfig(limits: ResourceLimits(maxMemory: _maxMemory)),
     );
     final spinning = session.feed('while True:\n    pass');
     Timer(const Duration(milliseconds: 300), channel.kill);
@@ -102,8 +103,10 @@ void main() {
         'answers ($mode, $backend)', () async {
       final (session, channel) = await _open(
         const SessionConfig(
-          maxMemoryBytes: 512 * 1024 * 1024,
-          maxRecursionDepth: 100000000,
+          limits: ResourceLimits(
+            maxMemory: 512 * 1024 * 1024,
+            maxRecursionDepth: 100000000,
+          ),
         ),
         forceNoJspi: noJspi,
       );
