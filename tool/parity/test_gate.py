@@ -113,6 +113,24 @@ class GateTest(unittest.TestCase):
         self.write(cid, 'vm', got)
         self.assertEqual(self.assert_gate(), 1)
 
+    def test_unsupported_against_a_missing_oracle_fails(self) -> None:
+        kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
+                         if x[0] == 'cases' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        for b in BACKENDS:
+            got = json.loads((self.out / cid / f'session-{b}.json').read_text())
+            got['unsupported'] = {'limits.x': 'no field'}
+            self.write(cid, b, got)
+        expected = Path(tempfile.mkdtemp(prefix='parity-gate-expected-'))
+        try:
+            shutil.copytree(EXPECTED, expected, dirs_exist_ok=True)
+            shutil.rmtree(expected / cid)
+            self.spec.write_text(json.dumps(self.gate))
+            with contextlib.redirect_stdout(io.StringIO()):
+                rc = score.assert_gate(self.spec, self.out, expected, BACKENDS, None, None)
+            self.assertEqual(rc, 1)
+        finally:
+            shutil.rmtree(expected)
+
     def test_unimplemented_is_pending_only(self) -> None:
         pid = self.landed_probe()
         for b in BACKENDS:

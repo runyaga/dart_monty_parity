@@ -471,20 +471,23 @@ def sp_print_raise(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
-    """Gathered `asyncio.sleep`s overlap under the async binding: every task has started its sleep before any
-    sleep ends, so each sees all three started ([3, 1, 2] three times). Sleeps waited one after another would
-    give [3], [3, 1], [3, 1, 2]. Timing-free: it holds however slow a round trip is."""
+    """Gathered `asyncio.sleep`s overlap under the async binding. Each task records who has started by the time
+    its sleep ends: all three ([3, 1, 2] three times), as when the sleeps run through the futures protocol. And
+    the gather of 1.2 s, 0.4 s and 0.8 s sleeps takes about the longest, not the 2.4 s sum: it waits at least
+    1.1 s and under 2 s, a 0.8 s margin either side for a slow runner."""
     code = ("import asyncio\nstarted = []\nasync def a(n):\n    started.append(n)\n"
-            "    await asyncio.sleep(0.01 * n)\n    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))")
+            "    await asyncio.sleep(0.4 * n)\n    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))")
 
     async def main() -> None:
         async with pm.AsyncMonty() as p, p.checkout() as s:
+            start = time.monotonic()
             try:
                 value = await s.feed_run(code)
             except Exception as e:  # noqa: BLE001 - recorded
                 t.add(err_ev(e))
                 return
-            t.add({'ev': 'complete', 'value': canon(value)})
+            took = time.monotonic() - start
+            t.add({'ev': 'complete', 'value': canon(value), 'waited': took >= 1.1, 'overlapped': took < 2.0})
 
     asyncio.run(main())
 

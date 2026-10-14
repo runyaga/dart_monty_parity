@@ -502,11 +502,12 @@ def ran_in_full(cid: str, kind: str, backend: str, out: Path, cases: dict[str, d
 def classify_session_case(cid: str, backend: str, out: Path, expected: Path, case: dict) -> tuple[str, list[str]]:
     """A session-engine case on [backend]: UNSUPPORTED when the session could not apply something the case asks
     (a limit, a policy, host objects, a restore), whatever its outcome; else as the worker engine's."""
-    got = load(out / cid / f'session-{backend}.json')
-    unsupported = sorted((got or {}).get('unsupported') or {})
-    if got is not None and not got.get('runner_error') and unsupported:
-        return 'UNSUPPORTED', unsupported
-    return classify_worker(cid, backend, out, expected, bool(case.get('local_refusal')), engine='session')
+    cls, why = classify_worker(cid, backend, out, expected, bool(case.get('local_refusal')), engine='session')
+    unsupported = sorted((load(out / cid / f'session-{backend}.json') or {}).get('unsupported') or {})
+    # A missing outcome or oracle outranks UNSUPPORTED.
+    if cls in ('NO-OUTCOME', 'NO-ORACLE') or not unsupported:
+        return cls, why
+    return 'UNSUPPORTED', unsupported
 
 
 def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) -> tuple[str, list[str]]:

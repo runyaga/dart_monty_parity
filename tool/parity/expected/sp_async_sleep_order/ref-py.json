@@ -60,7 +60,9 @@
       ]
      }
     ]
-   }
+   },
+   "waited": true,
+   "overlapped": true
   }
  ],
  "runner_error": null
