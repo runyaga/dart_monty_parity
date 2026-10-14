@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "510b69d100e1a5283988213056001b1b1559a957da751218fc2bc16f0b1271b6",
+  "sha256": "43ffbd01687499e1ba240ffc853090d3e5395bf4217c0766453e8d0a48292ade",
   "files": {
    "tool/parity/oracle/run_cases.py": "7526bc06c77c7afbed3208cb094056efd95c1e83419192432de9832b12413c07",
-   "tool/parity/oracle/run_probes.py": "c85204d76447f4a03175d68f34dd6a4adf97b54fbccc80bca7bb8f567eb17bc6",
+   "tool/parity/oracle/run_probes.py": "06926227e2325548fc4956a2acef5e4db23551df569b91c9c8fe08d06eadf2fe",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -4602,9 +4602,14 @@
     "ref-py": "373e750709f3315124761d563fda41e5fc053d1c24ecfc386a566aa8e30ddd2e"
    }
   },
+  "sp_async_gather_overlap": {
+   "outcomes": {
+    "ref-py": "8ba34ebf68b3cf70a3862c2d5477dae6cbbc0ee958992a3803a4d5147aeda64f"
+   }
+  },
   "sp_async_sleep_order": {
    "outcomes": {
-    "ref-py": "c604cae19710ecfcfee87cce6d6ade9b3358c61415e4e11daaec5fa1e404168b"
+    "ref-py": "b3bfda699f8219bb55611f441bde01095a79a1eddb06a556e3300c3e6a5227af"
    }
   },
   "sp_capacity_two": {
@@ -4637,6 +4642,11 @@
     "ref-py": "c940741b852dc455b19761d69229c67f8eaa27f0fd13f44f887a99b3eb6c819c"
    }
   },
+  "sp_eager_coroutine_auto": {
+   "outcomes": {
+    "ref-py": "26e594be4b69b32f9dd8631256033d07948ae014408a4f3d9dfe17c99c7985fb"
+   }
+  },
   "sp_finish_reset": {
    "outcomes": {
     "ref-py": "85844fcdb42e28036f643e54bab2651a432654e1370f9927f71b465593d3aa1b"
@@ -4659,7 +4669,7 @@
   },
   "sp_oversized_resume": {
    "outcomes": {
-    "ref-py": "52c8e405c20407ff184c1717c79109725ce8a17c3315c0f5cd2f2a9d7f25cd27"
+    "ref-py": "3d8a374cc328c5f940f09ab9a0f5060bd063449dc62153eaf5465b366f9a46d2"
    }
   },
   "sp_pool_close": {

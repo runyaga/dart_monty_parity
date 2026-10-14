@@ -27,9 +27,17 @@
    "msg": "snapshot has already been resumed"
   },
   {
+   "ev": "refusal_kind",
+   "kind": "spent"
+  },
+  {
    "ev": "refused",
    "cls": "RuntimeError",
    "msg": "monty worker protocol error: feed called while a suspension is awaiting an answer"
+  },
+  {
+   "ev": "refusal_kind",
+   "kind": "pending"
   }
  ],
  "runner_error": null

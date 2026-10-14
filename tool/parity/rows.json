@@ -1879,7 +1879,8 @@
    },
    "session": {
     "probes": [
-     "api_eager_coroutine"
+     "api_eager_coroutine",
+     "sp_eager_coroutine_auto"
     ]
    }
   },
@@ -1974,7 +1975,8 @@
    },
    "session": {
     "probes": [
-     "async_gather"
+     "async_gather",
+     "sp_async_gather_overlap"
     ]
    }
   },

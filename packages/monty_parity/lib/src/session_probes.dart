@@ -12,6 +12,7 @@
 // Implementation imports are the point of this engine: it measures core's
 // internal session path before that path has a public API.
 // ignore_for_file: implementation_imports
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
@@ -234,9 +235,78 @@ _probes = {
       ),
     ),
   ),
+  // Gathered async host functions run concurrently: each waits until both
+  // have started (a barrier with a 10 s watchdog), which a driver that
+  // awaited one call before starting the next could never pass.
+  'sp_async_gather_overlap': (t, shared, _) => shared.withSession((s) {
+    final started = <int>[];
+    final both = Completer<void>();
+
+    return _run(
+      t,
+      () => s.feedRun(
+        'import asyncio\nawait asyncio.gather(af(1), af(2))',
+        printCallback: _quiet,
+        externals: {
+          'af': coroutine((args, kwargs) async {
+            final n = (args.first as MontyInt).value;
+            started.add(n);
+            t.add({
+              'ev': 'handler',
+              'who': 'af',
+              'args': [identityCanon(args.first)],
+            });
+            if (started.length == 2) both.complete();
+            await both.future.timeout(const Duration(seconds: 10));
+
+            return MontyInt(n * 10);
+          }),
+        },
+      ),
+    );
+  }),
+  // A coroutine resumed automatically: awaited in place when the sandbox
+  // awaits the call at once, its value or exception delivered; a call
+  // stored first gets a pending future, settled when it is awaited.
+  'sp_eager_coroutine_auto': (t, shared, _) => shared.withSession((s) async {
+    final fns = <String, ProtoExternalFunction>{
+      'f': coroutine((args, kwargs) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        return const MontyInt(5);
+      }),
+      'g': coroutine(
+        (args, kwargs) async => throw const OsCallException(
+          'bad',
+          pythonExceptionType: 'ValueError',
+        ),
+      ),
+    };
+    for (final (code, name) in _eagerAutoCodes) {
+      try {
+        var x = await s.feedStart(code, externals: {name: fns[name]!});
+        t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
+        while (x is! SessionComplete) {
+          x = await _resumeAuto(x);
+          if (x is! SessionComplete) {
+            t.add({
+              'ev': 'suspend',
+              'kind': x is FutureSnapshot ? 'future' : 'call',
+            });
+          }
+        }
+        t.add({'ev': 'complete', 'value': identityCanon(x.output)});
+      } on MontyRuntimeError catch (e) {
+        t.add(_errEv(e.exception, e.traceback));
+      } on MontySyntaxError catch (e) {
+        t.add(_errEv(e.exception, e.traceback));
+      }
+    }
+  }),
   // Gathered asyncio.sleeps overlap: every task has started its sleep
-  // before any sleep ends, and the gather of 1.2 s, 0.4 s and 0.8 s sleeps
-  // takes about the longest, not the 2.4 s sum.
+  // before any sleep ends (sleeps waited one after another would give [3],
+  // [3, 1], [3, 1, 2]), and the gather waits at least its longest sleep, a
+  // lower bound no scheduling delay can break.
   'sp_async_sleep_order': (t, shared, _) => shared.withSession((s) async {
     final clock = Stopwatch()..start();
     try {
@@ -251,7 +321,6 @@ _probes = {
         'ev': 'complete',
         'value': identityCanon(value),
         'waited': took >= const Duration(milliseconds: 1100),
-        'overlapped': took < const Duration(seconds: 2),
       });
     } on MontyRuntimeError catch (e) {
       t.add(_errEv(e.exception, e.traceback));
@@ -423,7 +492,9 @@ _probes = {
           _fn(x).resume(ExternalReturnValue(MontyBytes(Uint8List(_oversized)))),
     );
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(1))));
+    _refusalKind(t);
     await _run(t, () => s.feedRun('3'));
+    _refusalKind(t);
   }),
   'sp_checkout_script_name': (t, shared, _) => shared.withSession(
     (s) async {
@@ -747,6 +818,39 @@ const _extArgsCode = "a = [1]\nf(1, 'a', a, a, k=3, m={'x': 1.5}, n=None)";
 
 /// A print callback for feeds whose prints a probe does not look at.
 void _quiet(String stream, String text) {}
+
+/// The snippets of `sp_eager_coroutine_auto`, each with the host function
+/// it calls, as run_probes.py's `EAGER_AUTO_CODES`.
+const _eagerAutoCodes = [
+  ('r = await f()\nr', 'f'),
+  (
+    'try:\n    r = await g()\nexcept ValueError as e:\n'
+        '    r = "caught " + str(e)\nr',
+    'g',
+  ),
+  ('t = f()\nr = await t\nr', 'f'),
+];
+
+/// [snapshot] resumed automatically.
+Future<MontySnapshot> _resumeAuto(MontySnapshot snapshot) => switch (snapshot) {
+  FunctionSnapshot() => snapshot.resumeAuto(),
+  FutureSnapshot() => snapshot.resumeAuto(),
+  NameLookupSnapshot() => snapshot.resumeAuto(),
+  SessionComplete() => throw StateError('the feed is complete'),
+};
+
+/// Records what the last event refused, as run_probes.py's `refusal_kind`:
+/// a spent snapshot, a feed while a suspension is pending, or anything else.
+void _refusalKind(_T t) {
+  final last = t.events.isEmpty ? const <String, Object?>{} : t.events.last;
+  final msg = last['ev'] == 'refused' ? '${last['msg']}' : '';
+  final kind = msg.contains('already been resumed')
+      ? 'spent'
+      : msg.contains('suspension is awaiting an answer')
+      ? 'pending'
+      : 'other';
+  t.add({'ev': 'refusal_kind', 'kind': kind});
+}
 
 /// [snapshot] as the function snapshot the probe expects.
 FunctionSnapshot _fn(MontySnapshot? snapshot) => snapshot! as FunctionSnapshot;
