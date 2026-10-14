@@ -1,0 +1,31 @@
+{
+ "id": "ss_budget_uncatchable",
+ "code": "try:\n    f(1)\n    f(2)\n    f(3)\nexcept BaseException:\n    pass\n'caught'",
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   },
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   },
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   }
+  ]
+ },
+ "limits": {
+  "max_suspensions": 2
+ },
+ "note": "host_suspension_budget: the third suspension under a limit of 2 fails the feed from inside a try/except BaseException that would catch any other error",
+ "exact_strings": true
+}

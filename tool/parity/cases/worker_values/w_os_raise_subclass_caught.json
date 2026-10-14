@@ -1,0 +1,16 @@
+{
+ "id": "w_os_raise_subclass_caught",
+ "code": "from pathlib import Path\ntry:\n  Path('/x').read_text()\nexcept OSError as e:\n  r = (type(e).__name__, str(e), e.args)\nr",
+ "os": {
+  "Path.read_text": [
+   {
+    "raise": {
+     "type": "FileNotFoundError",
+     "message": "nope"
+    }
+   }
+  ]
+ },
+ "note": "host_code: an OS handler's FileNotFoundError is caught as its base OSError",
+ "exact_strings": true
+}

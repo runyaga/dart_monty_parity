@@ -1,0 +1,10 @@
+{
+ "id": "ss_budget_before_sleep",
+ "code": "import time\ntime.sleep(0.5)",
+ "limits": {
+  "max_suspensions": 0,
+  "max_total_sleep_secs": 0.01
+ },
+ "note": "host_suspension_budget, host_sleep_budget: the suspension limit is checked before the sleep limit is charged",
+ "exact_strings": true
+}

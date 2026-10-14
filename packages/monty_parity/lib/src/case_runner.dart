@@ -277,7 +277,16 @@ MontyValue canonToMonty(
     'float' => MontyFloat(decodeFloat(c)),
     'str' => MontyString(c['v']! as String),
     'bytes' => MontyBytes(Uint8List.fromList(bytesOfHex(c['hex']! as String))),
-    'list' => MontyList(items()),
+    'list' => () {
+      // Registered before its items are read, so an item may refer back to
+      // it: a cyclic list, which a host may build and the writer refuses.
+      final out = <MontyValue>[];
+      final list = MontyList(out);
+      if (c['id'] case final int id) memo![id] = list;
+      out.addAll(items());
+
+      return list;
+    }(),
     'tuple' => MontyTuple(items()),
     'set' => MontySet(items()),
     'frozenset' => MontyFrozenSet(items()),
@@ -299,7 +308,19 @@ MontyValue canonToMonty(
       return MontyDate(year: p[0], month: p[1], day: p[2]);
     }(),
     'datetime' => () {
-      final s = (c['v']! as String).split('T');
+      // A value spelled with its offset ("...+00:00") and no `offset` key
+      // carries the offset in the text.
+      final text = c['v']! as String;
+      final tail = RegExp(r'([+-])(\d\d):(\d\d)$').firstMatch(text);
+      final inText = c.containsKey('offset') || tail == null
+          ? null
+          : (tail[1] == '-' ? -1 : 1) *
+                (int.parse(tail[2]!) * 3600 + int.parse(tail[3]!) * 60);
+      final s =
+          (tail == null || inText == null
+                  ? text
+                  : text.substring(0, tail.start))
+              .split('T');
       final d = s[0].split('-').map(int.parse).toList();
       final (h, m, sec, us) = hms(s[1]);
       return MontyDateTime(
@@ -310,7 +331,7 @@ MontyValue canonToMonty(
         minute: m,
         second: sec,
         microsecond: us,
-        offsetSeconds: c['offset'] as int?,
+        offsetSeconds: (c['offset'] as int?) ?? inText,
         timezoneName: c['tzname'] as String?,
       );
     }(),

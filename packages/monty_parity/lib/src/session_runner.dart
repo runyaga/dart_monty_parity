@@ -58,6 +58,7 @@ SessionConfig sessionConfig(
   if (suspensions == null && sleep == null) return worker;
 
   return SessionConfig(
+    osPolicy: worker.osPolicy,
     limits: ResourceLimits(
       maxMemory: base?.maxMemory,
       maxRecursionDepth: base?.maxRecursionDepth,

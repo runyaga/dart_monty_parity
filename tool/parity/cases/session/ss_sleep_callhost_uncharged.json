@@ -1,0 +1,21 @@
+{
+ "id": "ss_sleep_callhost_uncharged",
+ "code": "import time\ntime.sleep(5)\n'done'",
+ "limits": {
+  "max_total_sleep_secs": 0.05
+ },
+ "os_policy": {
+  "sleep": "call_host"
+ },
+ "os": {
+  "time.sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "note": "host_sleep_budget: a sleep the host answers is not charged to the system sleep budget",
+ "exact_strings": true
+}

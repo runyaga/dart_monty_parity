@@ -119,7 +119,9 @@
    },
    "worker": {
     "pre_cutover": [
-     "w_str_exact"
+     "w_str_exact",
+     "w_refuse_surrogate_in",
+     "w_refuse_surrogate_in_then_ok"
     ]
    }
   },
@@ -330,7 +332,8 @@
      "w_share_set_order",
      "w_share_nan_tuples",
      "w_share_namedtuple",
-     "w_share_proxy"
+     "w_share_proxy",
+     "w_refuse_cycle_in"
     ]
    }
   },
@@ -754,14 +757,17 @@
    },
    "session": {
     "cases": [
-     "b14_async_sleep_default"
+     "b14_async_sleep_default",
+     "b14_async_sleep_callhost"
     ],
     "probes": [
      "sp_async_sleep_order"
-    ],
-    "not_run": {
-     "b14_async_sleep_callhost": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy"
-    }
+    ]
+   },
+   "worker": {
+    "pre_cutover": [
+     "b14_async_sleep_callhost"
+    ]
    }
   },
   "os_calendar_calls": {
@@ -772,6 +778,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "b14_date_callhost",
+     "b14_date_callhost_tz"
+    ]
    }
   },
   "os_entropy": {
@@ -792,6 +804,11 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "b14_time_callhost"
+    ]
    }
   },
   "os_sync_sleep": {
@@ -810,15 +827,19 @@
     "cases": [
      "b14_sleep_default",
      "b14_sleep_negative",
-     "l16_sync_sleep"
+     "l16_sync_sleep",
+     "b14_sleep_callhost",
+     "b14_sleep_zero"
     ],
     "probes": [
      "sp_sync_sleep_waited"
-    ],
-    "not_run": {
-     "b14_sleep_callhost": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy",
-     "b14_sleep_zero": "the session runner does not map a case's os_policy to SessionConfig.osPolicy yet, so it would run it without the policy"
-    }
+    ]
+   },
+   "worker": {
+    "pre_cutover": [
+     "b14_sleep_callhost",
+     "b14_sleep_zero"
+    ]
    }
   },
   "working_directory": {
@@ -877,6 +898,23 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "x25_callhost",
+     "x25_callhost_no_draw",
+     "x25_callhost_reseed_first",
+     "x25_callhost_short",
+     "x25_callhost_unhandled",
+     "x25_callhost_wrongtype",
+     "x25_seed_bigint",
+     "x25_seed_bytes",
+     "x25_seed_float",
+     "x25_seed_int",
+     "x25_seed_negint",
+     "x25_seed_str",
+     "x25_seed_vs_sandbox_seed"
+    ]
    }
   },
   "configure_os_policy": {
@@ -910,6 +948,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "b14_callhost_all_unhandled",
+     "l17_sleep_zero_policy"
+    ]
    }
   },
   "file_mode_inspection": {
@@ -1601,7 +1645,14 @@
     "cases": [
      "l12_suspensions",
      "l13_suspension_default",
-     "ss_suspension_budget"
+     "ss_suspension_budget",
+     "ss_budget_uncatchable",
+     "ss_budget_zero_suspends",
+     "ss_budget_zero_plain",
+     "ss_budget_name_lookup_zero",
+     "ss_budget_name_lookup_one",
+     "ss_budget_before_sleep",
+     "ss_budget_async_sleep_zero"
     ]
    }
   },
@@ -1619,7 +1670,9 @@
    },
    "session": {
     "cases": [
-     "ss_sleep_budget"
+     "ss_sleep_budget",
+     "ss_sleep_zero_policy_uncharged",
+     "ss_sleep_callhost_uncharged"
     ],
     "not_run": {
      "l14_total_sleep": "its expected message has the amounts rewritten (strings_rewritten), which the session comparison refuses; ss_sleep_budget measures the same budget with exact strings",
@@ -1667,7 +1720,12 @@
      "w_os_raise_empty_message",
      "w_os_return_none",
      "w_os_decline",
-     "w_ext_raise_type"
+     "w_ext_raise_type",
+     "w_ext_raise_empty_message",
+     "w_ext_raise_key_error",
+     "w_os_raise_subclass_caught",
+     "w_os_decline_default_open",
+     "w_os_decline_getenv"
     ]
    }
   },
@@ -1691,6 +1749,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "worker": {
+    "pre_cutover": [
+     "c02_process_time_zero",
+     "c03_process_time_elapsed"
+    ]
    }
   },
   "run_blocking": {
@@ -2247,7 +2311,8 @@
    "x8handle_tell": "file_handle_value_conversion: as x8handle_pos5",
    "x8handle_pos2p53": "file_handle_value_conversion: as x8handle_pos5 (w_fh_large_in covers the large positions)",
    "x8handle_pos2p63m1": "file_handle_value_conversion: as x8handle_pos5 (w_fh_large_in covers the large positions)",
-   "x8hostmode_neg": "file_handle_value_conversion: as x8handle_pos5 (w_refuse_fh_position covers a negative position)"
+   "x8hostmode_neg": "file_handle_value_conversion: as x8handle_pos5 (w_refuse_fh_position covers a negative position)",
+   "c04_elapsed_excludes_sleep": "process_clock_policy: a system sleep is an OS call the pool session performs itself, and the worker driver (ProtoSession) declines it; the session engine runs the sleep cases (host_sleep_budget, os_sync_sleep)"
   },
   "controls": [
    {
@@ -2332,16 +2397,16 @@
      "items": [
       {
        "t": "str",
-       "v": "KeyError(\"'🫩\\\\ud800'\")"
+       "v": "KeyError(\"'\ud83e\udee9\\\\ud800'\")"
       },
       {
        "t": "str",
-       "v": "\"'🫩\\\\ud800'\""
+       "v": "\"'\ud83e\udee9\\\\ud800'\""
       },
       {
        "t": "exception",
        "type": "KeyError",
-       "arg": "'🫩\\ud800'"
+       "arg": "'\ud83e\udee9\\ud800'"
       }
      ]
     }

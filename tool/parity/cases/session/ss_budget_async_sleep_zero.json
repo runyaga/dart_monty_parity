@@ -1,0 +1,9 @@
+{
+ "id": "ss_budget_async_sleep_zero",
+ "code": "import asyncio\nawait asyncio.sleep(0)\nawait asyncio.sleep(0)\n'done'",
+ "limits": {
+  "max_suspensions": 1
+ },
+ "note": "host_suspension_budget: zero-delay async sleeps do not suspend, so they are not counted",
+ "exact_strings": true
+}
