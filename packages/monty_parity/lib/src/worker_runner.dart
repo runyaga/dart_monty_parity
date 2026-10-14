@@ -16,12 +16,14 @@
 // ignore_for_file: implementation_imports
 import 'dart:async';
 import 'dart:collection';
+import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
+import 'package:dart_monty_core/src/worker/os_policy.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/canon.dart';
@@ -33,7 +35,6 @@ typedef ChannelFactory = Future<MontyChannel> Function();
 /// The case keys this engine has no way to apply. Each one present is
 /// recorded under `unsupported` and the case runs without it.
 const _inexpressible = {
-  'os_policy': 'no OS policy in the worker driver; ran with the default',
   'cwd': 'no per-feed cwd in the worker driver; ran without it',
   'fs': 'no mounts in the worker driver; ran without them',
   'host': 'no host objects in the worker driver; ran without them',
@@ -164,11 +165,11 @@ Future<Map<String, Object?>> runEngineCase(
         step['value'] = identityCanon(value);
         host.rawOutputs.add(value);
       } on MontyRuntimeError catch (e) {
-        step['exception'] = raisedC(e.exception, e.traceback);
+        step['exception'] = raisedDisplayed(e.display, e.traceback);
         step['thrown'] = 'MontyRuntimeError';
         host.rawOutputs.add(null);
       } on MontySyntaxError catch (e) {
-        step['exception'] = raisedC(e.exception, e.traceback);
+        step['exception'] = raisedDisplayed(e.display, e.traceback);
         step['thrown'] = 'MontySyntaxError';
         host.rawOutputs.add(null);
         // A dead worker is an outcome here.
@@ -267,9 +268,11 @@ SessionConfig workerConfig(
     }
   }
 
+  final osPolicy = _osPolicy(c, unsupported);
+
   // No limit set sends no limits, as upstream's checkout without `limits`.
   if (memory == null && recursion == null && feed == null) {
-    return const SessionConfig();
+    return SessionConfig(osPolicy: osPolicy);
   }
 
   return SessionConfig(
@@ -278,8 +281,54 @@ SessionConfig workerConfig(
       maxRecursionDepth: recursion,
       maxFeedDuration: feed,
     ),
+    osPolicy: osPolicy,
   );
 }
+
+/// A case's `os_policy` as core's [OsPolicy], or null when it has none. A
+/// form the case file spells but this reader does not build (a fixed
+/// datetime, whose microseconds a web `DateTime` cannot hold) is recorded
+/// under `unsupported`, and the policy is left out.
+OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
+  final p = (c['os_policy'] as Map?)?.cast<String, Object?>();
+  if (p == null) return null;
+  String? mode(String key) => p[key] is String ? p[key]! as String : null;
+  RandomSeed? seed;
+  if (p['random_start'] case final Map<Object?, Object?> start) {
+    final s = (start['seed']! as Map).cast<String, Object?>();
+    seed = switch (s['t']) {
+      'int' => RandomSeed.integer(BigInt.parse(s['v']! as String)),
+      'str' => RandomSeed.string(s['v']! as String),
+      'bytes' => RandomSeed.bytes(_hex(s['hex']! as String)),
+      'float' => RandomSeed.float(double.parse(s['v']! as String)),
+      _ => null,
+    };
+    if (seed == null) {
+      unsupported['os_policy'] = 'a seed of kind ${s['t']}';
+
+      return null;
+    }
+  }
+  if (p['datetime'] is Map) {
+    unsupported['os_policy'] =
+        'a fixed datetime: a web DateTime holds whole milliseconds';
+
+    return null;
+  }
+
+  return OsPolicy(
+    datetime: mode('datetime'),
+    sleep: mode('sleep'),
+    processTime: mode('process_time'),
+    randomStart: mode('random_start'),
+    randomSeed: seed,
+  );
+}
+
+Uint8List _hex(String hex) => Uint8List.fromList([
+  for (var i = 0; i < hex.length; i += 2)
+    int.parse(hex.substring(i, i + 2), radix: 16),
+]);
 
 /// A call's record: its arguments and keyword arguments canonicalised as
 /// one batch, as the oracle's `canon_call` does.
@@ -461,24 +510,34 @@ List<Object?> identityCanonBatch(List<MontyValue> roots) {
   return [for (final r in roots) enc(r)];
 }
 
-/// A raised exception as the worker engine records it: core's error
-/// family's exception and traceback, in [exceptionC]'s shape.
-Map<String, Object?> raisedC(
-  MontyExceptionValue exception,
+/// A raised error as the oracle records it (`exc_fields`): the message is
+/// `display('msg')` and the type is what `display('type-msg')` puts before
+/// it, which is the type upstream names even when the host raised the error
+/// itself (an unpaired surrogate's `UnicodeEncodeError`, where `exception()`
+/// reads as `ValueError`).
+Map<String, Object?> raisedDisplayed(
+  String Function([String format]) display,
   List<Frame> traceback,
-) => {
-  'type': exception.excType,
-  'message': exception.message,
-  'traceback': [
-    for (final f in traceback)
-      {
-        'filename': f.filename,
-        'line': f.line,
-        'column': f.column,
-        'end_line': f.endLine,
-        'end_column': f.endColumn,
-        'function': f.functionName,
-        'source_line': f.sourceLine,
-      },
-  ],
+) {
+  final msg = display('msg');
+  final typeMsg = display('type-msg');
+  final type = msg.isNotEmpty && typeMsg.endsWith(': $msg')
+      ? typeMsg.substring(0, typeMsg.length - msg.length - 2)
+      : typeMsg.split(':').first;
+
+  return {
+    'type': type,
+    'message': msg,
+    'traceback': [for (final f in traceback) _frameC(f)],
+  };
+}
+
+Map<String, Object?> _frameC(Frame f) => {
+  'filename': f.filename,
+  'line': f.line,
+  'column': f.column,
+  'end_line': f.endLine,
+  'end_column': f.endColumn,
+  'function': f.functionName,
+  'source_line': f.sourceLine,
 };

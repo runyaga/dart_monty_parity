@@ -1,0 +1,22 @@
+{
+ "id": "w_refuse_cycle_in",
+ "code": "x",
+ "inputs": {
+  "x": {
+   "t": "list",
+   "id": 1,
+   "items": [
+    {
+     "t": "int",
+     "v": "1"
+    },
+    {
+     "t": "ref",
+     "id": 1
+    }
+   ]
+  }
+ },
+ "note": "writer_refusals: a cyclic container as an input is refused (ValueError: Circular reference detected); nothing runs",
+ "exact_strings": true
+}

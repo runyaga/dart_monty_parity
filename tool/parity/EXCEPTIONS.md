@@ -113,5 +113,4 @@ does not, each with its reason:
 
 | Rows | Not run | Why |
 |---|---|---|
-| `os_sync_sleep`, `async_os_sleep` | `b14_sleep_callhost`, `b14_sleep_zero`, `b14_async_sleep_callhost` | they set an `os_policy`, which the session runner does not map to `SessionConfig.osPolicy` yet |
 | `host_sleep_budget` | `l14_total_sleep`, `l15_total_sleep_catch` | their expected messages have the amounts rewritten (`strings_rewritten`), which the comparison refuses; `ss_sleep_budget` measures the same with exact strings |

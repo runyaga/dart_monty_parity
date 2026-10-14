@@ -1,0 +1,6 @@
+{
+ "id": "w_os_decline_default_open",
+ "code": "try:\n  open('/y')\nexcept BaseException as e:\n  r = (type(e).__name__, str(e))\nr",
+ "note": "host_code: a declined open() takes the default PermissionError",
+ "exact_strings": true
+}

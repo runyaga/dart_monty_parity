@@ -1,0 +1,19 @@
+{
+ "id": "ss_budget_zero_suspends",
+ "code": "f(1)",
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   }
+  ]
+ },
+ "limits": {
+  "max_suspensions": 0
+ },
+ "note": "host_suspension_budget: a limit of 0 fails the first suspension",
+ "exact_strings": true
+}

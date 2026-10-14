@@ -1,0 +1,12 @@
+{
+ "id": "w_refuse_surrogate_in",
+ "code": "x",
+ "inputs": {
+  "x": {
+   "t": "str",
+   "v": "x\ud800y"
+  }
+ },
+ "note": "writer_refusals: an input string with an unpaired surrogate is refused (UnicodeEncodeError); nothing runs",
+ "exact_strings": true
+}

@@ -1,0 +1,9 @@
+{
+ "id": "ss_budget_name_lookup_zero",
+ "code": "undefined_name",
+ "limits": {
+  "max_suspensions": 0
+ },
+ "note": "host_suspension_budget: a name lookup is a suspension: under 0 it fails with the budget's error",
+ "exact_strings": true
+}

@@ -1,0 +1,9 @@
+{
+ "id": "ss_budget_name_lookup_one",
+ "code": "undefined_name",
+ "limits": {
+  "max_suspensions": 1
+ },
+ "note": "host_suspension_budget: under 1 the lookup is within the budget and the name is undefined: NameError",
+ "exact_strings": true
+}

@@ -1,0 +1,12 @@
+{
+ "id": "ss_budget_zero_plain",
+ "feeds": [
+  "1 + 1",
+  "[1, 2][0]"
+ ],
+ "limits": {
+  "max_suspensions": 0
+ },
+ "note": "host_suspension_budget: a limit of 0 lets feeds that never suspend run",
+ "exact_strings": true
+}

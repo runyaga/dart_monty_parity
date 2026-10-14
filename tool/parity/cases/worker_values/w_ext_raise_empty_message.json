@@ -1,0 +1,15 @@
+{
+ "id": "w_ext_raise_empty_message",
+ "code": "try:\n  f()\nexcept BaseException as e:\n  r = (type(e).__name__, repr(e), e.args)\nr",
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "ValueError"
+    }
+   }
+  ]
+ },
+ "note": "host_code: an external raising a chosen type without a message raises it with one empty argument",
+ "exact_strings": true
+}

@@ -1,0 +1,12 @@
+{
+ "id": "ss_sleep_zero_policy_uncharged",
+ "code": "import time\ntime.sleep(5)\n'done'",
+ "limits": {
+  "max_total_sleep_secs": 0.05
+ },
+ "os_policy": {
+  "sleep": "zero"
+ },
+ "note": "host_sleep_budget: under the zero sleep policy nothing waits and nothing is charged",
+ "exact_strings": true
+}

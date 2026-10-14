@@ -3583,6 +3583,55 @@
     "refmem-py": "03d18e6e4180c921c3f14df01632666f94ec944e17435b3221f40906ee80616a"
    }
   },
+  "ss_budget_async_sleep_zero": {
+   "suite": "session",
+   "case": "fb43167aef2a301f27daeeceda42fc5d3a292c90179eecaf8a6619b1a31b53c3",
+   "outcomes": {
+    "ref-py": "27716ba9cdc90a9d296cb4c3af40efc2686bd0a8630e8add2d9e995918e98abc"
+   }
+  },
+  "ss_budget_before_sleep": {
+   "suite": "session",
+   "case": "be1ef08ab40ecf5ebe3d11866d28f46bef339b06bbcfbd9dda4682551c81d16e",
+   "outcomes": {
+    "ref-py": "2009ccf42a62af9cf3bffcdfdeeb8a3493390bdf288aaa47a16d3ce976b126df"
+   }
+  },
+  "ss_budget_name_lookup_one": {
+   "suite": "session",
+   "case": "55e57d63c43d92df2f4067d7dddfc98d1704923d24e090aec9510f7b2328127a",
+   "outcomes": {
+    "ref-py": "c5296a6338c107cc963befa3e4b0f3db8859b440d876e68c46a27b7701257720"
+   }
+  },
+  "ss_budget_name_lookup_zero": {
+   "suite": "session",
+   "case": "b3a31814032a24a32c4aeb534c4dd04a0eb02f3c02e50ff0e71bf807f1507183",
+   "outcomes": {
+    "ref-py": "c670014b68886964fc4a309cec1808348a49614d6611110db0237dbfe1a4ca77"
+   }
+  },
+  "ss_budget_uncatchable": {
+   "suite": "session",
+   "case": "4f8f6ffe19c25ecdaddfce658aeb4a84255dcbe9336564297cda49e9e475dfbd",
+   "outcomes": {
+    "ref-py": "3c9616ea3d03be5ee4dfb22fcfc826b8d4aab4cc173c282dd5b723b7e3a0b4c2"
+   }
+  },
+  "ss_budget_zero_plain": {
+   "suite": "session",
+   "case": "9cbc6c7ff4daec3bd52719e44670f98d73965973d0fca2cffadd78350e1d0a7d",
+   "outcomes": {
+    "ref-py": "d7e4a146e8177683bafb2619b3ff893a12c6f7cec08dd73462b1ef46b7e029d3"
+   }
+  },
+  "ss_budget_zero_suspends": {
+   "suite": "session",
+   "case": "966257fe00fccc2124d61c0ec02d6d5a6c6a80040255e0e41e70335d05d270eb",
+   "outcomes": {
+    "ref-py": "02bfe8def50d0438c46956372a043429b541be74e1745515d7044d914d9c0c03"
+   }
+  },
   "ss_os_calls_as_values": {
    "suite": "session",
    "case": "91a64805ba72933910f13abb0390b39a66a0a2a3f835cd07fb5bfe37f8c99645",
@@ -3595,6 +3644,20 @@
    "case": "bda512960da587966c65975bf55313265238edf99a2f5803d9f52d1f593cd5fe",
    "outcomes": {
     "ref-py": "7a92788c0017c09e8fcc751c263e41428a701fe5e13fcaded1fc25e94b9ad1e2"
+   }
+  },
+  "ss_sleep_callhost_uncharged": {
+   "suite": "session",
+   "case": "da69ef90708468bb66979b03d3dff42c0f8663b53fb4d47272ab63b0270c8f76",
+   "outcomes": {
+    "ref-py": "6ee2fa96d78c7a5b724c5a7b298290d9cf529e4df0e7fe70e53d4df06ccab2da"
+   }
+  },
+  "ss_sleep_zero_policy_uncharged": {
+   "suite": "session",
+   "case": "0af1855b989086804edf471eeb41b7bc15785478cfb9862d066f3863166ee221",
+   "outcomes": {
+    "ref-py": "0f7028bd93ff806eb0a757a8e5d14621eda8e6b06cb5fb851304b95003215598"
    }
   },
   "ss_suspension_budget": {
@@ -4269,6 +4332,20 @@
     "ref-py": "52c1c7076399abb2b65e6720ceef2a6b299ffb9741cb6c2b20bd77f27b76e596"
    }
   },
+  "w_ext_raise_empty_message": {
+   "suite": "worker_values",
+   "case": "578a88a5d7b64cbae3912b598dbeab10ce57043ea9e5375810a28208107d9e50",
+   "outcomes": {
+    "ref-py": "dd1f0f29de08fd749947fafb890d818f18933bd5c59c37b606f0e31aeb2f28e7"
+   }
+  },
+  "w_ext_raise_key_error": {
+   "suite": "worker_values",
+   "case": "959aed4e9adee2e3656d7f209ac9bd0262a01ad4862294059516cc7635ab7114",
+   "outcomes": {
+    "ref-py": "807e2afe5e79f9e2bf8d2863f3698d8055ff3ddf5eac745f98b2cc46ed0dbee8"
+   }
+  },
   "w_ext_raise_type": {
    "suite": "worker_values",
    "case": "8581c7ea861f0d1f0fab8c4ed12ea31c55862215815626db565ca89a0ed94dba",
@@ -4318,11 +4395,32 @@
     "ref-py": "38e3319918f4b8b2f5b45707f39cb36aac4bdc8aa3dab8a98d99f1ee6c7fe7dd"
    }
   },
+  "w_os_decline_default_open": {
+   "suite": "worker_values",
+   "case": "c5c2ec60c547d8e54d1ff0c65a2bfa44a295141c85508acad4a367de9ec86883",
+   "outcomes": {
+    "ref-py": "34f0a04979852886348bd5f54b855221ba960a803ea5398329d18efbecfd0ab0"
+   }
+  },
+  "w_os_decline_getenv": {
+   "suite": "worker_values",
+   "case": "f4c4ecbe14b050338624a4980ec67292408e0c3dc718e347f044b3672a837bea",
+   "outcomes": {
+    "ref-py": "ea96bc7eedc541f999399569202468d1f15aafc0e417e72f02836bcb335f3a32"
+   }
+  },
   "w_os_raise_empty_message": {
    "suite": "worker_values",
    "case": "671054e492b84baeb4dc49f5a00445cec147e4309d4874e30279994ae1b75b69",
    "outcomes": {
     "ref-py": "6524bbfcff44a59780e6260562e3e9690d5d18fe67d18b68061f384d869e5c8f"
+   }
+  },
+  "w_os_raise_subclass_caught": {
+   "suite": "worker_values",
+   "case": "f7603dee4ec5298bd0a10b68cf12b9fc0f54553ba09fd33231c9096bc579fc2f",
+   "outcomes": {
+    "ref-py": "2022674e6478813ed3abd882be0a1b74fd452d9737b59b524f949f7a4eb6fb7a"
    }
   },
   "w_os_raise_type": {
@@ -4337,6 +4435,13 @@
    "case": "8d1f72985a8390f8c670bd969d7181f7c2265dc7d35a58df1994f0c5e5da56e3",
    "outcomes": {
     "ref-py": "3aa18df76719f7493a8dd38ed959c8ef7c4d262946deb828cbf291a3123c6ed5"
+   }
+  },
+  "w_refuse_cycle_in": {
+   "suite": "worker_values",
+   "case": "475362f11720fc67bd7c3397af6e9495536dac226c0cd4899af2394953e0a97f",
+   "outcomes": {
+    "ref-py": "7356d9762f82c32dde2080046c39ad01d04811be53c8e0571644c65afa8aafae"
    }
   },
   "w_refuse_date_range": {
@@ -4358,6 +4463,20 @@
    "case": "6b4033635542c1a66572e06146764c53a16f199f0f4e6f5498c77f0ba1d16c92",
    "outcomes": {
     "ref-py": "9844c715812f0eb33f1df999adf5200415c3424f6eed0b945f586b3499d216b4"
+   }
+  },
+  "w_refuse_surrogate_in": {
+   "suite": "worker_values",
+   "case": "79be014efe1900b41d51f2e157a9eabcfae457205877ab6c2a8dcec4ab8239f0",
+   "outcomes": {
+    "ref-py": "f4386fcb4af330ec629efc403b17f03eea757b839927e750850ffc611720d4a7"
+   }
+  },
+  "w_refuse_surrogate_in_then_ok": {
+   "suite": "worker_values",
+   "case": "40bf96fd4c8eabf7a99e7c77bed818aa72e2497c99b63c924ec43dee6d93315b",
+   "outcomes": {
+    "ref-py": "a4bfb808ac36498e7a9172f02229d069b5391fe6d7f11f9938df685f1c5d7888"
    }
   },
   "w_refuse_time_range": {

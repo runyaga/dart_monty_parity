@@ -1,0 +1,15 @@
+{
+ "id": "w_refuse_surrogate_in_then_ok",
+ "feeds": [
+  "x",
+  "1 + 1"
+ ],
+ "inputs": {
+  "x": {
+   "t": "str",
+   "v": "x\ud800y"
+  }
+ },
+ "note": "writer_refusals: the refused input leaves the session usable; the next feed runs",
+ "exact_strings": true
+}

@@ -1,0 +1,16 @@
+{
+ "id": "w_ext_raise_key_error",
+ "code": "try:\n  f()\nexcept KeyError as e:\n  r = (type(e).__name__, repr(e), str(e), e.args)\nr",
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "KeyError",
+     "message": "k"
+    }
+   }
+  ]
+ },
+ "note": "host_code: a chosen KeyError is caught as a KeyError, with its quoted str",
+ "exact_strings": true
+}
