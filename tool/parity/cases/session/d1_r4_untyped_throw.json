@@ -1,0 +1,20 @@
+{
+ "id": "d1_r4_untyped_throw",
+ "feeds": [
+  "log = []\ntry:\n    r = f(1)\n    log.append(('returned', type(r).__name__))\nexcept Exception as e:\n    log.append(('except Exception', type(e).__name__, str(e)))\nexcept BaseException as e:\n    log.append(('except BaseException', type(e).__name__, str(e)))\nlog.append('after')\nrepr(log)",
+  "1 + 1"
+ ],
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "Exception",
+     "message": "u-msg",
+     "untyped": true
+    }
+   }
+  ]
+ },
+ "note": "D1-calls rule 4 (owner decision; no upstream cell): an untyped host throw reaches the guest as Exception with the throw's text; the oracle column is upstream's nearest cell, a host exception with no builtin ancestor beyond Exception (expMGb a3)",
+ "exact_strings": true
+}

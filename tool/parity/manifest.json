@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "43ffbd01687499e1ba240ffc853090d3e5395bf4217c0766453e8d0a48292ade",
+  "sha256": "ca136f09569426fcc1fcdac00d6d59711f15341be7cf7e14880c38161e33b734",
   "files": {
-   "tool/parity/oracle/run_cases.py": "7526bc06c77c7afbed3208cb094056efd95c1e83419192432de9832b12413c07",
-   "tool/parity/oracle/run_probes.py": "06926227e2325548fc4956a2acef5e4db23551df569b91c9c8fe08d06eadf2fe",
+   "tool/parity/oracle/run_cases.py": "8489625ca5f0d4a10c71f2a8cc2bbd53970e914533ee6fea9f912f8956e0f0cb",
+   "tool/parity/oracle/run_probes.py": "bb2b8100330bc43fa6e200789e7b2b5f71211e80feaa9e35e75bd82db7320062",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -3583,6 +3583,34 @@
     "refmem-py": "03d18e6e4180c921c3f14df01632666f94ec944e17435b3221f40906ee80616a"
    }
   },
+  "d1_r1_body_raise": {
+   "suite": "session",
+   "case": "ef93fcc283eebd4e5b0baee03a89fb2d6602e3c36313e2d9285cace39c123534",
+   "outcomes": {
+    "ref-py": "be79b60c6cacfb700c6fae82117ff09f67e9c6af28138b4540d72cdc861bdc49"
+   }
+  },
+  "d1_r2_typed_baseexc": {
+   "suite": "session",
+   "case": "0ea2f04d2d4aa1c044ca6816cd22fd9e6c2776e7c9a4e2fc96825be1a283e59c",
+   "outcomes": {
+    "ref-py": "185d44d8df4c57840eddec603752ef6542e58bfe3af3181f6d42309490032800"
+   }
+  },
+  "d1_r4_untyped_throw": {
+   "suite": "session",
+   "case": "5a1c3e22fa086cb9b00a502143040a057226accf006e379484badefa4461489d",
+   "outcomes": {
+    "ref-py": "c8735788b10ad2cf093b83ddd392fa0767d0bd7c945ec4c3f692d7c26d59fe52"
+   }
+  },
+  "d1_r5_return_unconvertible": {
+   "suite": "session",
+   "case": "7859b6d64bacda66179659a0fc55565d24f808636760bab7555a3e9df89d3269",
+   "outcomes": {
+    "ref-py": "27aeae6406ef8f03cb40da6d262de1e8d90a3addaad91f275c183c962d2f3648"
+   }
+  },
   "ss_budget_async_sleep_zero": {
    "suite": "session",
    "case": "fb43167aef2a301f27daeeceda42fc5d3a292c90179eecaf8a6619b1a31b53c3",
@@ -4859,6 +4887,11 @@
   "sp_request_timeout": {
    "outcomes": {
     "ref-py": "e7aec2d4efd3e5abe4a751d8195e5d28d2c7d94c97f3f73f84ca01dbccaae950"
+   }
+  },
+  "sp_resume_unconvertible": {
+   "outcomes": {
+    "ref-py": "bd4a5a2e94f0591ea0aab4aa9c14f5bd631fd558ae96d617766186c24a60354e"
    }
   },
   "sp_resume_validated": {

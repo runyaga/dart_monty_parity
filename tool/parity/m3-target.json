@@ -1,0 +1,1484 @@
+{
+ "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends.",
+ "clauses": {
+  "A1": {
+   "text": "area filesystem: mounts and the memory filesystem are M6 (C0a)",
+   "owner": "M6"
+  },
+  "A2": {
+   "text": "area telemetry",
+   "owner": "M6"
+  },
+  "A3": {
+   "text": "area deployment: prebuilt workers and delivery",
+   "owner": "M4"
+  },
+  "A4": {
+   "text": "area runtime_cli: the upstream command line",
+   "owner": "M4"
+  },
+  "B1": {
+   "text": "os_calls row whose every parity case needs a mounted filesystem (rows.json case sets `fs`)",
+   "owner": "M6"
+  },
+  "C1": {
+   "text": "upstream lacks the row in its bindings: neither python_cite nor js_cite in the manifest, and no parity case, probe, worker set or session rule compares it against the python binding (a Rust-API oracle does not count)",
+   "owner": "upstream"
+  },
+  "G7": {
+   "text": "browser aggregate-memory resource_limits rows (M6, G7): the web backends are not targets for the row, the native backend is",
+   "owner": "M6"
+  },
+  "D1": {
+   "text": "standalone type checking: the rule makes only type_checking in the session a target; M6 removes standalone typeCheck",
+   "owner": "M6"
+  },
+  "D2": {
+   "text": "upstream has no behaviour to compare: the C1 gate records it as core-gated (c1-gate.json core_gated), upstream's sinks and cancellation are its binding's own",
+   "owner": "upstream"
+  }
+ },
+ "rows": {
+  "run_blocking": {
+   "area": "compile_run",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J04"
+   ]
+  },
+  "start_program": {
+   "area": "compile_run",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J04"
+   ]
+  },
+  "assert_annotations": {
+   "area": "compile_run",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "source_nesting_guard": {
+   "area": "compile_run",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J04"
+   ]
+  },
+  "feed_repl_suspendable": {
+   "area": "repl",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "create_repl": {
+   "area": "repl",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "recover_repl_after_error": {
+   "area": "repl",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "feed_repl_to_completion": {
+   "area": "repl",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "run_progress_variants": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "suspension_source_position": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "resume_name_lookup": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "resume_os_call": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "abort_suspension": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J11"
+   ]
+  },
+  "snapshot_auto_resume": {
+   "area": "progress",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "external_function_value": {
+   "area": "external_functions",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "external_call_result": {
+   "area": "external_functions",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "external_call_arguments": {
+   "area": "external_functions",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_class_value": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_instance_value": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_eager_attributes": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_lazy_attributes": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_method_dispatch": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_constructor_policy": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_value_conversion_hook": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_object_identity_lifecycle": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_class_type_proxy": {
+   "area": "host_objects",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J09"
+   ]
+  },
+  "register_pending_future": {
+   "area": "async",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "resolve_pending_futures": {
+   "area": "async",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "eager_coroutine_completion": {
+   "area": "async",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "async_os_sleep": {
+   "area": "async",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "async_host_driver": {
+   "area": "async",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "configure_os_policy": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "clock_source": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "sandbox_timezone": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "sleep_policy": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "process_clock_policy": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "random_initialization": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "timezone_database": {
+   "area": "os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J11"
+   ],
+   "open": true
+  },
+  "os_environment": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J02"
+   ]
+  },
+  "os_calendar_calls": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J03"
+   ]
+  },
+  "os_entropy": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J03"
+   ]
+  },
+  "file_mode_inspection": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J02"
+   ]
+  },
+  "os_clock_reads": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J03"
+   ]
+  },
+  "os_sync_sleep": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J03"
+   ]
+  },
+  "os_callback_adapter": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J02"
+   ]
+  },
+  "boundary_value_graph": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "singleton_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "boolean_integer_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "big_integer_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "float_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "complex_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "text_and_bytes": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "sequence_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "set_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "dictionary_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "named_tuple_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "calendar_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "time_duration_zone_values": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "shared_value_batches": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "unstable_graph_access": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J08"
+   ],
+   "open": true
+  },
+  "boundary_uuid": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "path_value_conversion": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "file_handle_value_conversion": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J02"
+   ]
+  },
+  "exception_value_conversion": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "builtin_type_function_handles": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "lossy_output_placeholders": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "value_formatting": {
+   "area": "values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "raised_exception": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "exception_taxonomy": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "traceback_frames": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "structured_exception_data": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "resource_failure_semantics": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J04"
+   ]
+  },
+  "execution_input_errors": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "worker_failure_reporting": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "pool_operation_errors": {
+   "area": "errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "feed_execution_limit": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J09"
+   ]
+  },
+  "turn_execution_limit": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "allocator_memory_limit": {
+   "area": "resource_limits",
+   "backends": [
+    "vm"
+   ],
+   "backends_excluded": {
+    "dart2js": "G7",
+    "dart2wasm": "G7"
+   },
+   "judgement": [
+    "J05"
+   ]
+  },
+  "recursion_limit": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J09"
+   ]
+  },
+  "garbage_collection_interval": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_suspension_budget": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "host_sleep_budget": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "hard_memory_ceiling": {
+   "area": "resource_limits",
+   "backends": [
+    "vm"
+   ],
+   "backends_excluded": {
+    "dart2js": "G7",
+    "dart2wasm": "G7"
+   },
+   "judgement": [
+    "J05"
+   ]
+  },
+  "resource_accounting": {
+   "area": "resource_limits",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "dump_session": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "load_session": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "snapshot_state_kinds": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "snapshot_version_window": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "snapshot_errors": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "snapshot_trust": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "snapshot_host_state_reconstruction": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "load_suspended_snapshot": {
+   "area": "snapshots",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J09"
+   ]
+  },
+  "fork_session": {
+   "area": "sessions",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "type_check_stubs": {
+   "area": "type_checking",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "type_check_diagnostics": {
+   "area": "type_checking",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "reset_type_checker": {
+   "area": "type_checking",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J04"
+   ]
+  },
+  "persistent_type_check_state": {
+   "area": "type_checking",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "skip_feed_type_check": {
+   "area": "type_checking",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "print_stream_routing": {
+   "area": "print",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "collect_print_string": {
+   "area": "print",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "collect_print_streams": {
+   "area": "print",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "print_callback": {
+   "area": "print",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "print_flush_interval": {
+   "area": "print",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "create_worker_pool": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "checkout_worker": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "worker_recycling": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "finish_checkout": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "close_worker_pool": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "pool_capacity": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "worker_diagnostics": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "checkout_acquisition_timeout": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "request_deadline": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "execution_watchdogs": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "protocol_value_arena": {
+   "area": "protocol",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J08"
+   ],
+   "open": true
+  },
+  "protocol_frame_io": {
+   "area": "protocol",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J10"
+   ],
+   "open": true
+  },
+  "protocol_worker_state_machine": {
+   "area": "protocol",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J10"
+   ],
+   "open": true
+  },
+  "wire_domain_conversion": {
+   "area": "protocol",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J10"
+   ],
+   "open": true
+  },
+  "protocol_version_compatibility_check": {
+   "area": "protocol",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J10"
+   ],
+   "open": true
+  },
+  "binding_exposure_policy": {
+   "area": "binding_helpers",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "cpython_value_adapter": {
+   "area": "binding_helpers",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J08"
+   ],
+   "open": true
+  },
+  "resource_failure_disposal": {
+   "area": "security",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J01"
+   ]
+  },
+  "host_callback_authority": {
+   "area": "security",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J08"
+   ],
+   "open": true
+  },
+  "install_dependencies": {
+   "area": "pool",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "judgement": [
+    "J09"
+   ]
+  }
+ },
+ "excluded": {
+  "compile_program": {
+   "area": "compile_run",
+   "clause": "C1",
+   "owner": "upstream",
+   "judgement": [
+    "J04"
+   ]
+  },
+  "compiled_source": {
+   "area": "compile_run",
+   "clause": "C1",
+   "owner": "upstream",
+   "judgement": [
+    "J04"
+   ]
+  },
+  "feed_checked_source": {
+   "area": "repl",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "call_python_function": {
+   "area": "repl",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "discover_python_functions": {
+   "area": "repl",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "interactive_continuation": {
+   "area": "repl",
+   "clause": "C1",
+   "owner": "upstream",
+   "judgement": [
+    "J04"
+   ]
+  },
+  "inspect_repl_compile_options": {
+   "area": "repl",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "abandon_suspended_feed": {
+   "area": "progress",
+   "clause": "C1",
+   "owner": "upstream",
+   "judgement": [
+    "J04"
+   ]
+  },
+  "os_path_predicates": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_file_reads": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_file_writes": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_rename": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_path_resolution": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_open_file": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_stat_results": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_directory_listing": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_directory_creation": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_entry_removal": {
+   "area": "os_calls",
+   "clause": "B1",
+   "owner": "M6"
+  },
+  "os_request_inspection": {
+   "area": "os_calls",
+   "clause": "C1",
+   "owner": "upstream",
+   "judgement": [
+    "J01"
+   ]
+  },
+  "mount_table": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_modes": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_root_capability": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_dispatch_and_fallback": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_write_budget": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_memory_budget": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_usage_inspection": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_errors": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "working_directory": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "virtual_path_validation_normalization": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "memory_filesystem": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "callback_files": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_feed_lifecycle": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "mount_close": {
+   "area": "filesystem",
+   "clause": "A1",
+   "owner": "M6"
+  },
+  "borrowed_value_access": {
+   "area": "values",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "rust_projection_errors": {
+   "area": "errors",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "global_allocator": {
+   "area": "resource_limits",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "live_resource_limits": {
+   "area": "resource_limits",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "memory_baseline_accounting": {
+   "area": "resource_limits",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "memory_limit_headroom": {
+   "area": "resource_limits",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "type_check_source": {
+   "area": "type_checking",
+   "clause": "D1",
+   "owner": "M6",
+   "judgement": [
+    "J06"
+   ]
+  },
+  "pool_async_print_delivery": {
+   "area": "print",
+   "clause": "D2",
+   "owner": "upstream",
+   "judgement": [
+    "J07"
+   ]
+  },
+  "telemetry_adapter": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "telemetry_context": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "telemetry_metrics": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "telemetry_flush": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "telemetry_instrumentation_lifecycle": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "cli_telemetry": {
+   "area": "telemetry",
+   "clause": "A2",
+   "owner": "M6"
+  },
+  "pool_raw_driving": {
+   "area": "pool",
+   "clause": "C1",
+   "owner": "upstream"
+  },
+  "pool_cancellation_disposal": {
+   "area": "pool",
+   "clause": "D2",
+   "owner": "upstream",
+   "judgement": [
+    "J07"
+   ]
+  },
+  "cli_run_modes": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "subprocess_worker_entry": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "cli_type_checking": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "cli_filesystem": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "cli_execution_limits": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "cli_host_limits": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "cli_exit_status": {
+   "area": "runtime_cli",
+   "clause": "A4",
+   "owner": "M4"
+  },
+  "wasm_worker_backend": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  },
+  "runtime_version": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  },
+  "rust_toolchain_requirement": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  },
+  "reference_count_diagnostics": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  },
+  "runtime_binary_discovery": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  },
+  "worker_only_build": {
+   "area": "deployment",
+   "clause": "A3",
+   "owner": "M4"
+  }
+ }
+}

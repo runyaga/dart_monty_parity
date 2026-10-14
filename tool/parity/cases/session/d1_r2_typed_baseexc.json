@@ -1,0 +1,19 @@
+{
+ "id": "d1_r2_typed_baseexc",
+ "feeds": [
+  "log = []\ntry:\n    r = f(1)\n    log.append(('returned', type(r).__name__))\nexcept Exception as e:\n    log.append(('except Exception', type(e).__name__, str(e)))\nexcept BaseException as e:\n    log.append(('except BaseException', type(e).__name__, str(e)))\nlog.append('after')\nrepr(log)",
+  "1 + 1"
+ ],
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "KeyboardInterrupt",
+     "message": "k-msg"
+    }
+   }
+  ]
+ },
+ "note": "D1-calls rule 2 (expMGb a5): a typed throw keeps its type and message, and a BaseException kind is caught only by except BaseException",
+ "exact_strings": true
+}

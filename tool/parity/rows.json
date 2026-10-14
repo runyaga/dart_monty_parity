@@ -123,6 +123,14 @@
      "w_refuse_surrogate_in",
      "w_refuse_surrogate_in_then_ok"
     ]
+   },
+   "session": {
+    "cases": [
+     "v_text_bytes",
+     "i_text_bytes",
+     "w_refuse_surrogate_in",
+     "w_refuse_surrogate_in_then_ok"
+    ]
    }
   },
   "sequence_values": {
@@ -257,6 +265,19 @@
     "diverge": [
      "w_exc_unicode_version_in"
     ]
+   },
+   "session": {
+    "cases": [
+     "v_exception",
+     "i_exception",
+     "r_exception",
+     "w_exc_payloadless_out",
+     "w_exc_noarg_out",
+     "w_exc_lossy_in",
+     "w_exc_lossy_ret",
+     "w_refuse_exc_name",
+     "w_exc_noarg_in"
+    ]
    }
   },
   "builtin_type_function_handles": {
@@ -333,6 +354,16 @@
      "w_share_nan_tuples",
      "w_share_namedtuple",
      "w_share_proxy",
+     "w_refuse_cycle_in"
+    ]
+   },
+   "session": {
+    "cases": [
+     "v_alias",
+     "v_alias_nested",
+     "i_alias",
+     "i_alias_is",
+     "r_alias",
      "w_refuse_cycle_in"
     ]
    }
@@ -1727,6 +1758,22 @@
      "w_os_decline_default_open",
      "w_os_decline_getenv"
     ]
+   },
+   "session": {
+    "cases": [
+     "t01_except_hierarchy",
+     "t02_host_raise_subclass",
+     "w_ext_raise_type",
+     "w_ext_raise_empty_message",
+     "w_ext_raise_key_error",
+     "w_os_raise_type",
+     "w_os_raise_empty_message",
+     "w_os_return_none",
+     "w_os_decline",
+     "w_os_raise_subclass_caught",
+     "w_os_decline_default_open",
+     "w_os_decline_getenv"
+    ]
    }
   },
   "structured_exception_data": {
@@ -1737,6 +1784,12 @@
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "session": {
+    "cases": [
+     "t03_unicode_uncaught",
+     "t05_json_uncaught"
+    ]
    }
   },
   "process_clock_policy": {
@@ -2223,6 +2276,27 @@
    "session": {
     "probes": [
      "sp_collect_streams"
+    ]
+   }
+  },
+  "external_function_value": {
+   "session": {
+    "cases": [
+     "d1_r1_body_raise",
+     "d1_r2_typed_baseexc",
+     "d1_r4_untyped_throw",
+     "d1_r5_return_unconvertible"
+    ],
+    "probes": [
+     "sp_resume_validated",
+     "sp_resume_unconvertible"
+    ]
+   }
+  },
+  "print_stream_routing": {
+   "session": {
+    "probes": [
+     "sp_print_raise_suspended"
     ]
    }
   }

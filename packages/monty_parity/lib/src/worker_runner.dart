@@ -405,6 +405,10 @@ MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
   }
   final r = ((a['raise'] as Map?) ?? const {}).cast<String, Object?>();
   if (r.isEmpty) throw UnsupportedError('scripted answer $a');
+  // An untyped throw: the host throws a value that names no Python type, as
+  // a Dart function does; the oracle column raises `type` with `message`.
+  // ignore: only_throw_errors, a string is the untyped value a host may throw
+  if (r['untyped'] == true) throw r['message'] ?? '';
   throw ExternalException(
     (r['type'] as String?) ?? 'Exception',
     (r['message'] as String?) ?? '',

@@ -13,7 +13,7 @@ runner itself breaks; a case that cannot run records `runner_error`.
 Case format (tool/parity/cases/<suite>/<id>.json): `id`; `code` (one feed)
 or `feeds` (one REPL session, one feed each); optional typed `inputs`;
 scripted `externals` / `os` answers per name in call order (`return`,
-`raise`, `echo`, `echo_arg`); `limits`; `os_policy`; `fs` (mounts + seeded
+`raise`, `echo`, `echo_arg`; `auto_externals` has upstream's own loop answer them); `limits`; `os_policy`; `fs` (mounts + seeded
 files); `cwd`; `host` (host classes, objects, wrappers); `restore_before`;
 `refmem` (also run upstream's in-memory filesystem); `display` (also record the
 error's rendered forms, see `display_fields`). Values use the canonical
@@ -771,6 +771,22 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     out['steps'].append(step)
                     continue
             kw.update(feed_kw)
+            if case.get('auto_externals'):
+                # The host functions are answered by upstream's own loop (resume_auto), not scripted resumes:
+                # a value it cannot convert, or an exception, reaches the guest as upstream's binding delivers it.
+                def make_ext(name: str) -> Any:
+                    def ext(*args: Any, **kwargs: Any) -> Any:
+                        c_args, c_kwargs = canon_call(args, kwargs)
+                        step['ext_calls'].append({'name': name, 'args': c_args, 'kwargs': c_kwargs})
+                        a = answer((case.get('externals') or {}).get(name), used.get('ext:' + name, 0))
+                        used['ext:' + name] = used.get('ext:' + name, 0) + 1
+                        if a is None:
+                            raise NameError(f"name '{name}' is not defined")
+                        if 'return' in a:
+                            return decode(a['return'], ctx)
+                        raise getattr(builtins, a['raise']['type'])(a['raise'].get('message', ''))
+                    return ext
+                kw['external_lookup'] = {n: make_ext(n) for n in (case.get('externals') or {})}
             if mounts is not None:
                 def recorder(*, name: Any, args: Any, kwargs: Any, is_async: Any, **_: Any) -> Any:
                     c_args, c_kwargs = canon_call(args, kwargs)
@@ -796,7 +812,9 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     guard += 1
                     if guard > 1000:
                         raise RuntimeError('more than 1000 suspensions')
-                    if isinstance(snap, pm.FunctionSnapshot) and snap.object_id is not None:
+                    if isinstance(snap, pm.FunctionSnapshot) and (
+                            snap.object_id is not None
+                            or (case.get('auto_externals') and not snap.is_os_function)):
                         snap = snap.resume_auto()
                         continue
                     if mounts is not None and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:

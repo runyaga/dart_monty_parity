@@ -1,11 +1,15 @@
 {
- "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares.",
+ "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares. The stages C3-4, C3-5 and C3-6 hold the C3 parity rows (their cases come from the worker and core suites, run here through the session), and `d1_calls` holds one case or probe per D1-calls rule, named in `d1_rules` (taken from expMGb's cells, pydantic_monty as the oracle); none of the four is landed until P-cut.",
  "engine": "session",
  "stages": [
   "C1-3a",
   "C1-3b",
   "C1-4",
+  "C3-4",
+  "C3-5",
+  "C3-6",
   "C1-5",
+  "d1_calls",
   "cutover"
  ],
  "landed": [
@@ -48,9 +52,25 @@
   "host_constructor_policy": "cutover",
   "host_value_conversion_hook": "cutover",
   "collect_print_string": "cutover",
-  "collect_print_streams": "cutover"
+  "collect_print_streams": "cutover",
+  "exception_value_conversion": "C3-4",
+  "structured_exception_data": "C3-4",
+  "exception_taxonomy": "C3-5",
+  "text_and_bytes": "C3-6",
+  "boundary_value_graph": "C3-6",
+  "external_function_value": "d1_calls",
+  "print_stream_routing": "d1_calls"
  },
  "core_gated": {
   "C1-3b": "print stall and backpressure (pool_async_print_delivery) and close while busy (pool_cancellation_disposal) have no upstream behaviour to compare: upstream's sinks and cancellation are its binding's own, and a Dart close of a busy session is a recorded divergence. dart_monty_core's own tests gate them."
+ },
+ "d1_rules": {
+  "1": "d1_r1_body_raise",
+  "2": "d1_r2_typed_baseexc",
+  "3": "sp_resume_validated",
+  "4": "d1_r4_untyped_throw",
+  "5": "d1_r5_return_unconvertible",
+  "6": "sp_resume_unconvertible",
+  "7": "sp_print_raise_suspended"
  }
 }

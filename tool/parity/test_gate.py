@@ -205,7 +205,7 @@ class GateTest(unittest.TestCase):
         rows['host_suspension_budget']['session']['cases'].append('no_such_case')
         rows['run_progress_variants']['session']['exceptions'] = rows['run_progress_variants']['exceptions']
         rows['os_entropy']['session'] = {'cases': ['b14_urandom']}
-        rows['print_callback']['session']['probes'].remove('sp_print_raise_suspended')
+        rows['print_callback']['session']['probes'].remove('sp_print_raise_then_error')
         gate = copy.deepcopy(self.gate)
         gate['stages'].insert(1, 'C1-9')
         problems = '\n'.join(score.gate_problems(gate, rows, cases, EXPECTED))
@@ -213,8 +213,44 @@ class GateTest(unittest.TestCase):
         self.assertIn('no case file for no_such_case', problems)
         self.assertIn('tolerates no named exception', problems)
         self.assertIn('os_entropy: has a session rule but no stage', problems)
-        self.assertIn('sp_print_raise_suspended: a session probe of the oracle but in no gated session rule', problems)
+        self.assertIn('sp_print_raise_then_error: a session probe of the oracle but in no gated session rule', problems)
         self.assertIn("stage 'C1-9' gates no row", problems)
+
+    def test_new_stages_show_a_forced_mismatch_then_fail_once_landed(self) -> None:
+        """A control per stage P-t adds: a forced mismatch in the stage's rows is shown while the stage is
+        pending (the gate passes), and fails the gate once the stage is landed."""
+        for stage in ('C3-4', 'C3-5', 'C3-6', 'd1_calls'):
+            with self.subTest(stage=stage):
+                row = next(r for r, st in self.gate['rows'].items() if st == stage)
+                sess = self.rows[row]['session']
+                if sess.get('cases'):
+                    cid = sess['cases'][0]
+                    got = json.loads((self.out / cid / 'session-vm.json').read_text())
+                    saved = json.loads(json.dumps(got))
+                    got['steps'][-1]['value'] = {'t': 'str', 'v': 'forced mismatch'}
+                else:
+                    cid = sess['probes'][0]
+                    got = json.loads((self.out / cid / 'session-vm.json').read_text())
+                    saved = json.loads(json.dumps(got))
+                    got['events'] = got['events'] + [{'ev': 'refused', 'cls': 'forced', 'msg': 'mismatch'}]
+                self.write(cid, 'vm', got)
+                self.assertNotIn(stage, self.gate['landed'])
+                self.assertEqual(self.assert_gate(), 0)
+                landed = copy.deepcopy(self.gate)
+                landed['landed'].append(stage)
+                self.assertEqual(self.assert_gate(landed), 1)
+                self.write(cid, 'vm', saved)
+
+    def test_d1_rules_are_one_carrier_each(self) -> None:
+        d1 = self.gate['d1_rules']
+        self.assertEqual(sorted(d1), [str(n) for n in range(1, 8)])
+        gate = copy.deepcopy(self.gate)
+        gate['d1_rules']['7'] = 'sp_print_raise'  # a probe no d1_calls row carries
+        del gate['d1_rules']['2']
+        problems = '\n'.join(score.gate_problems(gate, self.rows, score.case_index(), EXPECTED))
+        self.assertIn('`d1_rules` must name rules 1-7', problems)
+        self.assertIn('rule 7: sp_print_raise is in no session rule of a `d1_calls` row', problems)
+        self.assertIn('carries d1_r2_typed_baseexc, which is no D1-calls rule', problems)
 
 
 if __name__ == '__main__':

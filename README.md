@@ -28,6 +28,7 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/baseline-current.json` | the current baseline: every case's result within every re-measured row, every row's status, per backend, the PRESENT totals, per-architecture differences and the list of intentional moves (`deltas`) |
 | `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
 | `tool/parity/c1-gate.json`, `test_gate.py` | the C1 gate: per capability row, the PR whose landing makes the row's `session` rule (in `rows.json`) gated through the session engine, and which of those PRs have landed; and its offline self-test |
+| `tool/parity/m3-target.json`, `test_target.py` | the M3 parity target: the in-scope manifest rows the M3 milestone owns, each with the backends it must be PRESENT on, the rest `excluded` under a named clause, and a row's `allowed` entry where an approved exception lets it be non-PRESENT; `score.py --target` prints it (not fatal until `--assert-target`); and its offline self-test |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
@@ -104,6 +105,10 @@ assigned the C1 pull request that makes it pass (`stages`); a row is asserted on
 `oracle/run_probes.py`) as the core engine's are, but with no named exception, so a suspension's position is
 compared. The pool, print and outbound-size probes (`sp_*`) and the `session` suite's cases (`ss_*`, exact
 strings) were added for this gate.
+Stages `C3-4`, `C3-5` and `C3-6` hold the C3 pull requests' parity rows (their cases come from the worker and
+core suites and run here through the session), and `d1_calls` holds one case or probe per D1-calls rule
+(`d1_rules` in the gate file: host failures during an external call, from expMGb's cells, upstream as the
+oracle; rules 1, 2, 4 and 5 are `session` cases, 3, 6 and 7 probes). Those four are run and shown, not landed.
 
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate
