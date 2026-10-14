@@ -124,6 +124,14 @@ class TargetTest(unittest.TestCase):
             # Text that declares no test (an import, a comment) is not a title; a group's title is.
             a['evidenced_by'][0]['tests'] = ['absent.dart']
             self.assertEqual(len(mine(score.evidence_core_problems(t, core))), 1)
+            # A test commented out, in either comment form, declares nothing.
+            (core / 'test/a_test.dart').write_text("// test('deleted evidence', () {});\n/* test('deleted evidence', () {}); */\n"
+                                                    "test('kept // not a comment', () {});\n")
+            a['evidenced_by'][0]['tests'] = ['deleted evidence']
+            self.assertEqual(len(mine(score.evidence_core_problems(t, core))), 1)
+            a['evidenced_by'][0]['tests'] = ['kept // not a comment']
+            self.assertEqual(mine(score.evidence_core_problems(t, core)), [])
+            (core / 'test/a_test.dart').write_text("group(\"a \\\"quoted\\\" group\", () {});\n")
             a['evidenced_by'][0]['tests'] = ['a "quoted" group']
             self.assertEqual(mine(score.evidence_core_problems(t, core)), [])
 

@@ -1123,7 +1123,7 @@
      "dart2js",
      "dart2wasm"
     ],
-    "reason": "Upstream runs the worker dispatcher in Rust (Child, SessionBudget, dispatch_frame); no binding exposes it and no python-binding oracle compares it. Core evidences the row with its worker-channel tests: the real worker executable (the Configure, Feed, Shutdown lifecycle, in-band errors, the suspension and sleep budgets), the VM channel and web connection against fakes (fatal, shutdown, one turn at a time), the Dart budget accounting, and the driver over a scripted channel; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). The Rust dispatcher is reached only through the real-worker tests and E0.",
+    "reason": "Upstream runs the worker dispatcher in Rust (Child, SessionBudget, dispatch_frame); no binding exposes it and no python-binding oracle compares it. Core evidences the row with its worker-channel tests: the real worker executable (the Configure, Feed, Shutdown lifecycle, in-band errors, and the suspension and sleep budgets), the VM channel and web connection against fakes (fatal, shutdown, one turn at a time), the Dart budget accounting, and the driver over a scripted channel; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). The budgets are counted in Dart (the pool session) and an exceeded budget reaches the worker as AbortFeed, so the budget tests establish that accounting and the worker's handling of the abort, not the Rust SessionBudget's own enforcement. The Rust dispatcher is reached only through the real-worker tests and E0.",
     "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
     "evidenced_by": [
      {
@@ -1140,14 +1140,14 @@
       "tests": [
        "past 1000 host calls the feed fails in the sandbox"
       ],
-      "exercises": "the real worker (VM) through a pool session: the 1000-suspension budget ends the feed with a RuntimeError in the sandbox and the session runs on"
+      "exercises": "the real worker (VM) through a pool session: past 1000 suspensions the pool session counts the budget in Dart and aborts the feed with a RuntimeError in the sandbox, and the session runs on"
      },
      {
       "path": "test/integration/worker/monty_snapshot_io_test.dart",
       "tests": [
        "the sleep budget: charged before waiting, uncatchable, refused"
       ],
-      "exercises": "the real worker (VM): the sleep budget is charged before waiting, raises an uncatchable TimeoutError and leaves refused sleeps uncharged"
+      "exercises": "the real worker (VM): the Dart-side sleep budget charges a sleep before waiting and aborts the feed past the limit with a TimeoutError the sandbox cannot catch (the test checks the exceptions and the results that follow, not that a refused sleep never waited)"
      },
      {
       "path": "test/integration/worker/process_channel_test.dart",
@@ -1171,9 +1171,11 @@
       "path": "test/unit/worker/session_budget_test.dart",
       "tests": [
        "the suspension past the limit aborts; the count is kept",
-       "a smaller suspension limit is adopted; a larger one is not"
+       "a smaller suspension limit is adopted; a larger one is not",
+       "a sleep past the sleep limit aborts uncharged",
+       "a sleep is charged at most the system-sleep maximum"
       ],
-      "exercises": "the Dart session-budget accounting (suspension and sleep limits; a reply only tightens them): unit tests, no worker"
+      "exercises": "the Dart session-budget accounting: the suspension limit and its abort, a reply that only tightens the limit, a sleep past the sleep limit aborting uncharged, a sleep charged at most the system-sleep maximum; unit tests, no worker"
      },
      {
       "path": "test/unit/worker/proto_session_test.dart",
@@ -1211,7 +1213,7 @@
      "dart2js",
      "dart2wasm"
     ],
-    "reason": "Rust-domain/protobuf conversion and validation is not exposed by any binding. Core evidences the row with its arena and host-answer tests (Dart conversion, against upstream-generated golden bytes and local tables), the driver over a scripted channel, and real-worker conversions of integers and floats; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). Rust's semantic validation failures (ProtoConvertError paths) are reached only through the real-worker tests and E0.",
+    "reason": "Rust-domain/protobuf conversion and validation is not exposed by any binding. Core evidences the row with its arena and host-answer tests (Dart conversion, against upstream-generated golden bytes and local tables), the driver over a scripted channel, and real-worker conversions of integers and floats; and with E0 through the worker (tool/parity/e0.json, run against the real worker on vm, dart2js and dart2wasm in the `e0` CI job). Not covered by a named test: the Rust side's semantic-validation failures (ProtoConvertError) of malformed wire values. The named real-worker tests and E0 convert valid values; the refusals cited here (a malformed arena, temporal ranges, malformed instance ids) are Dart-side validation.",
     "cite": "owner decision PT1, 2026-10-14 (P-t review, J08 and J10)",
     "evidenced_by": [
      {
@@ -1231,7 +1233,7 @@
        "temporal ranges, as the worker states them",
        "class and instance ids must be uuids"
       ],
-      "exercises": "the Dart writer and reader round-trip each value kind and refuse what the worker's validation refuses: temporal ranges, malformed instance ids"
+      "exercises": "the Dart writer and reader round-trip the value kinds the group lists (ellipsis, NotImplemented, dates and times, timedelta, timezones, exceptions, builtin types and functions, a file handle, a named tuple, a class instance) and refuse temporal values out of range and malformed instance ids"
      },
      {
       "path": "test/unit/worker/proto_wire_test.dart",

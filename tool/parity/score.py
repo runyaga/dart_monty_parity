@@ -726,13 +726,46 @@ def evidence_shape_problems(cid: str, allowed: dict) -> list[str]:
 _STR = re.compile(r"""'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)\"""")
 
 
+def _without_comments(src: str) -> str:
+    """[src] with Dart `//` and `/* */` comments blanked (string literals, raw and triple-quoted, are kept)."""
+    out, i, n = [], 0, len(src)
+    while i < n:
+        c = src[i]
+        if src.startswith('//', i):
+            j = src.find('\n', i)
+            j = n if j < 0 else j
+            out.append(' ' * (j - i))
+            i = j
+        elif src.startswith('/*', i):
+            j = src.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            out.append(''.join(ch if ch == '\n' else ' ' for ch in src[i:j]))
+            i = j
+        elif c in '\'"':
+            raw = i > 0 and src[i - 1] == 'r' and (i < 2 or not (src[i - 2].isalnum() or src[i - 2] == '_'))
+            q = src[i:i + 3] if src.startswith(c * 3, i) else c
+            j = i + len(q)
+            while j < n and not src.startswith(q, j):
+                if src[j] == '\\' and not raw:
+                    j += 1
+                elif src[j] == '\n' and len(q) == 1:
+                    break
+                j += 1
+            out.append(src[i:j + len(q)])
+            i = j + len(q)
+        else:
+            out.append(c)
+            i += 1
+    return ''.join(out)
+
+
 def declared_titles(path: str, src: str) -> list[str]:
     """The titles a source file declares: Dart `test(`, `group(` and `testWidgets(` (adjacent string literals
-    joined, as Dart joins them) or Rust `#[test]` functions. Imports and other text declare none; a test
-    commented out with `//` is read as declared (the check is a guard against a wrong title, not a parser)."""
+    joined, as Dart joins them) or Rust `#[test]` functions. Imports, comments and other text declare none."""
     if path.endswith('.rs'):
         return re.findall(r'#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+(\w+)', src)
     out = []
+    src = _without_comments(src)
     for m in re.finditer(r'\b(?:test|group|testWidgets)\(\s*', src):
         pos, parts = m.end(), []
         while (lit := _STR.match(src, pos)):
