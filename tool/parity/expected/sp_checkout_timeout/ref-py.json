@@ -1,0 +1,25 @@
+{
+ "probe": "sp_checkout_timeout",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "release"
+  },
+  {
+   "ev": "checkout"
+  },
+  {
+   "ev": "checkout_refused",
+   "waited": true
+  }
+ ],
+ "runner_error": null
+}

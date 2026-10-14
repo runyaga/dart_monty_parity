@@ -1,0 +1,15 @@
+{
+ "id": "ss_sleep_budget",
+ "feeds": [
+  "import time\ntime.sleep(0.2)\n1",
+  "time.sleep(0.1)\n2",
+  "try:\n    time.sleep(0.1)\nexcept BaseException:\n    pass\n3",
+  "import asyncio\nawait asyncio.sleep(0.04)\n4",
+  "await asyncio.sleep(0.02)\n5"
+ ],
+ "limits": {
+  "max_total_sleep_secs": 0.25
+ },
+ "note": "host_sleep_budget: each system sleep is charged before it is waited, time.sleep and asyncio.sleep alike; past the budget the feed fails uncatchably with the charged total, and a refused sleep is not charged",
+ "exact_strings": true
+}

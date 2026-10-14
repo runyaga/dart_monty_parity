@@ -1,0 +1,35 @@
+{
+ "probe": "sp_print_lines",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "a\n"
+  },
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "b\n"
+  },
+  {
+   "ev": "print",
+   "stream": "stderr",
+   "text": "c\n"
+  },
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "d"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "5"
+   }
+  }
+ ],
+ "runner_error": null
+}

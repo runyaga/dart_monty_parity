@@ -1,0 +1,36 @@
+{
+ "probe": "sp_collect_streams",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "collected",
+   "output": [
+    [
+     "stdout",
+     "a\n"
+    ],
+    [
+     "stdout",
+     "b\n"
+    ],
+    [
+     "stderr",
+     "c\n"
+    ],
+    [
+     "stdout",
+     "d\n"
+    ]
+   ]
+  }
+ ],
+ "runner_error": null
+}

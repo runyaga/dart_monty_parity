@@ -1,0 +1,36 @@
+{
+ "probe": "sp_oversized_resume",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 3
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "request frame of 268435487 bytes exceeds the maximum of 268435456 bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "snapshot has already been resumed"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "monty worker protocol error: feed called while a suspension is awaiting an answer"
+  }
+ ],
+ "runner_error": null
+}

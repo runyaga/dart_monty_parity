@@ -1,0 +1,21 @@
+{
+ "probe": "sp_oversized_input",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "request frame of 268435499 bytes exceeds the maximum of 268435456 bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  }
+ ],
+ "runner_error": null
+}

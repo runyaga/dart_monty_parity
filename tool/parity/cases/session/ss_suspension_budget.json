@@ -1,0 +1,42 @@
+{
+ "id": "ss_suspension_budget",
+ "feeds": [
+  "f(1)",
+  "f(1) + f(2)",
+  "7",
+  "f(3)"
+ ],
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   },
+   {
+    "return": {
+     "t": "int",
+     "v": "1"
+    }
+   },
+   {
+    "return": {
+     "t": "int",
+     "v": "2"
+    }
+   },
+   {
+    "return": {
+     "t": "int",
+     "v": "3"
+    }
+   }
+  ]
+ },
+ "limits": {
+  "max_suspensions": 2
+ },
+ "note": "host_suspension_budget: the count is per checkout; past it a feed fails, and a feed that does not suspend still runs",
+ "exact_strings": true
+}

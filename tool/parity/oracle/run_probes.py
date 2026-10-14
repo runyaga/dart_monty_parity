@@ -12,7 +12,9 @@ dart_monty_core, and tool/parity/probes_compare.py compares the two.
 
 Event vocabulary: suspend{kind,name,args,kwargs,position,pending},
 complete{value}, error{type,message,tb_last}, refused{}, handler{who,args},
-unsupported{what}, plus probe-specific observation events.
+unsupported{what}, plus probe-specific observation events; the pool and print
+probes (`sp_*`) add print{stream,text}, checkout{}, checkout_refused{waited}, release{},
+crashed{at_deadline}, failed{callback_error} and complete's waited.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ import hashlib
 import json
 import sys
 import tempfile
+import time
 import traceback
 import uuid
 from pathlib import Path, PurePosixPath
@@ -228,6 +231,345 @@ def abandon(pool: pm.Monty, t: T) -> None:
         t.step(lambda: s.feed_start('g'))  # feed while suspended
         t.step(lambda: x.resume({'return_value': 5}))  # the suspension survived
         t.step(lambda: s.feed_start('g'))
+
+
+# ------------------------------------------------------- pool and print (the session engine's rows)
+# Each `sp_*` probe starts the pools it needs, so pool settings and the reuse of
+# one worker are part of what it measures. A feed's outcome is `complete` or an
+# error event; an error that is not a sandbox exception (a timeout, a crash, a
+# finished session) is `refused`, compared as a refusal.
+def run(t: T, fn: Any) -> None:
+    """Records a `feed_run`'s value as `complete`, or its error."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+
+
+def enter(t: T, pool: pm.Monty) -> None:
+    """Records whether a checkout is granted (`checkout`, then returned at once) or refused."""
+    try:
+        cm = pool.checkout()
+        cm.__enter__()
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+        return
+    t.add({'ev': 'checkout'})
+    cm.__exit__(None, None, None)
+
+
+@probe
+def sp_checkout_script_name(pool: pm.Monty, t: T) -> None:
+    with pool.checkout(script_name='job.py') as s:
+        run(t, lambda: s.feed_run('__file__'))
+        run(t, lambda: s.feed_run('def f():\n    return 1 / 0\nf()'))
+
+
+@probe
+def sp_finish_reset(pool: pm.Monty, t: T) -> None:
+    """One worker: the second checkout gets the same worker back, Reset, without the first one's globals."""
+    with pm.Monty(max_processes=1) as p:
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('x = 1\nx'))
+            first = s.worker_pid
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('x'))
+            t.add({'ev': 'reused', 'same_worker': s.worker_pid == first})
+
+
+@probe
+def sp_checkout_timeout(pool: pm.Monty, t: T) -> None:
+    """One worker, held: a checkout waits for it and gets it once it is returned (a 10 s timeout, so no race);
+    held again under a 0.3 s timeout, a checkout waits it out and is refused."""
+    async def enter_async(p: pm.AsyncMonty) -> None:
+        start = time.monotonic()
+        try:
+            async with p.checkout():
+                t.add({'ev': 'checkout'})
+        except Exception:  # noqa: BLE001 - recorded: whether it waited its timeout, not the host's error type
+            t.add({'ev': 'checkout_refused', 'waited': 0.25 <= time.monotonic() - start < 2})
+
+    async def main() -> None:
+        async with pm.AsyncMonty(max_processes=1, checkout_timeout=10) as p:
+            async with p.checkout() as s:
+                t.add({'ev': 'complete', 'value': canon(await s.feed_run('1'))})
+                waiting = asyncio.ensure_future(enter_async(p))
+                await asyncio.sleep(0.1)
+                t.add({'ev': 'release'})
+            await waiting
+        async with pm.AsyncMonty(max_processes=1, checkout_timeout=0.3) as p:
+            async with p.checkout():
+                await enter_async(p)
+
+    asyncio.run(main())
+
+
+@probe
+def sp_capacity_two(pool: pm.Monty, t: T) -> None:
+    """Two workers: two checkouts are held at once, a third waits until one is returned."""
+    async def main() -> None:
+        async with pm.AsyncMonty(max_processes=2, checkout_timeout=10) as p:
+            pids = set()
+            async with p.checkout() as s1, p.checkout() as s2:
+                t.add({'ev': 'complete', 'value': canon(await s1.feed_run('1'))})
+                t.add({'ev': 'complete', 'value': canon(await s2.feed_run('2'))})
+                pids |= {s1.worker_pid, s2.worker_pid}
+
+                async def third() -> None:
+                    async with p.checkout() as s3:
+                        t.add({'ev': 'checkout'})
+                        t.add({'ev': 'complete', 'value': canon(await s3.feed_run('3'))})
+                        pids.add(s3.worker_pid)
+
+                waiting = asyncio.ensure_future(third())
+                await asyncio.sleep(0.1)
+                t.add({'ev': 'release'})
+            await waiting
+            # The third checkout ran on one of the two workers: no third was started.
+            t.add({'ev': 'workers', 'count': len(pids)})
+
+    asyncio.run(main())
+
+
+@probe
+def sp_pool_close(pool: pm.Monty, t: T) -> None:
+    """A session outlives its pool's close; the closed pool refuses a checkout."""
+    p = pm.Monty(max_processes=2)
+    p.__enter__()
+    cm = p.checkout()
+    s = cm.__enter__()
+    try:
+        run(t, lambda: s.feed_run('x = 1'))
+    finally:
+        p.__exit__(None, None, None)
+    run(t, lambda: s.feed_run('x + 1'))
+    enter(t, p)
+    cm.__exit__(None, None, None)
+
+
+@probe
+def sp_request_timeout(pool: pm.Monty, t: T) -> None:
+    """A turn within `request_timeout` (0.5 s) runs, and so does a host callback longer than it; a turn past it is
+    killed at the deadline, as a crash, and finishes the session; the next checkout runs."""
+    def slow() -> int:
+        time.sleep(0.8)
+        return 1
+
+    # One slot, so the next checkout needs the killed worker's slot back.
+    with pm.Monty(request_timeout=0.5, max_processes=1, checkout_timeout=10) as p:
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('sum(range(1000))'))
+            # Host code is not a turn: a callback longer than the deadline is not timed out.
+            run(t, lambda: s.feed_run('slow() + 1', external_lookup={'slow': slow}))
+            start = time.monotonic()
+            try:
+                s.feed_run('while True:\n    pass')
+                t.add({'ev': 'complete'})
+            except pm.MontyCrashedError:
+                t.add({'ev': 'crashed', 'at_deadline': 0.4 <= time.monotonic() - start < 5})
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+            run(t, lambda: s.feed_run('1'))
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('1 + 1'))
+
+
+@probe
+def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
+    """A system `time.sleep` is waited, not skipped: 0.3 s passes before the feed ends."""
+    with pool.checkout() as s:
+        start = time.monotonic()
+        try:
+            value = s.feed_run('import time\ntime.sleep(0.3)\n1')
+        except Exception as e:  # noqa: BLE001 - recorded
+            t.add(err_ev(e))
+            return
+        t.add({'ev': 'complete', 'value': canon(value), 'waited': 0.25 <= time.monotonic() - start < 5})
+
+
+@probe
+def sp_print_lines(pool: pm.Monty, t: T) -> None:
+    """With no flush interval each line arrives on its own, in order, on its stream: two lines on one
+    stream are two deliveries."""
+    with pool.checkout(print_flush_interval=0) as s:
+        def cb(stream: str, text: str) -> None:
+            t.add({'ev': 'print', 'stream': stream, 'text': text})
+
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+                                  "print('d', end='')\n5", print_callback=cb))
+
+
+@probe
+def sp_print_batched(pool: pm.Monty, t: T) -> None:
+    """With a long flush interval, output is held until a host call or the end of the run, then delivered."""
+    def f() -> int:
+        t.add({'ev': 'handler', 'who': 'f', 'args': []})
+        return 1
+
+    with pool.checkout(print_flush_interval=10) as s:
+        def cb(stream: str, text: str) -> None:
+            t.add({'ev': 'print', 'stream': stream, 'text': text})
+
+        run(t, lambda: s.feed_run("print('a')\nprint('b')\nf()\nprint('c')\n4", print_callback=cb,
+                                  external_lookup={'f': f}))
+
+
+@probe
+def sp_collect_string(pool: pm.Monty, t: T) -> None:
+    """`CollectString` gathers both streams into one string."""
+    with pool.checkout() as s:
+        c = pm.CollectString()
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b', file=sys.stderr)\n1", print_callback=c))
+        t.add({'ev': 'collected', 'output': c.output})
+
+
+@probe
+def sp_collect_streams(pool: pm.Monty, t: T) -> None:
+    """`CollectStreams` keeps (stream, text) pairs. With no flush interval each line is its own delivery, and
+    upstream keeps each as its own pair (measured: adjacent stdout lines are not merged)."""
+    with pool.checkout(print_flush_interval=0) as s:
+        c = pm.CollectStreams()
+        run(t, lambda: s.feed_run("import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+                                  "print('d')\n1", print_callback=c))
+        t.add({'ev': 'collected', 'output': [list(p) for p in c.output]})
+
+
+@probe
+def sp_collect_overflow(pool: pm.Monty, t: T) -> None:
+    """A collector past its cap fails the feed with `MemoryError`; the session stays usable."""
+    with pool.checkout() as s:
+        c = pm.CollectString(max_bytes=4)
+        run(t, lambda: s.feed_run("print('hello world')\n1", print_callback=c))
+        t.add({'ev': 'collected', 'output': c.output})
+        run(t, lambda: s.feed_run('2'))
+
+
+def _print_failure(t: T, code: str, **kw: Any) -> Any:
+    """Feeds [code] with a print callback that raises `cb boom` at once; records the failure, not its type."""
+    def bad(stream: str, text: str) -> None:
+        t.add({'ev': 'print', 'stream': stream, 'text': text})
+        raise ValueError('cb boom')
+
+    return lambda s: _failed(t, lambda: s.feed_run(code, print_callback=bad, **kw))
+
+
+def _failed(t: T, fn: Any) -> None:
+    """A feed whose print callback raised: `failed` with whether its error carries the callback's text."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add({'ev': 'failed', 'callback_error': 'cb boom' in str(e)})
+
+
+@probe
+def sp_print_raise(pool: pm.Monty, t: T) -> None:
+    """A raising print callback fails the feed, but its turn runs to the end: the session keeps what the feed did
+    after the failed print."""
+    with pool.checkout(print_flush_interval=0) as s:
+        s.feed_run('x = 1')
+        _print_failure(t, "x = 2\nprint('a')\nx = 3\nprint('b')\n7")(s)
+        run(t, lambda: s.feed_run('x'))
+
+
+@probe
+def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
+    """Gathered `asyncio.sleep`s overlap under the async binding. Each task records who has started by the time
+    its sleep ends: all three ([3, 1, 2] three times), as when the sleeps run through the futures protocol. And
+    the gather of 1.2 s, 0.4 s and 0.8 s sleeps takes about the longest, not the 2.4 s sum: it waits at least
+    1.1 s and under 2 s, a 0.8 s margin either side for a slow runner."""
+    code = ("import asyncio\nstarted = []\nasync def a(n):\n    started.append(n)\n"
+            "    await asyncio.sleep(0.4 * n)\n    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))")
+
+    async def main() -> None:
+        async with pm.AsyncMonty() as p, p.checkout() as s:
+            start = time.monotonic()
+            try:
+                value = await s.feed_run(code)
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+                return
+            took = time.monotonic() - start
+            t.add({'ev': 'complete', 'value': canon(value), 'waited': took >= 1.1, 'overlapped': took < 2.0})
+
+    asyncio.run(main())
+
+
+@probe
+def sp_print_raise_then_error(pool: pm.Monty, t: T) -> None:
+    """A raising print callback, then a sandbox exception in the same feed: the callback's failure wins, and the
+    session stays usable."""
+    with pool.checkout(print_flush_interval=0) as s:
+        _print_failure(t, "print('a')\nraise ValueError('sandbox')")(s)
+        run(t, lambda: s.feed_run('9'))
+
+
+@probe
+def sp_print_raise_suspended(pool: pm.Monty, t: T) -> None:
+    """A raising print callback in a feed that then suspends: the feed fails, the call is never made, and the
+    session is finished."""
+    def f(x: Any) -> Any:
+        t.add({'ev': 'handler', 'who': 'f', 'args': [canon(x)]})
+        return x
+
+    with pool.checkout(print_flush_interval=0) as s:
+        _print_failure(t, "print('a')\nf(1)", external_lookup={'f': f})(s)
+        run(t, lambda: s.feed_run('8'))
+
+
+@probe
+def sp_futures_partial(pool: pm.Monty, t: T) -> None:
+    """Pending futures settle one at a time: the one left is reported again, then settles."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('import asyncio\nr = await asyncio.gather(f(1), f(2))\nr'))
+        ids = [x.call_id]
+        x = t.step(lambda: x.resume({'future': ...}))
+        ids.append(x.call_id)
+        # Upstream reports pending ids in hash order, which varies run to run: compared sorted.
+        y = x.resume({'future': ...})
+        t.add({'ev': 'futures', 'pending': sorted(y.pending_call_ids)})
+        z = y.resume({ids[1]: {'return_value': 20}})
+        t.add({'ev': 'futures', 'pending': sorted(z.pending_call_ids)})
+        t.step(lambda: z.resume({ids[0]: {'return_value': 10}}))
+
+
+@probe
+def sp_resume_validated(pool: pm.Monty, t: T) -> None:
+    """An answer refused on its checks leaves the snapshot unspent: the same snapshot then resumes."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('f()'))
+        t.step(lambda: x.resume({'exc_type': 'NotAnExceptionType'}))
+        t.step(lambda: x.resume({'return_value': 5}))
+
+
+# One byte past the frame limit (MAX_FRAME_LEN, 256 MiB): a request carrying it cannot be sent.
+OVERSIZED = 256 * 1024 * 1024 + 1
+
+
+@probe
+def sp_oversized_input(pool: pm.Monty, t: T) -> None:
+    """An input too large to send fails the feed before it reaches the worker; the session stays usable."""
+    with pool.checkout() as s:
+        run(t, lambda: s.feed_run('len(x)', inputs={'x': b'\0' * OVERSIZED}))
+        run(t, lambda: s.feed_run('1'))
+
+
+@probe
+def sp_oversized_answer(pool: pm.Monty, t: T) -> None:
+    """A host function's answer too large to send fails the feed and leaves the call pending: the next feed is
+    refused."""
+    with pool.checkout() as s:
+        run(t, lambda: s.feed_run('f()', external_lookup={'f': lambda: b'\0' * OVERSIZED}))
+        run(t, lambda: s.feed_run('2'))
+
+
+@probe
+def sp_oversized_resume(pool: pm.Monty, t: T) -> None:
+    """A manual resume too large to send fails, and the snapshot is spent: a retry and the next feed are refused."""
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('f()'))
+        t.step(lambda: x.resume({'return_value': b'\0' * OVERSIZED}))
+        t.step(lambda: x.resume({'return_value': 1}))
+        run(t, lambda: s.feed_run('3'))
 
 
 # ------------------------------------------------------- API surface

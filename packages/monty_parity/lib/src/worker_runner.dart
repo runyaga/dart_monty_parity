@@ -59,6 +59,14 @@ abstract interface class CaseSession {
 /// Opens a session configured as [config] says.
 typedef OpenCaseSession = Future<CaseSession> Function(SessionConfig config);
 
+/// A case's settings as an engine's session takes them; a setting the engine
+/// cannot apply is recorded in the second argument, `unsupported`.
+typedef CaseConfig =
+    SessionConfig Function(
+      Map<String, Object?> c,
+      Map<String, Object?> unsupported,
+    );
+
 /// Runs case [c] on [backend] through a worker [spawn] opens.
 Future<Map<String, Object?>> runWorkerCase(
   Map<String, Object?> c,
@@ -73,14 +81,16 @@ Future<Map<String, Object?>> runWorkerCase(
       _ProtoCaseSession(await ProtoSession.open(await spawn(), config)),
 );
 
-/// Runs case [c] on [backend] as [engine], through a session [open] opens,
-/// and returns its normalised outcome.
+/// Runs case [c] on [backend] as [engine], through a session [open] opens
+/// with the settings [configure] reads from the case, and returns its
+/// normalised outcome.
 Future<Map<String, Object?>> runEngineCase(
   Map<String, Object?> c,
   String backend, {
   required String engine,
   required String engineVersion,
   required OpenCaseSession open,
+  CaseConfig configure = workerConfig,
 }) async {
   final out = newOutcome(c['id']! as String, engine, backend);
   out['engine_version'] = engineVersion;
@@ -88,7 +98,7 @@ Future<Map<String, Object?>> runEngineCase(
   for (final MapEntry(:key, :value) in _inexpressible.entries) {
     if (c[key] != null) unsupported[key] = value;
   }
-  final config = workerConfig(c, unsupported);
+  final config = configure(c, unsupported);
   final host = CoreHost(c);
   // One memo: inputs may share objects with each other, as the oracle's do.
   final memo = <int, MontyValue>{};

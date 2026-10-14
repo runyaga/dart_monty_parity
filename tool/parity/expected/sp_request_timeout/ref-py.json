@@ -1,0 +1,38 @@
+{
+ "probe": "sp_request_timeout",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "crashed",
+   "at_deadline": true
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  }
+ ],
+ "runner_error": null
+}

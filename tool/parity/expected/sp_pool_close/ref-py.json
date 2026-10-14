@@ -1,0 +1,26 @@
+{
+ "probe": "sp_pool_close",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "none"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "the pool is not active — enter the Monty / AsyncMonty context manager first"
+  }
+ ],
+ "runner_error": null
+}

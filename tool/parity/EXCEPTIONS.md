@@ -99,3 +99,19 @@ The cutover set holds the complex values (`s07_complex` included) and file posit
 (`w_fh_large_in`; on the runner, a position an `int` cannot hold is recorded as `Inexpressible`). No
 standalone class-type case is in it: upstream 1.1.0 sends a sandbox class reached as a value as its repr
 text, which `w_classtype_out` checks before the cutover.
+
+## Session engine: the C1 gate
+
+The session engine (`run.py --engine session`; `score.py --assert-gate`, `tool/parity/c1-gate.json`)
+tolerates no named exception. Its cases are compared by `worker_compare.py`, as the worker engine's are; its
+probes by `probes_compare.py` with an empty rule, so `no-suspension-position` never applies: a suspension's
+`position` (filename and UTF-8 byte range) is compared. A `session` rule in `rows.json` that names an
+exception fails the gate.
+
+Each row's `session` rule lists the core cases and probes of the row it runs, and under `not_run` the ones it
+does not, each with its reason:
+
+| Rows | Not run | Why |
+|---|---|---|
+| `os_sync_sleep`, `async_os_sleep` | `b14_sleep_callhost`, `b14_sleep_zero`, `b14_async_sleep_callhost` | they set an `os_policy`, which the session takes as a field only once C3-2 designs `OsPolicy` |
+| `host_sleep_budget` | `l14_total_sleep`, `l15_total_sleep_catch` | their expected messages have the amounts rewritten (`strings_rewritten`), which the comparison refuses; `ss_sleep_budget` measures the same with exact strings |

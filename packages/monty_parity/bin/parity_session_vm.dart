@@ -3,30 +3,42 @@
 // tool/build_worker.sh writes into the core checkout), Reset and reused from
 // case to case.
 //
-// usage: dart run bin/parity_session_vm.dart OUTDIR case.json [case.json ...]
+// usage: dart run bin/parity_session_vm.dart OUTDIR [case.json ...]
+//            [--probes=ID,ID,...]
 //
-// Writes OUTDIR/<case_id>/session-vm.json. A case that throws in the runner
-// records `runner_error`. Exits 1 if any case records a runner error, if a
-// case leaves more than the pool's one worker running, or if any worker
-// outlives the closed pool.
+// Writes OUTDIR/<case_id>/session-vm.json, then, for each probe,
+// OUTDIR/<probe>/session-vm.json (lib/src/session_probes.dart; a probe opens
+// any other pool it configures). A case or probe that throws in the runner
+// records `runner_error`. Exits 1 if any case or probe records a runner
+// error, if one leaves more than the pool's one worker running, or if any
+// worker outlives the closed pools.
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dart_monty_core/src/worker/channel_factory.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/process_channel.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/monty_parity.dart';
+import 'package:monty_parity/src/session_probes.dart';
 import 'package:monty_parity/src/session_runner.dart';
 
 const enc = JsonEncoder.withIndent(' ');
 
 Future<void> main(List<String> args) async {
   final outdir = args.first;
+  const flag = '--probes=';
+  final probes = [
+    for (final a in args.skip(1))
+      if (a.startsWith(flag))
+        ...a.substring(flag.length).split(',').where((p) => p.isNotEmpty),
+  ];
   var failed = false;
+  var spawned = 0;
   final pool = await MontyPool.start(
     options: const PoolOptions(maxProcesses: 1),
   );
-  for (final path in args.skip(1)) {
+  for (final path in args.skip(1).where((a) => !a.startsWith(flag))) {
     final c = (jsonDecode(File(path).readAsStringSync()) as Map)
         .cast<String, Object?>();
     final id = c['id']! as String;
@@ -48,6 +60,46 @@ Future<void> main(List<String> args) async {
     ).writeAsStringSync('${enc.convert(res)}\n');
     stdout.writeln(
       'session-vm $id: ${res['runner_error'] == null ? 'ok' : 'ERROR'}',
+    );
+  }
+  for (final id in probes) {
+    Map<String, Object?> res;
+    try {
+      res = await runSessionProbe(
+        id,
+        'vm',
+        pool,
+        (options) => MontyPool.startWith(
+          options,
+          open: () {
+            spawned++;
+
+            return openChannel(workerLocation: options.workerLocation);
+          },
+        ),
+        () => spawned,
+      );
+    } on Object catch (e, st) {
+      res = {
+        'probe': id,
+        'engine': 'session',
+        'backend': 'vm',
+        'events': const <Object?>[],
+        'runner_error': '$e\n$st',
+      };
+    }
+    // A probe's own pools are closed: only the run's one worker may remain.
+    final live = await _settled(1);
+    if (live.isNotEmpty) {
+      res['runner_error'] ??= 'worker processes left running: $live';
+    }
+    if (res['runner_error'] != null) failed = true;
+    final d = Directory('$outdir/$id')..createSync(recursive: true);
+    File(
+      '${d.path}/session-vm.json',
+    ).writeAsStringSync('${enc.convert(res)}\n');
+    stdout.writeln(
+      'session-vm probe $id: ${res['runner_error'] == null ? 'ok' : 'ERROR'}',
     );
   }
   await pool.close();

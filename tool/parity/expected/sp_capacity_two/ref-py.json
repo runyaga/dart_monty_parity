@@ -1,0 +1,39 @@
+{
+ "probe": "sp_capacity_two",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "release"
+  },
+  {
+   "ev": "checkout"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "workers",
+   "count": 2
+  }
+ ],
+ "runner_error": null
+}
