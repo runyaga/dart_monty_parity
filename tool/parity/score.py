@@ -85,8 +85,10 @@ the session engine's outcomes (`session-<backend>.json`, run.py --engine
 session) for every case and probe of each gated row's `session` rule in
 rows.json. Cases are compared as --assert-e0 compares them; probes as the
 core engine's are (probes_compare.py), but with no named exception: a
-suspension's position is compared. Whatever its stage, a case must record a
-value or an exception for every feed, and a probe its events. A row is gated once its stage is
+suspension's position is compared. A case the session ran without
+something it asks for (an `unsupported` entry: a limit, a policy, host
+objects, a restore) is UNSUPPORTED, never MATCH. Whatever its stage, a case
+must record a value or an exception for every feed, and a probe its events. A row is gated once its stage is
 `landed`: then every case and probe of it must MATCH on every backend. A row
 of a later stage is shown, not asserted. Whatever its stage, every case and
 probe must have an outcome on every backend (a probe the session cannot run
@@ -497,6 +499,16 @@ def ran_in_full(cid: str, kind: str, backend: str, out: Path, cases: dict[str, d
         for s in steps)
 
 
+def classify_session_case(cid: str, backend: str, out: Path, expected: Path, case: dict) -> tuple[str, list[str]]:
+    """A session-engine case on [backend]: UNSUPPORTED when the session could not apply something the case asks
+    (a limit, a policy, host objects, a restore), whatever its outcome; else as the worker engine's."""
+    got = load(out / cid / f'session-{backend}.json')
+    unsupported = sorted((got or {}).get('unsupported') or {})
+    if got is not None and not got.get('runner_error') and unsupported:
+        return 'UNSUPPORTED', unsupported
+    return classify_worker(cid, backend, out, expected, bool(case.get('local_refusal')), engine='session')
+
+
 def classify_session_probe(pid: str, backend: str, out: Path, expected: Path) -> tuple[str, list[str]]:
     """A session-engine probe on [backend], judged with no named exception."""
     from probes_compare import judge  # noqa: PLC0415 (local module, same dir)
@@ -534,8 +546,7 @@ def assert_gate(spec_path: Path, outcomes: Path, expected: Path, backends: list[
             for kind in ('cases', 'probes'):
                 for cid in sess.get(kind, []):
                     if cid not in table:
-                        table[cid] = {b: (classify_worker(cid, b, outcomes, expected,
-                                                          bool(cases[cid].get('local_refusal')), engine='session')
+                        table[cid] = {b: (classify_session_case(cid, b, outcomes, expected, cases[cid])
                                           if kind == 'cases' else classify_session_probe(cid, b, outcomes, expected))
                                       for b in backends}
                     cells = [table[cid][b][0] + (f' `{"; ".join(table[cid][b][1])}`' if table[cid][b][1] else '')

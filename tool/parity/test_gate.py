@@ -58,7 +58,9 @@ class GateTest(unittest.TestCase):
         for kind, cid in gated_ids(self.gate, self.rows, landed_only=False):
             ref = json.loads((EXPECTED / cid / 'ref-py.json').read_text())
             for b in BACKENDS:
-                self.write(cid, b, {**ref, 'engine': 'session', 'backend': b})
+                # The oracle notes what pydantic-monty cannot report (`usage`); a session outcome notes
+                # only what it could not apply.
+                self.write(cid, b, {**ref, 'engine': 'session', 'backend': b, 'unsupported': {}})
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmp)
@@ -101,6 +103,13 @@ class GateTest(unittest.TestCase):
         kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=True) if x[0] == 'cases')
         got = json.loads((self.out / cid / 'session-vm.json').read_text())
         got['steps'][-1]['value'] = {'t': 'str', 'v': 'not what upstream returned'}
+        self.write(cid, 'vm', got)
+        self.assertEqual(self.assert_gate(), 1)
+
+    def test_a_case_run_without_what_it_asks_fails(self) -> None:
+        kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=True) if x[0] == 'cases')
+        got = json.loads((self.out / cid / 'session-vm.json').read_text())
+        got['unsupported'] = {'restore_before': 'no restore in this engine'}
         self.write(cid, 'vm', got)
         self.assertEqual(self.assert_gate(), 1)
 

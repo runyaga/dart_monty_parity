@@ -471,11 +471,11 @@ def sp_print_raise(pool: pm.Monty, t: T) -> None:
 
 @probe
 def sp_async_sleep_order(pool: pm.Monty, t: T) -> None:
-    """Gathered `asyncio.sleep`s overlap under the async binding: tasks finish in delay order (3, 1, 2 started
-    in that order finish 1, 2, 3), which sleeps waited one after another could not give. The delays are 0.5 s
-    apart, so a slow round trip between the three starts cannot reorder them."""
-    code = ("import asyncio\norder = []\nasync def a(n):\n    await asyncio.sleep(0.5 * n)\n"
-            "    order.append(n)\n    return n\nr = await asyncio.gather(a(3), a(1), a(2))\n(r, order)")
+    """Gathered `asyncio.sleep`s overlap under the async binding: every task has started its sleep before any
+    sleep ends, so each sees all three started ([3, 1, 2] three times). Sleeps waited one after another would
+    give [3], [3, 1], [3, 1, 2]. Timing-free: it holds however slow a round trip is."""
+    code = ("import asyncio\nstarted = []\nasync def a(n):\n    started.append(n)\n"
+            "    await asyncio.sleep(0.01 * n)\n    return list(started)\nawait asyncio.gather(a(3), a(1), a(2))")
 
     async def main() -> None:
         async with pm.AsyncMonty() as p, p.checkout() as s:
