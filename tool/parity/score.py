@@ -650,8 +650,9 @@ def target_problems(target: dict, in_scope: dict[str, dict]) -> list[str]:
             problems.append(f'{cid}: `allowed` kind {allowed.get("kind")!r} is none of {list(ALLOWED_KINDS)}')
         if not allowed.get('reason') or not allowed.get('cite'):
             problems.append(f'{cid}: `allowed` needs a reason and a cite')
-        if not allowed.get('status') or set(allowed.get('backends', [])) - set(row.get('backends', [])):
-            problems.append(f'{cid}: `allowed` needs the status it accepts and backends the row is a target on')
+        covered = set(allowed.get('backends') or [])
+        if not allowed.get('status') or not covered or covered - set(row.get('backends', [])):
+            problems.append(f'{cid}: `allowed` needs the status it accepts and a non-empty list of backends the row is a target on')
     return problems
 
 
@@ -784,6 +785,8 @@ def main() -> int:
     a = ap.parse_args()
     if a.assert_target and not a.target:
         sys.exit('--assert-target needs --target')
+    if a.target and (a.assert_e0 or a.assert_gate or a.assert_worker):
+        sys.exit('--target scores the core engine\'s rows; it cannot join --assert-e0, --assert-gate or --assert-worker')
     if a.engine and not a.assert_e0:
         sys.exit('--engine applies to --assert-e0 only')
     if a.assert_e0:

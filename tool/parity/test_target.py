@@ -132,6 +132,25 @@ class TargetTest(unittest.TestCase):
         self.assertIn(f'{dropped}: an in-scope manifest row that is neither', problems)
         self.assertIn("kind 'because'", problems)
         self.assertIn('needs a reason and a cite', problems)
+        for backends in (None, []):
+            t['rows'][withallowed]['allowed'] = {'kind': 'owner-exception', 'status': 'N/A', 'reason': 'r', 'cite': 'c'}
+            if backends is not None:
+                t['rows'][withallowed]['allowed']['backends'] = backends
+            self.assertIn('non-empty list of backends', '\n'.join(score.target_problems(t, self.in_scope)))
+
+    def test_the_target_flags_are_not_silently_skipped(self) -> None:
+        import contextlib  # noqa: PLC0415
+        import io  # noqa: PLC0415
+        from unittest import mock  # noqa: PLC0415
+
+        for argv in (['score.py', '/nonexistent', '--assert-target'],
+                     ['score.py', '/nonexistent', '--assert-gate', '--target', '/nonexistent/m3-target.json'],
+                     ['score.py', '/nonexistent', '--assert-e0', '--target', '--assert-target'],
+                     ['score.py', '/nonexistent', '--assert-worker', '--target']):
+            with self.subTest(argv=argv), mock.patch.object(sys, 'argv', argv), \
+                    contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as cm:
+                score.main()
+            self.assertNotEqual(cm.exception.code, 0)
 
 
 if __name__ == '__main__':
