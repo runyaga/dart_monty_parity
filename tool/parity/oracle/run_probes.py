@@ -309,19 +309,24 @@ def sp_capacity_two(pool: pm.Monty, t: T) -> None:
     """Two workers: two checkouts are held at once, a third waits until one is returned."""
     async def main() -> None:
         async with pm.AsyncMonty(max_processes=2, checkout_timeout=10) as p:
+            pids = set()
             async with p.checkout() as s1, p.checkout() as s2:
                 t.add({'ev': 'complete', 'value': canon(await s1.feed_run('1'))})
                 t.add({'ev': 'complete', 'value': canon(await s2.feed_run('2'))})
+                pids |= {s1.worker_pid, s2.worker_pid}
 
                 async def third() -> None:
                     async with p.checkout() as s3:
                         t.add({'ev': 'checkout'})
                         t.add({'ev': 'complete', 'value': canon(await s3.feed_run('3'))})
+                        pids.add(s3.worker_pid)
 
                 waiting = asyncio.ensure_future(third())
                 await asyncio.sleep(0.1)
                 t.add({'ev': 'release'})
             await waiting
+            # The third checkout ran on one of the two workers: no third was started.
+            t.add({'ev': 'workers', 'count': len(pids)})
 
     asyncio.run(main())
 

@@ -29,6 +29,10 @@
     "t": "int",
     "v": "3"
    }
+  },
+  {
+   "ev": "workers",
+   "count": 2
   }
  ],
  "runner_error": null

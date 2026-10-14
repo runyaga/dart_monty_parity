@@ -182,29 +182,39 @@ _probes = {
   },
   // Two workers: two checkouts are held at once, a third waits until one
   // is returned.
-  'sp_capacity_two': (t, _, start) => _withPool(
-    start,
-    const PoolOptions(maxProcesses: 2, checkoutTimeout: Duration(seconds: 10)),
-    (p) async {
-      final s1 = await p.checkout();
-      final s2 = await p.checkout();
-      Future<void>? waiting;
-      try {
-        await _run(t, () => s1.feedRun('1'));
-        await _run(t, () => s2.feedRun('2'));
-        waiting = p.withSession((s3) async {
-          t.add({'ev': 'checkout'});
-          await _run(t, () => s3.feedRun('3'));
-        });
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        t.add({'ev': 'release'});
-      } finally {
-        await s2.close();
-        await s1.close();
-      }
-      await waiting;
-    },
-  ),
+  'sp_capacity_two': (t, _, start) {
+    final before = _spawned();
+
+    return _withPool(
+      start,
+      const PoolOptions(
+        maxProcesses: 2,
+        checkoutTimeout: Duration(seconds: 10),
+      ),
+      (p) async {
+        final s1 = await p.checkout();
+        final s2 = await p.checkout();
+        Future<void>? waiting;
+        try {
+          await _run(t, () => s1.feedRun('1'));
+          await _run(t, () => s2.feedRun('2'));
+          waiting = p.withSession((s3) async {
+            t.add({'ev': 'checkout'});
+            await _run(t, () => s3.feedRun('3'));
+          });
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          t.add({'ev': 'release'});
+        } finally {
+          await s2.close();
+          await s1.close();
+        }
+        await waiting;
+        // The third checkout ran on one of the two workers: no third was
+        // started.
+        t.add({'ev': 'workers', 'count': _spawned() - before});
+      },
+    );
+  },
   'sp_pool_close': (t, _, start) async {
     final p = await start(const PoolOptions(maxProcesses: 2));
     final PoolSession s;
