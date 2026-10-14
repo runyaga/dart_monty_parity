@@ -9,7 +9,8 @@
   "cutover"
  ],
  "landed": [
-  "C1-3a"
+  "C1-3a",
+  "C1-4"
  ],
  "rows": {
   "checkout_worker": "C1-3a",
