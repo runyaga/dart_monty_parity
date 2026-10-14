@@ -6,6 +6,7 @@ usage:
          [--expected DIR] [--json FILE] [--markdown FILE]
          [--assert-baseline] [--assert-rows] [--assert-current FILE]
          [--assert-e0 [FILE] [--engine worker|session]] [--assert-worker] [--assert-gate [FILE]]
+         [--target [FILE] [--assert-target]]
 
 OUTCOMES holds core-<backend>.json per case (tool/parity/run.py) and, for the
 probe suites, per probe. EXPECTED (default tool/parity/expected) holds the
@@ -54,6 +55,15 @@ current tree (tool/parity/baseline-current.json): every case's class within
 every re-measured row, every row's status, on every backend, and the PRESENT
 totals. A change that moves a case or a row updates that file, with the move
 listed under `deltas`.
+
+--target [FILE] (default tool/parity/m3-target.json) also scores the M3 parity target: the in-scope
+manifest rows M3 owns, each with the backends it must be PRESENT on (the rest of the 185 are `excluded`,
+each under a named clause). It prints per-area PRESENT counts and every target row's status per backend
+(a row with no parity case keeps its recorded baseline status, marked `*`). A row passes on a backend when it
+is PRESENT there or an `allowed` entry (an approved exception: its kind, status, backends, reason and cite)
+accepts the status it has; an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
+Shown, never fatal, unless --assert-target (landed at the cut). The file itself must be consistent (every
+in-scope row in exactly one list, a valid `allowed`): an inconsistent file exits non-zero either way.
 
 --assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
 the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
@@ -485,6 +495,20 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
             problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule')
     for stage in set(gate.get('core_gated', {})) - set(stages):
         problems.append(f'`core_gated` names {stage!r}, which is not in `stages`')
+    d1 = gate.get('d1_rules')
+    if d1 is not None:
+        # One case or probe per D1-calls rule (rules 1-7), each in the session rule of a row of the `d1_calls` stage.
+        if sorted(d1) != [str(n) for n in range(1, 8)]:
+            problems.append(f'`d1_rules` must name rules 1-7, one each; it has {sorted(d1)}')
+        carried = {cid for row, st in gate['rows'].items() if st == 'd1_calls'
+                   for kind in ('cases', 'probes') for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
+        for rule, cid in d1.items():
+            if cid not in carried:
+                problems.append(f'D1-calls rule {rule}: {cid} is in no session rule of a `d1_calls` row')
+        for cid in sorted(carried - set(d1.values())):
+            problems.append(f'`d1_calls` carries {cid}, which is no D1-calls rule\'s case or probe')
+        if 'd1_calls' not in stages:
+            problems.append('`d1_rules` is set but `stages` has no `d1_calls`')
     return problems
 
 
@@ -585,6 +609,94 @@ def assert_gate(spec_path: Path, outcomes: Path, expected: Path, backends: list[
     return rc
 
 
+# ------------------------------------------------------------------ the M3 parity target
+TARGET = ROOT / 'tool/parity/m3-target.json'
+ALLOWED_KINDS = ('refused-as-upstream', 'browser-divergence', 'owner-exception')
+ALL_BACKENDS = ('vm', 'dart2js', 'dart2wasm')
+
+
+def target_problems(target: dict, in_scope: dict[str, dict]) -> list[str]:
+    """What makes the target file inconsistent with the manifest: rows missing or in both lists, a bad `allowed`."""
+    problems = []
+    rows, excluded = target.get('rows', {}), target.get('excluded', {})
+    for cid in sorted(set(rows) & set(excluded)):
+        problems.append(f'{cid} is both a target row and excluded')
+    for cid in sorted(set(in_scope) - set(rows) - set(excluded)):
+        problems.append(f'{cid}: an in-scope manifest row that is neither a target row nor excluded')
+    for cid in sorted((set(rows) | set(excluded)) - set(in_scope)):
+        problems.append(f'{cid}: not an in-scope manifest row')
+    clauses = target.get('clauses', {})
+    for cid, ex in excluded.items():
+        if ex.get('clause') not in clauses:
+            problems.append(f'{cid}: excluded under {ex.get("clause")!r}, which is not in `clauses`')
+        if cid in in_scope and ex.get('area') != in_scope[cid]['area']:
+            problems.append(f'{cid}: area {ex.get("area")!r}, manifest says {in_scope[cid]["area"]!r}')
+    for cid, row in rows.items():
+        if cid in in_scope and row.get('area') != in_scope[cid]['area']:
+            problems.append(f'{cid}: area {row.get("area")!r}, manifest says {in_scope[cid]["area"]!r}')
+        if not row.get('backends') or set(row['backends']) - set(ALL_BACKENDS):
+            problems.append(f'{cid}: `backends` must be a non-empty subset of {list(ALL_BACKENDS)}')
+        # A backend the row is not a target on is named, with the clause that says so: never dropped silently.
+        gone = row.get('backends_excluded', {})
+        if set(row.get('backends', [])) | set(gone) != set(ALL_BACKENDS) or set(row.get('backends', [])) & set(gone):
+            problems.append(f'{cid}: `backends` and `backends_excluded` must split {list(ALL_BACKENDS)} between them')
+        for b, clause in gone.items():
+            if clause not in clauses:
+                problems.append(f'{cid}: backend {b} excluded under {clause!r}, which is not in `clauses`')
+        allowed = row.get('allowed')
+        if allowed is None:
+            continue
+        if allowed.get('kind') not in ALLOWED_KINDS:
+            problems.append(f'{cid}: `allowed` kind {allowed.get("kind")!r} is none of {list(ALLOWED_KINDS)}')
+        if not allowed.get('reason') or not allowed.get('cite'):
+            problems.append(f'{cid}: `allowed` needs a reason and a cite')
+        if not allowed.get('status') or set(allowed.get('backends', [])) - set(row.get('backends', [])):
+            problems.append(f'{cid}: `allowed` needs the status it accepts and backends the row is a target on')
+    return problems
+
+
+def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], backends: list[str]) -> tuple[list[str], int]:
+    """Lines (and the failure count) for the target against [statuses] (row -> backend -> (status, source)).
+
+    A target row passes on a backend it must be PRESENT on when it is PRESENT there, or when an `allowed`
+    entry accepts the status it has there; an `allowed` entry on a backend where the row is PRESENT is stale."""
+    rows = target['rows']
+    lines, fails = [], 0
+    per_area: dict[str, dict] = {}
+    detail = []
+    for cid, row in rows.items():
+        area = per_area.setdefault(row['area'], {'rows': 0, 'present': {b: 0 for b in backends}, 'needed': {b: 0 for b in backends}})
+        area['rows'] += 1
+        allowed = row.get('allowed') or {}
+        cells = []
+        for b in backends:
+            if b not in row['backends']:
+                cells.append('-')
+                continue
+            status, source = statuses[cid][b]
+            area['needed'][b] += 1
+            area['present'][b] += status == 'PRESENT'
+            if status == 'PRESENT':
+                verdict = 'STALE' if b in allowed.get('backends', []) else 'ok'
+            elif b in allowed.get('backends', []) and status == allowed.get('status'):
+                verdict = 'allowed'
+            else:
+                verdict = 'FAIL'
+            fails += verdict in ('STALE', 'FAIL')
+            cells.append(f'{status}{"*" if source == "recorded" else ""}{"" if verdict == "ok" else f" {verdict}"}')
+        detail.append(f'| {cid} | {row["area"]} | ' + ' | '.join(cells) + ' |')
+    lines += ['The M3 parity target (shown; `--assert-target` makes a FAIL fatal). `*` = the status is the recorded baseline '
+              '(the row has no parity case this run), not a measurement.', '',
+              '| area | rows | ' + ' | '.join(f'{b} PRESENT' for b in backends) + ' |', '|---|---|' + '---|' * len(backends)]
+    for area, a in per_area.items():
+        lines.append(f'| {area} | {a["rows"]} | ' + ' | '.join(f'{a["present"][b]}/{a["needed"][b]}' for b in backends) + ' |')
+    tot = {b: (sum(a['present'][b] for a in per_area.values()), sum(a['needed'][b] for a in per_area.values())) for b in backends}
+    lines += ['', 'target total: ' + ', '.join(f'{b} {tot[b][0]}/{tot[b][1]}' for b in backends)
+              + f'; rows excluded: {len(target.get("excluded", {}))}; cells failing: {fails}', '',
+              '| row | area | ' + ' | '.join(backends) + ' |', '|---|---|' + '---|' * len(backends), *detail, '']
+    return lines, fails
+
+
 # ------------------------------------------------------------------ main
 def assert_e0(spec_path: Path, outcomes: Path, expected: Path, backends: list[str],
               markdown: Path | None, json_out: Path | None, engine: str | None = None) -> int:
@@ -664,9 +776,14 @@ def main() -> int:
                     help="score the worker engine's value rows instead (rows.json `worker`)")
     ap.add_argument('--assert-gate', type=Path, nargs='?', const=GATE,
                     help="score the C1 gate through the session engine instead (default tool/parity/c1-gate.json)")
+    ap.add_argument('--target', type=Path, nargs='?', const=TARGET,
+                    help='also score the M3 parity target (default tool/parity/m3-target.json): shown, not fatal')
+    ap.add_argument('--assert-target', action='store_true', help='--target: fail on any row that is not PRESENT or allowed')
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
+    if a.assert_target and not a.target:
+        sys.exit('--assert-target needs --target')
     if a.engine and not a.assert_e0:
         sys.exit('--engine applies to --assert-e0 only')
     if a.assert_e0:
@@ -790,6 +907,22 @@ def main() -> int:
         else:
             print(f'PASS current ({arch}): every case, every re-measured row and the PRESENT totals match '
                   f'baseline-current.json ({", ".join(f"{b} {present[b]}/{len(in_scope)}" for b in backends)})')
+    if a.target:
+        target = json.loads(a.target.read_text())
+        problems = target_problems(target, in_scope)
+        if problems:
+            sys.exit(f'{a.target}: ' + '; '.join(problems))
+        col = {'vm': 'baseline_ffi'}
+        statuses = {cid: {b: ((result['rows'][cid][b]['status'], 'measured') if cid in result['rows']
+                              else (in_scope[cid][col.get(b, 'baseline_web')], 'recorded')) for b in backends}
+                    for cid in target['rows']}
+        tlines, tfails = score_target(target, statuses, backends)
+        print('\n'.join(tlines))
+        if a.markdown:
+            with a.markdown.open('a') as f:
+                f.write('\n' + '\n'.join(tlines))
+        if a.assert_target and tfails:
+            rc = 1
     if a.assert_rows and mismatches:
         rc = 1
         for row, b, got, want in mismatches:

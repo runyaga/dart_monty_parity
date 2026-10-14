@@ -603,6 +603,18 @@ def sp_resume_validated(pool: pm.Monty, t: T) -> None:
         t.step(lambda: x.resume({'return_value': 5}))
 
 
+@probe
+def sp_resume_unconvertible(pool: pm.Monty, t: T) -> None:
+    """A manual resume with a value that cannot be converted fails on the host, and the snapshot stays unspent:
+    the same snapshot then resumes (D1-calls rule 6)."""
+    cyclic: list[Any] = []
+    cyclic.append(cyclic)
+    with pool.checkout() as s:
+        x = t.step(lambda: s.feed_start('f()'))
+        t.step(lambda: x.resume({'return_value': cyclic}))
+        t.step(lambda: x.resume({'return_value': 5}))
+
+
 # One byte past the frame limit (MAX_FRAME_LEN, 256 MiB): a request carrying it cannot be sent.
 OVERSIZED = 256 * 1024 * 1024 + 1
 

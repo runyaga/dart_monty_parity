@@ -1,7 +1,7 @@
 name: CI
 
 # The suite checks itself against dart_monty_core:
-#   manifest  every case bound to its expected outcome (offline)
+#   manifest  every case bound to its expected outcome; the gate's and the M3 target's self-tests (offline)
 #   pins      every third-party action pinned to a commit SHA (offline)
 #   tokens    every workflow scopes its token: a read-only top-level
 #             `permissions:` and no checkout that keeps credentials (offline)
@@ -47,6 +47,8 @@ jobs:
         run: python3 -I tool/parity/test_worker_compare.py
       - name: The C1 gate's self-test
         run: python3 -I tool/parity/test_gate.py
+      - name: The M3 parity target's self-test
+        run: python3 -I tool/parity/test_target.py
 
   # Every third-party `uses:` pinned to a 40-hex commit SHA (offline).
   action-pins:
@@ -148,11 +150,14 @@ jobs:
         run: python3 -I tool/parity/run.py dart2js --core core --out /tmp/parity
       - name: Run on dart2wasm
         run: python3 -I tool/parity/run.py dart2wasm --core core --out /tmp/parity
-      - name: Score and assert the current baseline
+      # The M3 target (tool/parity/m3-target.json) is scored and printed here, not asserted:
+      # `--assert-target` joins at the cut.
+      - name: Score and assert the current baseline; show the M3 target
         run: |
           python3 -I tool/parity/score.py /tmp/parity \
             --json /tmp/parity/score.json --markdown /tmp/parity/score.md \
-            --assert-current tool/parity/baseline-current.json
+            --assert-current tool/parity/baseline-current.json \
+            --target tool/parity/m3-target.json
       - name: Publish the scorecard
         if: success() || failure()
         run: '[ -f /tmp/parity/score.md ] && cat /tmp/parity/score.md >> "$GITHUB_STEP_SUMMARY" || true'

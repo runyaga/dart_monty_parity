@@ -482,6 +482,14 @@ _probes = {
     );
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
   }),
+  'sp_resume_unconvertible': (t, shared, _) => shared.withSession((s) async {
+    final x = await _step(t, () => s.feedStart('f()'));
+    final items = <MontyValue>[];
+    final cyclic = MontyList(items);
+    items.add(cyclic);
+    await _step(t, () => _fn(x).resume(ExternalReturnValue(cyclic)));
+    await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
+  }),
   'sp_oversized_resume': (t, shared, _) => shared.withSession((s) async {
     final x = await _step(t, () => s.feedStart('f()'));
     await _step(

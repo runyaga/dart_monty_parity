@@ -1,0 +1,19 @@
+{
+ "id": "d1_r1_body_raise",
+ "feeds": [
+  "log = []\ntry:\n    r = f(1)\n    log.append(('returned', type(r).__name__))\nexcept Exception as e:\n    log.append(('except Exception', type(e).__name__, str(e)))\nexcept BaseException as e:\n    log.append(('except BaseException', type(e).__name__, str(e)))\nlog.append('after')\nrepr(log)",
+  "1 + 1"
+ ],
+ "externals": {
+  "f": [
+   {
+    "raise": {
+     "type": "ValueError",
+     "message": "v-msg"
+    }
+   }
+  ]
+ },
+ "note": "D1-calls rule 1 (expMGb a1): a host function that raises becomes a guest exception at the call site, caught by except Exception, the code after the try runs and the session answers the next feed",
+ "exact_strings": true
+}

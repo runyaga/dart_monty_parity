@@ -1,0 +1,30 @@
+{
+ "id": "d1_r5_return_unconvertible",
+ "feeds": [
+  "log = []\ntry:\n    r = f(1)\n    log.append(('returned', type(r).__name__))\nexcept Exception as e:\n    log.append(('except Exception', type(e).__name__, str(e)))\nexcept BaseException as e:\n    log.append(('except BaseException', type(e).__name__, str(e)))\nlog.append('after')\nrepr(log)",
+  "1 + 1"
+ ],
+ "externals": {
+  "f": [
+   {
+    "return": {
+     "t": "list",
+     "id": 1,
+     "items": [
+      {
+       "t": "int",
+       "v": "1"
+      },
+      {
+       "t": "ref",
+       "id": 1
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "auto_externals": true,
+ "note": "D1-calls rule 5 (expMGb b3): a value a host function returns that cannot be converted (a self-containing list) becomes a guest ValueError, in an automatic answer, and the session survives",
+ "exact_strings": true
+}
