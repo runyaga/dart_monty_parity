@@ -1,0 +1,23 @@
+{
+ "probe": "sp_host_lazy_denied",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.norm1\",[\"p\"]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'norm1'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"hasattr(p, 'norm1')\",[]]",
+   "outcome": "value: False"
+  }
+ ],
+ "runner_error": null
+}

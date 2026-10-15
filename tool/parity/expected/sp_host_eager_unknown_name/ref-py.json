@@ -1,0 +1,18 @@
+{
+ "probe": "sp_host_eager_unknown_name",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"1\",[\"p\"]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'nope'"
+  }
+ ],
+ "runner_error": null
+}

@@ -35,6 +35,7 @@ MANIFEST = ROOT / 'tool/parity/manifest.json'
 GENERATOR = [
     'tool/parity/oracle/run_cases.py',
     'tool/parity/oracle/run_probes.py',
+    'tool/parity/oracle/host_cases.py',
     'tool/parity/oracle/rust/Cargo.toml',
     'tool/parity/oracle/rust/Cargo.lock',
     'tool/parity/oracle/rust/src/main.rs',

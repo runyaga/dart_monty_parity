@@ -116,7 +116,16 @@ oracle; rules 1, 2, 4 and 5 are `session` cases, 3, 6 and 7 probes). `C3-4` is l
 `load_session`, `snapshot_state_kinds`, `snapshot_errors`, `fork_session`). Idle and suspended dumps (a function, name,
 OS-call or future suspension, from the snapshot or from the session while it waits), the freshness rule, the wrong kind
 of dump, bytes the worker cannot load, the dump's own type-check setting and the suspension ceiling on a load, all
-against upstream's outcomes. The host-object rows (`host_*`, C1-6) stay under `cutover`.
+against upstream's outcomes.
+
+`C1-6` is landed: host objects through the session (`sp_host_*`, eighteen probes of core's host-object cases on one host
+class: eager and lazy attributes, methods, class values, construction, the conversion hook, identity, re-wrapping, the
+id alias refusal and the empty registry after a load; and the `h_*` cases whose `host` block the session engine now
+builds from core's wrappers: `host_world.dart`). Rows `host_eager_attributes`, `host_instance_value`,
+`host_lazy_attributes`, `host_class_value`, `host_method_dispatch`, `host_constructor_policy`,
+`host_value_conversion_hook`, `host_object_identity_lifecycle` and `snapshot_host_state_reconstruction`. The cases and
+steps that cannot match, and why, are listed in `tool/parity/EXCEPTIONS.md`; `host_class_type_proxy` stays under
+`cutover`. Identity `==` of core's wrappers is the named divergence `host-wrapper-identity-eq` there.
 
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate

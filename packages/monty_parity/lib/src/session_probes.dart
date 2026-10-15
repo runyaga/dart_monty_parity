@@ -24,6 +24,7 @@ import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
+import 'package:monty_parity/src/host_probes.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// Starts a pool with [options] for one probe; the probe closes it.
@@ -103,6 +104,9 @@ final Map<
   Future<void> Function(_T t, MontyPool shared, StartPool start)
 >
 _probes = {
+  // ------------------------------------------- host objects (host_probes.dart)
+  for (final id in hostProbeIds)
+    id: (t, shared, start) => runHostProbe(id, start, t.add),
   // ------------------------------------------- suspensions, step by step
   'k_function': (t, shared, _) => shared.withSession((s) async {
     final x = await _step(t, () => s.feedStart("g = 1\ny = f(2, k='é')\ny"));

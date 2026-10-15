@@ -1,0 +1,28 @@
+{
+ "probe": "sp_host_rewrap_replaces_policy",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.sum()\",[\"p\"]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'sum'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"1\",[\"p2\"]]",
+   "outcome": "value: 1"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.sum()\",[]]",
+   "outcome": "value: 3"
+  }
+ ],
+ "runner_error": null
+}

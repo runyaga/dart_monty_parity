@@ -1,0 +1,33 @@
+{
+ "probe": "sp_host_identity",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p\",[\"p\"]]",
+   "outcome": "value: is:o"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"[p, (p, p)]\",[]]",
+   "outcome": "value: [is:o, (is:o, is:o)]"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(p is p, q)\",[\"q\"]]",
+   "outcome": "value: (True, is:o2)"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"class C:\\n    pass\\nC()\",[]]",
+   "outcome": "value: proxy:C"
+  }
+ ],
+ "runner_error": null
+}

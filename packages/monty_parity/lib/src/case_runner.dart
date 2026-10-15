@@ -400,6 +400,14 @@ class CoreHost {
   /// Wrapper specs by name.
   late final Map<String, Object?> wspecs;
 
+  /// Whether this host builds the case's `host` block (core's public API
+  /// does not; the session engine's does).
+  bool get appliesHost => false;
+
+  /// The label of the host object a decoded value stands for, or null.
+  /// Core's public API has no such object; the session engine's host does.
+  String? labelOf(MontyValue v) => null;
+
   /// Each step's raw value (for `echo` answers).
   final rawOutputs = <MontyValue?>[];
 

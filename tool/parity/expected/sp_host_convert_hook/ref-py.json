@@ -1,0 +1,18 @@
+{
+ "probe": "sp_host_convert_hook",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(p.x, p.y, p.norm1)\",[\"p\"]]",
+   "outcome": "value: ('***', 2, 3)"
+  }
+ ],
+ "runner_error": null
+}

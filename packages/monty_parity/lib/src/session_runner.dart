@@ -14,9 +14,11 @@
 // ignore_for_file: implementation_imports
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/monty_pool.dart';
+import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
 import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/resource_limits.dart';
+import 'package:monty_parity/src/host_world.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// Runs case [c] on [backend] through a session checked out of [pool].
@@ -29,10 +31,12 @@ Future<Map<String, Object?>> runSessionCase(
   backend,
   engine: 'session',
   engineVersion: 'dart_monty_core (internal: MontyPool session)',
-  open: (config) async => _PoolCaseSession(
+  open: (config, host) async => _PoolCaseSession(
     await pool.checkout(options: config),
+    host is SessionHost && host.active ? host : null,
   ),
   configure: sessionConfig,
+  hostFor: SessionHost.new,
 );
 
 /// Case limits -> the session's [SessionConfig]: the worker engine's, plus
@@ -72,9 +76,14 @@ SessionConfig sessionConfig(
 }
 
 final class _PoolCaseSession implements CaseSession {
-  _PoolCaseSession(this._session);
+  _PoolCaseSession(this._session, this._host);
 
   final PoolSession _session;
+
+  /// The case's host world, when it has one: the feed is then driven by
+  /// hand, because a host function may answer with a host-object wrapper,
+  /// which `feedRun`'s `ProtoExternalFunction` (a `MontyValue`) cannot carry.
+  final SessionHost? _host;
 
   @override
   Future<MontyValue> feed(
@@ -83,13 +92,63 @@ final class _PoolCaseSession implements CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
-  }) => _session.feedRun(
-    code,
-    inputs: inputs,
-    externals: externals,
-    os: onOsCall,
-    printCallback: onPrint,
-  );
+  }) async {
+    final host = _host;
+    if (host == null) {
+      return _session.feedRun(
+        code,
+        inputs: inputs,
+        externals: externals,
+        os: onOsCall,
+        printCallback: onPrint,
+      );
+    }
+    var snapshot = await _session.feedStart(
+      code,
+      inputs: inputs,
+      externals: externals,
+      os: onOsCall,
+      printCallback: onPrint,
+    );
+    while (snapshot is! SessionComplete) {
+      snapshot = switch (snapshot) {
+        FunctionSnapshot(objectId: null, isOsFunction: false)
+            when externals[snapshot.functionName] != null =>
+          await _answer(
+            snapshot,
+            externals[snapshot.functionName]!,
+            host,
+          ),
+        FunctionSnapshot() => await snapshot.resumeAuto(),
+        NameLookupSnapshot() => await snapshot.resumeAuto(),
+        FutureSnapshot() => await snapshot.resumeAuto(),
+        SessionComplete() => snapshot,
+      };
+    }
+
+    return snapshot.output;
+  }
+
+  /// Answers [call] with what [answer] gives: a value, or a host-object
+  /// wrapper the host world built for it.
+  Future<MontySnapshot> _answer(
+    FunctionSnapshot call,
+    ProtoExternalFunction answer,
+    SessionHost host,
+  ) async {
+    final MontyValue value;
+    try {
+      value = await answer(call.args, call.kwargs);
+      // Any throw but a chosen Python exception raises `Exception` with its
+      // text, as `feedRun` raises it ([raisedFrom]).
+    } on ExternalException catch (e) {
+      return call.resume(e);
+    } on Object catch (e) {
+      return call.resume(ExternalException('Exception', '$e'));
+    }
+
+    return call.resume(ExternalReturnValue(host.takeWrapper() ?? value));
+  }
 
   @override
   Future<void> close() => _session.close();

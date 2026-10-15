@@ -1,0 +1,28 @@
+{
+ "probe": "sp_host_class_construct",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"q = T(3, 4)\\n(q.x, q.y, q.sum(), type(q) is T)\",[\"T\"]]",
+   "outcome": "value: (3, 4, 7, True)"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"q.norm1\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'norm1'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T(1)\",[]]",
+   "outcome": "MontyRuntimeError: TypeError: Point.__init__() missing 1 required positional argument: 'y'"
+  }
+ ],
+ "runner_error": null
+}

@@ -1,0 +1,28 @@
+{
+ "probe": "sp_host_class_grant_kept",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T(5, 6).x\",[\"T\"]]",
+   "outcome": "value: 5"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.x\",[\"p\"]]",
+   "outcome": "value: 1"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T(7, 8).y\",[]]",
+   "outcome": "value: 8"
+  }
+ ],
+ "runner_error": null
+}

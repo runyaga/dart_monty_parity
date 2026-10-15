@@ -1,0 +1,33 @@
+{
+ "probe": "sp_host_class_methods",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(T.describe(), T.add(2, 3), T.ORIGIN_NAME)\",[\"T\"]]",
+   "outcome": "value: ('Point class', 5, 'origin')"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T.sum()\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: type object 'Point' has no attribute 'sum'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T(1, 2)\",[]]",
+   "outcome": "MontyRuntimeError: TypeError: cannot instantiate host class 'Point'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"T.nope\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: type object 'Point' has no attribute 'nope'"
+  }
+ ],
+ "runner_error": null
+}

@@ -1,0 +1,59 @@
+{
+ "probe": "sp_host_restore_store_empty",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.sum()\",[\"p\"]]",
+   "outcome": "value: 3"
+  },
+  {
+   "ev": "host",
+   "step": "[\"dump\",\"s\"]",
+   "outcome": "dumped"
+  },
+  {
+   "ev": "host",
+   "step": "[\"open\",\"t\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"load_session\",\"t\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"t\",\"p.x\",[]]",
+   "outcome": "value: 1"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"t\",\"p.sum()\",[]]",
+   "outcome": "MontyRuntimeError: RuntimeError: no host object registered for method call 'sum' (id <uuid>) — the instance store is empty after loading a dump into a fresh session"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"t\",\"p.norm1\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'norm1'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"t\",\"p\",[]]",
+   "outcome": "value: proxy:Point"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p\",[]]",
+   "outcome": "value: is:o"
+  }
+ ],
+ "runner_error": null,
+ "strings_rewritten": true
+}
