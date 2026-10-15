@@ -27,6 +27,17 @@ import score  # noqa: E402
 BACKENDS = ['vm', 'dart2js', 'dart2wasm']
 
 
+# The owner's TGT1 allowances (2026-10-15): row -> (kind, status, backends).
+TGT1 = {
+    'snapshot_trust': ('owner-exception', 'N/A', BACKENDS),
+    'resource_accounting': ('owner-exception', 'N/A', BACKENDS),
+    'resource_failure_disposal': ('owner-exception', 'N/A', BACKENDS),
+    'exception_value_conversion': ('owner-exception', 'PARTIAL', BACKENDS),
+    'file_handle_value_conversion': ('browser-divergence', 'PARTIAL', ['dart2js', 'dart2wasm']),
+    'worker_diagnostics': ('browser-divergence', 'ABSENT', ['dart2js', 'dart2wasm']),
+}
+
+
 class TargetTest(unittest.TestCase):
     def setUp(self) -> None:
         self.target = json.loads(score.TARGET.read_text())
@@ -92,9 +103,18 @@ class TargetTest(unittest.TestCase):
         for cid in j10:
             paths = [e['path'] for e in self.target['rows'][cid]['allowed']['evidenced_by']]
             self.assertTrue(any(p.startswith('test/') for p in paths), cid)
-        # No other row has an allowance, and none is still open.
-        self.assertEqual(sorted(c for c, r in self.target['rows'].items() if r.get('allowed')), sorted(j08 + j10))
+        # No row but PT1's and TGT1's has an allowance, and none is still open.
+        self.assertEqual(sorted(c for c, r in self.target['rows'].items() if r.get('allowed')),
+                         sorted(j08 + j10 + list(TGT1)))
         self.assertFalse([c for c, r in self.target['rows'].items() if r.get('open')])
+
+    def test_tgt1_allowed_entries(self) -> None:
+        """TGT1: three J01 rows N/A on every backend, the oracle's Unicode version PARTIAL, two browser divergences."""
+        for cid, (kind, status, backends) in TGT1.items():
+            allowed = self.target['rows'][cid]['allowed']
+            self.assertEqual((allowed['kind'], allowed['status'], allowed['backends']), (kind, status, backends), cid)
+            self.assertIn('TGT1', allowed['cite'], cid)
+            self.assertEqual(self.target['rows'][cid]['backends'], BACKENDS, cid)  # still a target everywhere
 
     def test_evidenced_by_is_validated(self) -> None:
         t = copy.deepcopy(self.target)
@@ -165,9 +185,29 @@ class TargetTest(unittest.TestCase):
         st[cid] = {b: ('N/A', 'recorded') for b in BACKENDS}
         _, fails = score.score_target(t, st, BACKENDS)
         self.assertEqual(fails, 0)  # the status the entry accepts
-        st[cid]['vm'] = ('ABSENT', 'recorded')
+        st[cid]['vm'] = ('ABSENT', 'measured')
         _, fails = score.score_target(t, st, BACKENDS)
-        self.assertEqual(fails, 1)  # any other status still fails
+        self.assertEqual(fails, 1)  # any other measured status still fails
+
+    def test_an_na_entry_accepts_only_an_unmeasured_row(self) -> None:
+        """N/A: nothing measures the row, so it accepts the recorded baseline status (`*`), whatever it is; once a
+        cell measures the row, only PRESENT (stale) or the measured status N/A would do."""
+        t = copy.deepcopy(self.target)
+        cid = next(c for c, r in t['rows'].items() if len(r['backends']) == 3 and not r.get('allowed'))
+        t['rows'][cid]['allowed'] = {'kind': 'owner-exception', 'status': 'N/A', 'backends': BACKENDS,
+                                     'reason': 'r', 'cite': 'c'}
+        st = self.statuses()
+        st[cid] = {'vm': ('PARTIAL', 'recorded'), 'dart2js': ('ABSENT', 'recorded'), 'dart2wasm': ('ABSENT', 'recorded')}
+        lines, fails = score.score_target(t, st, BACKENDS)
+        self.assertEqual(fails, 0)
+        self.assertIn(f'| {cid} | {t["rows"][cid]["area"]} | PARTIAL* allowed | ABSENT* allowed | ABSENT* allowed |', lines)
+        st[cid]['dart2js'] = ('ABSENT', 'measured')
+        _, fails = score.score_target(t, st, BACKENDS)
+        self.assertEqual(fails, 1)
+        # Any other status accepts only itself, recorded or measured.
+        t['rows'][cid]['allowed']['status'] = 'ABSENT'
+        _, fails = score.score_target(t, st, BACKENDS)
+        self.assertEqual(fails, 1)  # vm PARTIAL*
 
     def test_a_forced_mismatch_is_shown_and_counted(self) -> None:
         st = self.statuses()

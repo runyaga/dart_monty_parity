@@ -61,7 +61,8 @@ manifest rows M3 owns, each with the backends it must be PRESENT on (the rest of
 each under a named clause). It prints per-area PRESENT counts and every target row's status per backend
 (a row with no parity case keeps its recorded baseline status, marked `*`). A row passes on a backend when it
 is PRESENT there or an `allowed` entry (an approved exception: its kind, status, backends, reason and cite)
-accepts the status it has; an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
+accepts the status it has (an N/A entry accepts the recorded status of a row nothing measures there, and no
+measured status but N/A); an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
 Shown, never fatal, unless --assert-target (landed at the cut). The file itself must be consistent (every
 in-scope row in exactly one list, a valid `allowed`): an inconsistent file exits non-zero either way.
 An `allowed` entry may carry `evidenced_by` ({path, tests, exercises} items: the core tests that evidence a
@@ -917,7 +918,8 @@ def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], 
     """Lines (and the failure count) for the target against [statuses] (row -> backend -> (status, source)).
 
     A target row passes on a backend it must be PRESENT on when it is PRESENT there, or when an `allowed`
-    entry accepts the status it has there; an `allowed` entry on a backend where the row is PRESENT is stale."""
+    entry accepts the status it has there: its own status, or, for an N/A entry, the recorded baseline status of a
+    row that nothing measures on that backend. An `allowed` entry on a backend where the row is PRESENT is stale."""
     rows = target['rows']
     lines, fails = [], 0
     per_area: dict[str, dict] = {}
@@ -936,7 +938,8 @@ def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], 
             area['present'][b] += status == 'PRESENT'
             if status == 'PRESENT':
                 verdict = 'STALE' if b in allowed.get('backends', []) else 'ok'
-            elif b in allowed.get('backends', []) and status == allowed.get('status'):
+            elif b in allowed.get('backends', []) and (status == allowed.get('status')
+                                                       or (allowed.get('status') == 'N/A' and source == 'recorded')):
                 verdict = 'allowed'
             else:
                 verdict = 'FAIL'
