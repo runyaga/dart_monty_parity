@@ -376,6 +376,118 @@ def sp_request_timeout(pool: pm.Monty, t: T) -> None:
 
 
 @probe
+def sp_worker_recycling(pool: pm.Monty, t: T) -> None:
+    """`max_checkouts_per_worker` retires a worker after that many checkouts: with 2, five checkouts of one slot run
+    on three workers (new, same, new, same, new); with 0, each checkout gets a new one. No worker is started
+    eagerly (`min_processes=0`), so each new one is the checkout's own."""
+    for limit, n in ((2, 5), (0, 3)):
+        with pm.Monty(min_processes=0, max_processes=1, max_checkouts_per_worker=limit, checkout_timeout=10) as p:
+            prev = None
+            for i in range(n):
+                with p.checkout() as s:
+                    run(t, lambda: s.feed_run(str(i)))
+                    pid = s.worker_pid
+                    t.add({'ev': 'worker', 'new': pid != prev})
+                    prev = pid
+
+
+@probe
+def sp_worker_pid(pool: pm.Monty, t: T) -> None:
+    """A session names its worker's process id, the same before and after a feed; two sessions held at once name
+    two processes."""
+    with pm.Monty(max_processes=2, checkout_timeout=10) as p:
+        with p.checkout() as a, p.checkout() as b:
+            first = a.worker_pid
+            run(t, lambda: a.feed_run('1'))
+            run(t, lambda: b.feed_run('2'))
+            t.add({'ev': 'pid', 'is_int': isinstance(first, int) and first > 0, 'stable': a.worker_pid == first,
+                   'distinct': isinstance(b.worker_pid, int) and b.worker_pid != first})
+
+
+# One operation the sandbox cannot interrupt: about 3 s of big-integer arithmetic on an arm64 laptop, between two
+# of the interpreter's time checks; longer than the default grace's kill (limit + 1 s), so a grace that was ignored
+# shows as a late kill.
+SLOW_POW = 'x = 3 ** 30_000_000\n1'
+
+
+def finished_feed(t: T, fn: Any) -> None:
+    """A feed on a session that should be finished: `finished` for the binding's finished-session refusal, its value
+    or error otherwise, and any other refusal as `unexpected` with its class and text (a crash included)."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except (pm.MontyRuntimeError, pm.MontySyntaxError) as e:
+        t.add(err_ev(e))
+    except Exception as e:  # noqa: BLE001 - recorded
+        if type(e) is RuntimeError and 'already been finished' in str(e):
+            t.add({'ev': 'finished'})
+        else:
+            t.add({'ev': 'unexpected', 'cls': type(e).__name__, 'msg': str(e)})
+
+
+@probe
+def sp_execution_watchdogs(pool: pm.Monty, t: T) -> None:
+    """A turn past its feed (or turn) limit that the sandbox cannot interrupt is killed once the pool's grace runs
+    out too: a crash at the deadline (0.1 s limit + 0.1 s grace, so 0.2 s; under 0.8 s counts, where the default
+    1 s grace would kill at 1.1 s), which finishes the session. With that grace off (None), the operation runs to its
+    end and the sandbox raises the limit's TimeoutError, and the session lives."""
+    for limit_key, grace_key in (('max_feed_duration_secs', 'feed_duration_limit_grace'),
+                                 ('max_turn_duration_secs', 'turn_duration_limit_grace')):
+        for grace in (0.1, None):
+            with pm.Monty(max_processes=1, checkout_timeout=10, **{grace_key: grace}) as p:
+                t.add({'ev': 'watchdog', 'limit': limit_key, 'grace': grace})
+                with p.checkout(limits={limit_key: 0.1}) as s:
+                    start = time.monotonic()
+                    try:
+                        t.add({'ev': 'complete', 'value': canon(s.feed_run(SLOW_POW))})
+                    except pm.MontyCrashedError as e:
+                        t.add({'ev': 'crashed', 'timed_out': e.timed_out,
+                               'at_deadline': 0.15 <= time.monotonic() - start < 0.8})
+                    except pm.MontyRuntimeError as e:
+                        ev = err_ev(e)
+                        # The limit's own text, without the measured duration.
+                        t.add({**ev, 'message': ev['message'].split(':')[0]})
+                    finished_feed(t, lambda: s.feed_run('2'))
+                with p.checkout() as s:
+                    run(t, lambda: s.feed_run('3'))
+
+
+# Two 300,000-deep nested lists compared: the comparison recurses past the worker's native stack (a wasm stack
+# overflow in the browser) when the recursion limit allows it, and the worker dies.
+DEEP_COMPARE = ('x = []\nfor i in range(300000):\n    x = [x]\n'
+                'y = []\nfor i in range(300000):\n    y = [y]\nx == y')
+
+
+@probe
+def sp_worker_crash(pool: pm.Monty, t: T) -> None:
+    """A worker that dies mid-feed is reported as a crash, not a timeout, and finishes the session; the next
+    checkout gets a working worker."""
+    with pm.Monty(max_processes=1, checkout_timeout=10) as p:
+        with p.checkout(limits={'max_memory': 512 * 1024 * 1024, 'max_recursion_depth': 100_000_000}) as s:
+            try:
+                t.add({'ev': 'complete', 'value': canon(s.feed_run(DEEP_COMPARE))})
+            except pm.MontyCrashedError as e:
+                t.add({'ev': 'crashed', 'timed_out': e.timed_out})
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+            finished_feed(t, lambda: s.feed_run('2'))
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('3'))
+
+
+@probe
+def sp_hard_memory_ceiling(pool: pm.Monty, t: T) -> None:
+    """An input far over a 1 MB memory limit trips the worker's hard allocator ceiling (limit + 4 MiB headroom):
+    the worker exits with OOM_EXIT_CODE, which surfaces as MemoryError and finishes the session; the next checkout
+    gets a working worker."""
+    with pm.Monty(max_processes=1, checkout_timeout=10) as p:
+        with p.checkout(limits={'max_memory': 1_000_000}) as s:
+            run(t, lambda: s.feed_run('len(x)', inputs={'x': b'\0' * 10_000_000}))
+            finished_feed(t, lambda: s.feed_run('2'))
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run('3'))
+
+
+@probe
 def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
     """A system `time.sleep` is waited, not skipped: 0.3 s passes before the feed ends."""
     with pool.checkout() as s:

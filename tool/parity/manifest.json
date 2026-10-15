@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "5e37ea62c18851576383a5ce5e976665102acb18d2d4ef2db7b092974a412de8",
+  "sha256": "f2a850ca03473cf11ecfc5897a32047ce89bd822e6b29f9ddb94c18b7cb73de8",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "5913008f64ecf9bd96bd202948ee3636c22331f65bfde541d03e57a43de33898",
+   "tool/parity/oracle/run_probes.py": "babd98bcd82402f372b01ad52d1a02a2beaaef3ac3c46c091fc1386101989953",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -5002,6 +5002,11 @@
     "ref-py": "26e594be4b69b32f9dd8631256033d07948ae014408a4f3d9dfe17c99c7985fb"
    }
   },
+  "sp_execution_watchdogs": {
+   "outcomes": {
+    "ref-py": "f40af9c67bc62397afffe6878db44e26272a2a61b4a08ad00ddf45fcc981476e"
+   }
+  },
   "sp_finish_reset": {
    "outcomes": {
     "ref-py": "85844fcdb42e28036f643e54bab2651a432654e1370f9927f71b465593d3aa1b"
@@ -5010,6 +5015,11 @@
   "sp_futures_partial": {
    "outcomes": {
     "ref-py": "95de80a10bb05ebbcea55c19e228e4ded0d49dfe2fe469124db8265a7206977f"
+   }
+  },
+  "sp_hard_memory_ceiling": {
+   "outcomes": {
+    "ref-py": "aa2810b56c8b3eae8a443c13c12fda2d1dcd83e5e1982e126b99ccbd175711de"
    }
   },
   "sp_host_alias_refused": {
@@ -5205,6 +5215,21 @@
   "sp_type_check_stubs": {
    "outcomes": {
     "ref-py": "140102b9d6955e946697cb138a229b4331c2245326938accfc8f5bc7fb5bbb25"
+   }
+  },
+  "sp_worker_crash": {
+   "outcomes": {
+    "ref-py": "018849f8e01bda8e62a2c86bd2705d22e2a16035c34e886e7bf72f322827d989"
+   }
+  },
+  "sp_worker_pid": {
+   "outcomes": {
+    "ref-py": "dae8f522edabcca7b343c808ead03508c1518ef2226c6662bde675cba5120691"
+   }
+  },
+  "sp_worker_recycling": {
+   "outcomes": {
+    "ref-py": "eb78fdee0ba8a0a4c03dfa37401f7759ea9c005dd71b37b63a44263c95a13b56"
    }
   }
  }
