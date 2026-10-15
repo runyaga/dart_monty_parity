@@ -1788,7 +1788,33 @@
    "session": {
     "cases": [
      "t03_unicode_uncaught",
-     "t05_json_uncaught"
+     "t05_json_uncaught",
+     "w_exc_data_decode_uncaught",
+     "w_exc_data_decode_ascii",
+     "w_exc_data_encode_uncaught",
+     "w_exc_data_json_uncaught",
+     "w_exc_data_json_empty",
+     "w_exc_data_manual_decode",
+     "w_exc_data_manual_encode",
+     "w_exc_data_manual_json",
+     "w_exc_data_wrapped",
+     "w_exc_data_bare_reraise",
+     "w_exc_data_then_ok"
+    ]
+   },
+   "worker": {
+    "pre_cutover": [
+     "w_exc_data_decode_uncaught",
+     "w_exc_data_decode_ascii",
+     "w_exc_data_encode_uncaught",
+     "w_exc_data_json_uncaught",
+     "w_exc_data_json_empty",
+     "w_exc_data_manual_decode",
+     "w_exc_data_manual_encode",
+     "w_exc_data_manual_json",
+     "w_exc_data_wrapped",
+     "w_exc_data_bare_reraise",
+     "w_exc_data_then_ok"
     ]
    }
   },

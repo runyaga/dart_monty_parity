@@ -60,7 +60,14 @@ class GateTest(unittest.TestCase):
             for b in BACKENDS:
                 # The oracle notes what pydantic-monty cannot report (`usage`); a session outcome notes
                 # only what it could not apply.
-                self.write(cid, b, {**ref, 'engine': 'session', 'backend': b, 'unsupported': {}})
+                got = {**ref, 'engine': 'session', 'backend': b, 'unsupported': {}}
+                # A value upstream's host refuses (its type starts `HOST:`) is refused by the driver before
+                # any worker runs: the session records an ArgumentError and nothing else.
+                if 'steps' in ref:
+                    got['steps'] = [{**st, 'thrown': 'ArgumentError'}
+                                    if str((st.get('exception') or {}).get('type', '')).startswith('HOST:') else st
+                                    for st in ref['steps']]
+                self.write(cid, b, got)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmp)
@@ -219,7 +226,7 @@ class GateTest(unittest.TestCase):
     def test_new_stages_show_a_forced_mismatch_then_fail_once_landed(self) -> None:
         """A control per stage P-t adds: a forced mismatch in the stage's rows is shown while the stage is
         pending (the gate passes), and fails the gate once the stage is landed."""
-        for stage in ('C3-4', 'C3-5', 'C3-6', 'd1_calls'):
+        for stage in ('C3-5', 'C3-6', 'd1_calls'):
             with self.subTest(stage=stage):
                 row = next(r for r, st in self.gate['rows'].items() if st == stage)
                 sess = self.rows[row]['session']
@@ -240,6 +247,21 @@ class GateTest(unittest.TestCase):
                 landed['landed'].append(stage)
                 self.assertEqual(self.assert_gate(landed), 1)
                 self.write(cid, 'vm', saved)
+
+    def test_landed_c3_4_fails_on_missing_exception_data(self) -> None:
+        """C3-4 is landed: the session engine must record an uncaught error's structured data (`Ed`), so an
+        outcome without it fails the gate, and one with it passes."""
+        self.assertIn('C3-4', self.gate['landed'])
+        for cid in ('t03_unicode_uncaught', 'w_exc_data_json_uncaught'):
+            with self.subTest(case=cid):
+                got = json.loads((self.out / cid / 'session-vm.json').read_text())
+                saved = json.loads(json.dumps(got))
+                self.assertIn('data', got['steps'][-1]['exception'])
+                del got['steps'][-1]['exception']['data']
+                self.write(cid, 'vm', got)
+                self.assertEqual(self.assert_gate(), 1)
+                self.write(cid, 'vm', saved)
+                self.assertEqual(self.assert_gate(), 0)
 
     def test_d1_rules_are_one_carrier_each(self) -> None:
         d1 = self.gate['d1_rules']

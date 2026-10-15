@@ -108,7 +108,9 @@ strings) were added for this gate.
 Stages `C3-4`, `C3-5` and `C3-6` hold the C3 pull requests' parity rows (their cases come from the worker and
 core suites and run here through the session), and `d1_calls` holds one case or probe per D1-calls rule
 (`d1_rules` in the gate file: host failures during an external call, from expMGb's cells, upstream as the
-oracle; rules 1, 2, 4 and 5 are `session` cases, 3, 6 and 7 probes). Those four are run and shown, not landed.
+oracle; rules 1, 2, 4 and 5 are `session` cases, 3, 6 and 7 probes). `C3-4` is landed (the session engine records an uncaught error's structured data: a Unicode error's
+`encoding`, `object`, `start`, `end`, `reason`, a JSON error's `msg`, `doc`, `pos`, `lineno`, `colno`); `C3-5`,
+`C3-6` and `d1_calls` are run and shown, not landed.
 
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate

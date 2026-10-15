@@ -1,0 +1,9 @@
+{
+ "id": "w_exc_data_then_ok",
+ "feeds": [
+  "b'a\\xff'.decode()",
+  "1 + 1"
+ ],
+ "note": "structured_exception_data: a decode error on one feed, and the next feed on the same session raises no data and returns its value",
+ "exact_strings": true
+}

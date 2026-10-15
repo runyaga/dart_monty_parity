@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_wrapped",
+ "code": "try:\n    b'\\xff'.decode()\nexcept UnicodeDecodeError as e:\n    raise ValueError('wrapped') from e",
+ "note": "structured_exception_data: a decode error caught and replaced: the data does not follow",
+ "exact_strings": true
+}

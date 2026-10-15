@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_encode_uncaught",
+ "code": "'caf\\u00e9'.encode('ascii')",
+ "note": "structured_exception_data: UnicodeEncodeError raised in the sandbox: object is a str",
+ "exact_strings": true
+}

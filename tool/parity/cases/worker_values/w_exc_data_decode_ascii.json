@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_decode_ascii",
+ "code": "b'a\\x80'.decode('ascii')",
+ "note": "structured_exception_data: a decode error in another codec",
+ "exact_strings": true
+}
