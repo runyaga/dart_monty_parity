@@ -9,16 +9,22 @@ usage:
 --core is the dart_monty_core checkout to measure (required). The runner
 package (packages/monty_parity) is pointed at it with a pubspec_overrides.yaml
 written for the run and removed afterwards, so the same runner measures any
-core commit whose public API it compiles against. Core's native library (FFI)
-is built from that checkout by its build hook, so the VM backend needs Rust.
+core commit whose public API it compiles against (Monty / MontySession, core
+0.110 on; parity's tag runner-0.23 holds the runner for the older API). Every
+engine needs the worker executable that core's tool/build_worker.sh writes
+into the core checkout on the VM, and core's committed worker assets
+(lib/assets/dart_monty_core_worker.{js,wasm}) in the browser.
 
---engine core (the default) drives core's public API and writes
-OUTDIR/<case>/core-<backend>.json (and core1-<backend>.json for one-shot
-cases). A case marked "isolate" runs in its own VM process under a 60 s cap,
-because an FFI run that core cannot interrupt would otherwise hang the batch;
-a case that hits the cap records `runner_error`. Its default cases are every
+--engine core (the default) drives core's public Monty / MontySession through
+the same driver as the session engine (packages/monty_parity/lib/src/
+session_runner.dart; the two differ only in the scorer's rules) and writes
+OUTDIR/<case>/core-<backend>.json. A case marked "isolate" runs in its own VM
+process under a 60 s cap, so a run that never ends cannot hang the batch; a
+case that hits the cap records `runner_error`. Its default cases are every
 suite except the worker engine's own (e0 and worker_values) and the display
-suite, whose expected renderings dart_monty_core's own tests check.
+suite, whose expected renderings dart_monty_core's own tests check. The same
+run then runs the core rows' probes (rows.json `probes`) and writes
+OUTDIR/<probe>/core-<backend>.json.
 
 --engine worker drives core's internal monty-proto worker (each case on a
 fresh worker: a process on the VM, a Web Worker in the browser) and writes
@@ -30,8 +36,8 @@ the backend are removed first, so a failed run cannot reuse them). It then runs 
 (test/worker_crash_{vm,web}_test.dart) and exits 1 if they fail or run fewer
 tests than expected; --no-crash-tests skips them.
 
---engine session drives core's internal pool session (MontyPool.checkout,
-PoolSession.feedRun): one pool for the run, its one worker Reset and reused
+--engine session drives core's public Monty / MontySession (Monty.checkout,
+MontySession.feedRun): one pool for the run, its one worker Reset and reused
 from case to case. It writes OUTDIR/<case>/session-<backend>.json; its
 default cases are the e0 suite (score.py --assert-e0 --engine session) and
 every case of a gated row's `session` rule (tool/parity/c1-gate.json,
@@ -51,7 +57,6 @@ import json
 import os
 import platform
 import re
-import shutil
 import signal
 import subprocess
 import sys
@@ -76,9 +81,6 @@ RULES = ROOT / 'tool/parity/rows.json'
 CRASH_TESTS = {'vm': ('test/worker_crash_vm_test.dart', 2),
                'dart2js': ('test/worker_crash_web_test.dart', 3),
                'dart2wasm': ('test/worker_crash_web_test.dart', 3)}
-WEB_ASSETS = ('dart_monty_core_bridge.js', 'dart_monty_core_worker.js', 'dart_monty_core_native.wasm')
-# Older cores load the WASI worker from @pydantic/monty-wasm32-wasi (npm, via js/package-lock.json).
-WASI_WORKER = 'js/node_modules/@pydantic/monty-wasm32-wasi/wasi-worker-browser.mjs'
 
 
 def case_files(globs: list[str], engine: str) -> list[Path]:
@@ -97,6 +99,11 @@ def case_files(globs: list[str], engine: str) -> list[Path]:
     if not files:
         sys.exit(f'no cases match {pats}')
     return files
+
+
+def core_probes() -> list[str]:
+    """Every probe of the core rows (rows.json `probes`)."""
+    return sorted({p for rule in json.loads(RULES.read_text())['rows'].values() for p in rule.get('probes') or []})
 
 
 def gate_ids(kind: str) -> set[str]:
@@ -135,29 +142,33 @@ def sh(cmd: list[str], log: Path, timeout: int | None = None) -> int:
 def run_vm(cases: list[Path], out: Path, log: Path) -> None:
     batch = [c for c in cases if not json.loads(c.read_text()).get('isolate')]
     isolated = [c for c in cases if json.loads(c.read_text()).get('isolate')]
+    runner = ['dart', 'run', 'bin/parity_session_vm.dart']
     if batch:
-        rc = sh(['dart', 'run', 'bin/parity_vm.dart', str(out), *map(str, batch)], log)
+        rc = sh([*runner, str(out), *map(str, batch), '--engine=core'], log)
         print(f'vm batch: {len(batch)} cases, exit {rc}', flush=True)
     for c in isolated:
         cid = json.loads(c.read_text())['id']
-        rc = sh(['dart', 'run', 'bin/parity_vm.dart', str(out), str(c)], log, timeout=ISOLATE_SECS)
+        rc = sh([*runner, str(out), str(c), '--engine=core'], log, timeout=ISOLATE_SECS)
         if rc != 0:
-            write(out, placeholder(cid, 'vm', f'parity_vm exit {rc} (-999 = killed after {ISOLATE_SECS} s)'))
+            write(out, placeholder(cid, 'vm', f'parity_session_vm exit {rc} (-999 = killed after {ISOLATE_SECS} s)'))
         print(f'vm {cid}: exit {rc}', flush=True)
     for c in cases:
         cid = json.loads(c.read_text())['id']
         if not (out / cid / 'core-vm.json').exists():
             write(out, placeholder(cid, 'vm', 'no outcome written'))
-    rc = sh(['dart', 'run', 'bin/parity_vm.dart', '--probes', str(out)], log, timeout=600)
+    probes = core_probes()
+    rc = sh([*runner, str(out), f'--probes={",".join(probes)}', '--engine=core'], log, timeout=600)
     print(f'vm probes: exit {rc}', flush=True)
+    probe_placeholders(probes, out, 'core', 'vm', f'no outcome written (exit {rc})')
 
 
-def bake(cases: list[Path], probes: list[str] = ()) -> None:
+def bake(cases: list[Path], probes: list[str] = (), engine: str = 'session') -> None:
     lines = ['// GENERATED by tool/parity/run.py; not committed.', 'const parityCases = <String>[']
     for c in cases:
         lines.append('  ' + json.dumps(c.read_text()).replace('$', '\\$') + ',')
     lines.append('];')
     lines.append('const parityProbes = <String>[' + ''.join(f'{json.dumps(p)}, ' for p in probes) + '];')
+    lines.append(f"const parityEngine = '{engine}';")
     (PKG / 'test/cases.g.dart').write_text('\n'.join(lines) + '\n')
 
 
@@ -189,37 +200,26 @@ def run_worker_vm(cases: list[Path], out: Path, log: Path, engine: str = 'worker
     return rc
 
 
-def web_test(backend: str, test_file: str, log: Path, core: Path) -> int:
-    """`dart test` [test_file] in Chrome on [backend], with core's web assets staged for the page template."""
-    staged = []
-    try:
-        for f in WEB_ASSETS:
-            shutil.copy(core / 'lib/assets' / f, PKG / 'test' / f)
-            staged.append(PKG / 'test' / f)
-        wasi = core / WASI_WORKER
-        if wasi.exists():
-            d = PKG / 'test/@pydantic/monty-wasm32-wasi'
-            d.mkdir(parents=True, exist_ok=True)
-            shutil.copy(wasi, d / wasi.name)
-            staged.append(PKG / 'test/@pydantic')
-        cmd = ['dart', 'test', '-p', 'chrome', '--reporter', 'expanded', test_file]
-        if backend == 'dart2wasm':
-            cmd[4:4] = ['-c', 'dart2wasm']
-        return sh(cmd, log, timeout=3600)
-    finally:
-        for p in staged:
-            shutil.rmtree(p) if p.is_dir() else p.unlink(missing_ok=True)
+def web_test(backend: str, test_file: str, log: Path) -> int:
+    """`dart test` [test_file] in Chrome on [backend]; the page loads core's worker assets from its package."""
+    cmd = ['dart', 'test', '-p', 'chrome', '--reporter', 'expanded', test_file]
+    if backend == 'dart2wasm':
+        cmd[4:4] = ['-c', 'dart2wasm']
+    return sh(cmd, log, timeout=3600)
 
 
 def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, engine: str = 'core',
             probes: list[str] = ()) -> int:
     # Isolated cases are limit cases that may never finish where core cannot
     # bound them; the browser runs them too (it bounds nothing less than the VM).
-    bake(cases, probes)
-    test_file = {'worker': 'test/parity_worker_web_test.dart',
-                 'session': 'test/parity_session_web_test.dart'}.get(engine, 'test/parity_web_test.dart')
+    if engine == 'core':
+        probes = core_probes()
+        clear_outcomes(cases, out, engine, backend, probes)
+    bake(cases, probes, engine)
+    test_file = ('test/parity_worker_web_test.dart' if engine == 'worker'
+                 else 'test/parity_session_web_test.dart')
     try:
-        rc = web_test(backend, test_file, log, core)
+        rc = web_test(backend, test_file, log)
     finally:
         (PKG / 'test/cases.g.dart').unlink(missing_ok=True)
     got = got_probes = 0
@@ -227,7 +227,7 @@ def run_web(backend: str, cases: list[Path], out: Path, log: Path, core: Path, e
         i = line.find(MARKER)
         if i >= 0:
             res = json.loads(line[i + len(MARKER):])
-            if res.get('backend') == backend and res.get('engine') in (engine, f'{engine}1'):
+            if res.get('backend') == backend and res.get('engine') == engine:
                 write(out, res)
                 got += 1
         i = line.find(PROBE_MARKER)
@@ -256,7 +256,7 @@ def run_crash_tests(backend: str, out: Path, core: Path) -> bool:
     if backend == 'vm':
         rc = sh(['dart', 'test', '-p', 'vm', '--reporter', 'expanded', test_file], log, timeout=600)
     else:
-        rc = web_test(backend, test_file, log, core)
+        rc = web_test(backend, test_file, log)
     text = log.read_text(errors='replace')
     # The expanded reporter's last line: `MM:SS +N[ ~S]: All tests passed!` (~S counts skips).
     ends = re.findall(r'\+(\d+)(?: ~(\d+))?: All tests passed!', text)

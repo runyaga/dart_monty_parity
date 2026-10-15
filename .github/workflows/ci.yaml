@@ -7,9 +7,11 @@ name: CI
 #             `permissions:` and no checkout that keeps credentials (offline)
 #   runner    the Dart runner analyses clean against the core it targets
 #   current   the core commit in CORE_REF reproduces tool/parity/baseline-current.json
-#             case by case on vm, dart2js and dart2wasm (what core's own CI job asserts)
+#             case by case on vm, dart2js and dart2wasm (what core's own CI job asserts);
+#             the M3 target (tool/parity/m3-target.json) is shown
 #   baseline  core 5873ec5, where the capability manifest's baseline was
-#             measured, reproduces that baseline (the instrument check)
+#             measured, reproduces that baseline through the runner of its API
+#             (the tag runner-0.23; the instrument check)
 #   e0        the E0 cases through core's monty-proto worker at CORE_REF match
 #             upstream on vm, dart2js and dart2wasm, and the worker crash
 #             tests pass on each; so do the worker value rows' pre-cutover
@@ -121,7 +123,7 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
-          workspaces: core/native
+          workspaces: core/native/worker
           key: core-${{ needs.core-ref.outputs.sha }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
@@ -137,21 +139,24 @@ jobs:
         run: |
           printf 'dependency_overrides:\n  dart_monty_core:\n    path: %s\n' "$GITHUB_WORKSPACE/core" > pubspec_overrides.yaml
           dart pub get
-          printf 'const parityCases = <String>[];\nconst parityProbes = <String>[];\n' > test/cases.g.dart
+          printf "const parityCases = <String>[];\nconst parityProbes = <String>[];\nconst parityEngine = 'core';\n" > test/cases.g.dart
           dart format --output=none --set-exit-if-changed bin lib \
-            test/parity_web_test.dart test/parity_worker_web_test.dart \
+            test/parity_worker_web_test.dart \
             test/parity_session_web_test.dart \
             test/worker_crash_vm_test.dart test/worker_crash_web_test.dart
           dart analyze --fatal-infos
           rm test/cases.g.dart pubspec_overrides.yaml
-      - name: Run on the VM (FFI)
+      - name: Build core's worker executable
+        run: bash core/tool/build_worker.sh
+      - name: Run on the VM (worker process)
         run: python3 -I tool/parity/run.py vm --core core --out /tmp/parity
       - name: Run on dart2js
         run: python3 -I tool/parity/run.py dart2js --core core --out /tmp/parity
       - name: Run on dart2wasm
         run: python3 -I tool/parity/run.py dart2wasm --core core --out /tmp/parity
       # The M3 target (tool/parity/m3-target.json) is scored and printed here, not asserted:
-      # `--assert-target` joins at the cut.
+      # rows that need the values and session surface the flip leaves out (C5-v, C5-s) and rows no
+      # case measures yet are not PRESENT, and `--assert-target` waits for them.
       - name: Score and assert the current baseline; show the M3 target
         run: |
           python3 -I tool/parity/score.py /tmp/parity \
@@ -200,9 +205,7 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
-          workspaces: |
-            core/native
-            core/native/worker
+          workspaces: core/native/worker
           key: core-e0-${{ needs.core-ref.outputs.sha }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
@@ -269,6 +272,11 @@ jobs:
   # instrument that cannot reproduce a known measurement is not trusted with a
   # new one.
   #
+  # 5873ec5 predates Monty / MontySession, so its outcomes come from the
+  # runner of its API: this repository at the tag runner-0.23 (the last
+  # commit before the cut), checked out under runner/. This checkout's scorer
+  # and rules score them.
+  #
   # RUSTUP_TOOLCHAIN overrides that commit's rust-toolchain.toml, which lists
   # cross targets the host build never uses; the build itself is unchanged.
   baseline:
@@ -278,6 +286,7 @@ jobs:
     env:
       RUSTUP_TOOLCHAIN: stable
       BASELINE_CORE: 5873ec55747083b3ee64411d11cf62315a7200f3
+      BASELINE_RUNNER: runner-0.23
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -287,6 +296,11 @@ jobs:
           repository: ${{ env.CORE_REPO }}
           ref: ${{ env.BASELINE_CORE }}
           path: core
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.BASELINE_RUNNER }}
+          path: runner
           persist-credentials: false
       - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
@@ -304,17 +318,17 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.pub-cache
-          key: pub-parity-${{ runner.os }}-${{ hashFiles('packages/monty_parity/pubspec.yaml') }}
+          key: pub-parity-${{ runner.os }}-${{ hashFiles('runner/packages/monty_parity/pubspec.yaml') }}
           restore-keys: pub-${{ runner.os }}-
       - name: Its browser WASI worker (npm, pinned by its package-lock.json)
         working-directory: core/js
         run: npm ci --force --silent
       - name: Run on the VM (FFI)
-        run: python3 -I tool/parity/run.py vm --core core --out /tmp/parity
+        run: python3 -I runner/tool/parity/run.py vm --core core --out /tmp/parity
       - name: Run on dart2js
-        run: python3 -I tool/parity/run.py dart2js --core core --out /tmp/parity
+        run: python3 -I runner/tool/parity/run.py dart2js --core core --out /tmp/parity
       - name: Run on dart2wasm
-        run: python3 -I tool/parity/run.py dart2wasm --core core --out /tmp/parity
+        run: python3 -I runner/tool/parity/run.py dart2wasm --core core --out /tmp/parity
       - name: Score and assert the baseline
         run: |
           python3 -I tool/parity/score.py /tmp/parity \

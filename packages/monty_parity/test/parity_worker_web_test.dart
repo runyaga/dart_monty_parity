@@ -1,7 +1,7 @@
 // Runs the parity cases baked into cases.g.dart through core's worker in the
 // browser (dart2js or dart2wasm): each case on a fresh Web Worker
 // (WorkerChannel) running core's committed
-// lib/assets/dart_monty_core_proto_worker.{js,wasm}, all sharing one
+// lib/assets/dart_monty_core_worker.{js,wasm}, all sharing one
 // compiled module. Prints each outcome on a marker line for
 // tool/parity/run.py to collect.
 // Printing is the transport: tool/parity/run.py reads the marker lines.
@@ -25,13 +25,13 @@ void main() {
   test('parity cases through the worker (web)', () async {
     const backend = identical(1, 1.0) ? 'dart2js' : 'dart2wasm';
     final cache = WasmModuleCache(
-      '$_assets/dart_monty_core_proto_worker.wasm',
+      '$_assets/dart_monty_core_worker.wasm',
     );
     final opened = <WorkerChannel>[];
     Future<WorkerChannel> spawn() async {
       final channel = await WorkerChannel.spawn(
         cache,
-        workerUrl: '$_assets/dart_monty_core_proto_worker.js',
+        workerUrl: '$_assets/dart_monty_core_worker.js',
       );
       opened.add(channel);
 
@@ -68,7 +68,7 @@ void main() {
 Future<bool> _jspi(WasmModuleCache cache) async {
   final probe = await WorkerChannel.spawn(
     cache,
-    workerUrl: '$_assets/dart_monty_core_proto_worker.js',
+    workerUrl: '$_assets/dart_monty_core_worker.js',
   );
   final jspi = probe.jspi;
   await probe.close();

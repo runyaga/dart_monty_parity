@@ -20,13 +20,11 @@ import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
-import 'package:dart_monty_core/src/platform/exception_attributes.dart';
+import 'package:dart_monty_core/src/platform/monty_value.dart'
+    show montyClassProxy, montyClassTypeProxy;
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
-import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
-import 'package:dart_monty_core/src/worker/os_policy.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
-import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:monty_parity/src/canon.dart';
 import 'package:monty_parity/src/case_runner.dart';
 
@@ -54,6 +52,11 @@ abstract interface class CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   });
+
+  /// Moves the session's state to a fresh session (dump, then load into a
+  /// new checkout), as the case's `restore_before` asks. Only an engine that
+  /// lists `restore_before` in its `applies` is asked.
+  Future<void> restore();
 
   /// Ends the session.
   Future<void> close();
@@ -107,6 +110,7 @@ Future<Map<String, Object?>> runEngineCase(
   required OpenCaseSession open,
   CaseConfig configure = workerConfig,
   CoreHost Function(Map<String, Object?> c) hostFor = CoreHost.new,
+  Set<String> applies = const {},
 }) async {
   final out = newOutcome(c['id']! as String, engine, backend);
   out['engine_version'] = engineVersion;
@@ -116,6 +120,7 @@ Future<Map<String, Object?>> runEngineCase(
     // An empty block (`host: {}`) asks for nothing, and a host world applies
     // its `host` block.
     if (key == 'host' && host.appliesHost) continue;
+    if (applies.contains(key)) continue;
     if (c[key] == null || (c[key] is Map && (c[key]! as Map).isEmpty)) continue;
     unsupported[key] = value;
   }
@@ -139,6 +144,34 @@ Future<Map<String, Object?>> runEngineCase(
   }
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
+  final restoreBefore = applies.contains('restore_before')
+      ? ((c['restore_before'] as List?) ?? const []).cast<int>()
+      : const <int>[];
+  // The case's mounts, built once: their state lasts across its feeds. A
+  // call no mount serves falls through to the scripted answers.
+  var curOs = <Object?>[];
+  MontyValue scriptedOs(
+    String name,
+    List<MontyValue> args,
+    Map<String, MontyValue> kwargs,
+  ) {
+    curOs.add(_callRecord(name, args, kwargs));
+    final a = script.next(name, isOs: true);
+    if (a == null) throw const OsCallNotHandledException();
+
+    return _answer(a, name, host);
+  }
+
+  OsHandler? fsHandler;
+  Object? fsError;
+  final fs = (c['fs'] as Map?)?.cast<String, Object?>();
+  if (fs != null && applies.contains('fs')) {
+    try {
+      fsHandler = buildFsHandler(fs, scriptedOs, unsupported);
+    } on Object catch (e) {
+      fsError = e;
+    }
+  }
   final CaseSession session;
   try {
     session = await open(config, host);
@@ -167,7 +200,18 @@ Future<Map<String, Object?>> runEngineCase(
       host.log = step['host_calls']! as List<Object?>;
       final prints = <(String, String)>[];
       final ext = step['ext_calls']! as List<Object?>;
-      final os = step['os_calls']! as List<Object?>;
+      curOs = step['os_calls']! as List<Object?>;
+      if (restoreBefore.contains(n)) await session.restore();
+      if (fsError != null) {
+        step['exception'] = {
+          'type': fsError.runtimeType.toString(),
+          'message': '$fsError',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'host';
+        host.rawOutputs.add(null);
+        continue;
+      }
       if (n == 0 && inexpressible != null) {
         step['exception'] = {
           'type': 'Inexpressible',
@@ -190,13 +234,7 @@ Future<Map<String, Object?>> runEngineCase(
                 return _answer(script.next(name, isOs: false), name, host);
               },
           },
-          onOsCall: (name, args, kwargs) {
-            os.add(_callRecord(name, args, kwargs));
-            final a = script.next(name, isOs: true);
-            if (a == null) throw const OsCallNotHandledException();
-
-            return _answer(a, name, host);
-          },
+          onOsCall: fsHandler ?? scriptedOs,
           onPrint: (stream, text) => prints.add((stream, text)),
         );
         step['value'] = identityCanon(value, hostLabel: host.labelOf);
@@ -205,7 +243,7 @@ Future<Map<String, Object?>> runEngineCase(
         step['exception'] = raisedDisplayed(
           e.display,
           e.traceback,
-          exceptionAttributes(e.exception),
+          e.exception.attributes,
         );
         step['thrown'] = 'MontyRuntimeError';
         host.rawOutputs.add(null);
@@ -213,7 +251,7 @@ Future<Map<String, Object?>> runEngineCase(
         step['exception'] = raisedDisplayed(
           e.display,
           e.traceback,
-          exceptionAttributes(e.exception),
+          e.exception.attributes,
         );
         step['thrown'] = 'MontySyntaxError';
         host.rawOutputs.add(null);
@@ -285,6 +323,10 @@ final class _ProtoCaseSession implements CaseSession {
 
     return result.value;
   }
+
+  @override
+  Future<void> restore() =>
+      throw UnsupportedError('no snapshot/restore in the worker driver');
 
   @override
   Future<void> close() => _session.close();
@@ -405,8 +447,8 @@ MontyValue? _workerExtra(Map<String, Object?> c) => switch (c['t']) {
     mode: c['mode']! as String,
     position: _position(c['position']! as String),
   ),
-  'proxy' => MontyClassInstance(
-    classType: MontyClassType(
+  'proxy' => montyClassProxy(
+    classType: montyClassTypeProxy(
       name: c['class']! as String,
       id: c['class_id']! as String,
       hostDefined: false,
@@ -470,7 +512,7 @@ bool _isShared(MontyValue v) =>
     v is MontySet ||
     v is MontyFrozenSet ||
     v is MontyNamedTuple ||
-    v is MontyClassInstance;
+    v is MontyClassProxy;
 
 List<MontyValue> _children(MontyValue v) => switch (v) {
   MontyList(:final items) || MontyTuple(:final items) => items,
@@ -479,7 +521,7 @@ List<MontyValue> _children(MontyValue v) => switch (v) {
     for (final (k, x) in pairs) ...[k, x],
   ],
   MontyNamedTuple(:final values) => values,
-  MontyClassInstance(:final attrs) => [...attrs.values],
+  MontyClassProxy(:final attrs) => [...attrs.values],
   _ => const [],
 };
 
@@ -546,7 +588,7 @@ List<Object?> identityCanonBatch(
         out['type'] = typeName;
         out['fields'] = fieldNames;
         out['items'] = [for (final i in values) enc(i)];
-      case MontyClassInstance(
+      case MontyClassProxy(
         :final classType,
         :final instanceId,
         :final attrs,

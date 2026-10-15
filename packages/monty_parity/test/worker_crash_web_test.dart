@@ -10,9 +10,8 @@ library;
 import 'dart:async';
 
 import 'package:dart_monty_core/dart_monty_core.dart';
-import 'package:dart_monty_core/src/worker/monty_channel.dart';
+import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
-import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_channel.dart';
 import 'package:test/test.dart';
 
@@ -28,7 +27,7 @@ const _deepCompare =
     'x = []\nfor i in range(300000):\n    x = [x]\n'
     'y = []\nfor i in range(300000):\n    y = [y]\nx == y';
 
-final _cache = WasmModuleCache('$_assets/dart_monty_core_proto_worker.wasm');
+final _cache = WasmModuleCache('$_assets/dart_monty_core_worker.wasm');
 
 /// Every channel a test opened; each test must leave all of them dead.
 final _opened = <WorkerChannel>[];
@@ -40,7 +39,7 @@ Future<(ProtoSession, WorkerChannel)> _open(
 }) async {
   final channel = await WorkerChannel.spawn(
     _cache,
-    workerUrl: '$_assets/dart_monty_core_proto_worker.js',
+    workerUrl: '$_assets/dart_monty_core_worker.js',
     forceNoJspi: forceNoJspi,
   );
   _opened.add(channel);

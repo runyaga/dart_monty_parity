@@ -148,16 +148,24 @@ class GateTest(unittest.TestCase):
         gate['landed'] = []
         self.assertEqual(self.assert_gate(gate), 0)
 
+    def probes_pending(self) -> dict:
+        """The gate with `cutover` (the collector probes) pending: every stage with probes is landed."""
+        gate = copy.deepcopy(self.gate)
+        gate['landed'].remove('cutover')
+        return gate
+
     def test_unimplemented_with_a_runner_error_fails(self) -> None:
-        kind, pid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
-                         if x[0] == 'probes' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        gate = self.probes_pending()
+        kind, pid = next(x for x in gated_ids(gate, self.rows, landed_only=False)
+                         if x[0] == 'probes' and x not in gated_ids(gate, self.rows, landed_only=True))
         self.write(pid, 'vm', {'probe': pid, 'engine': 'session', 'backend': 'vm', 'events': [],
                                'runner_error': 'worker processes left running', 'unimplemented': 'not yet'})
-        self.assertEqual(self.assert_gate(), 1)
+        self.assertEqual(self.assert_gate(gate), 1)
 
     def test_unimplemented_against_a_failed_oracle_fails(self) -> None:
-        kind, pid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
-                         if x[0] == 'probes' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        gate = self.probes_pending()
+        kind, pid = next(x for x in gated_ids(gate, self.rows, landed_only=False)
+                         if x[0] == 'probes' and x not in gated_ids(gate, self.rows, landed_only=True))
         for b in BACKENDS:
             self.write(pid, b, {'probe': pid, 'engine': 'session', 'backend': b, 'events': [],
                                 'runner_error': None, 'unimplemented': 'not yet'})
@@ -166,7 +174,7 @@ class GateTest(unittest.TestCase):
             shutil.copytree(EXPECTED, expected, dirs_exist_ok=True)
             (expected / pid / 'ref-py.json').write_text(json.dumps({'probe': pid, 'events': [],
                                                                     'runner_error': 'oracle failed'}))
-            self.spec.write_text(json.dumps(self.gate))
+            self.spec.write_text(json.dumps(gate))
             with contextlib.redirect_stdout(io.StringIO()):
                 rc = score.assert_gate(self.spec, self.out, expected, BACKENDS, None, None)
             self.assertEqual(rc, 1)
@@ -185,9 +193,10 @@ class GateTest(unittest.TestCase):
         from probes_compare import judge  # noqa: PLC0415 (local module, same dir)
         self.assertEqual(judge('k_function', ref, got, self.rows['run_progress_variants'])[0], 'MATCH')
 
-    def pending(self, kind: str) -> str:
-        return next(cid for k, cid in gated_ids(self.gate, self.rows, landed_only=False)
-                    if k == kind and (k, cid) not in gated_ids(self.gate, self.rows, landed_only=True)
+    def pending(self, kind: str, gate: dict | None = None) -> str:
+        gate = gate or self.gate
+        return next(cid for k, cid in gated_ids(gate, self.rows, landed_only=False)
+                    if k == kind and (k, cid) not in gated_ids(gate, self.rows, landed_only=True)
                     and json.loads((self.out / cid / 'session-vm.json').read_text()).get(
                         'steps' if kind == 'cases' else 'events'))
 
@@ -199,11 +208,12 @@ class GateTest(unittest.TestCase):
         self.assertEqual(self.assert_gate(), 1)
 
     def test_empty_pending_probe_fails(self) -> None:
-        pid = self.pending('probes')
+        gate = self.probes_pending()
+        pid = self.pending('probes', gate)
         got = json.loads((self.out / pid / 'session-dart2js.json').read_text())
         got['events'] = []
         self.write(pid, 'dart2js', got)
-        self.assertEqual(self.assert_gate(), 1)
+        self.assertEqual(self.assert_gate(gate), 1)
 
     def test_incomplete_rules_are_reported(self) -> None:
         cases = score.case_index()
@@ -223,29 +233,28 @@ class GateTest(unittest.TestCase):
         self.assertIn('sp_print_raise_then_error: a session probe of the oracle but in no gated session rule', problems)
         self.assertIn("stage 'C1-9' gates no row", problems)
 
-    def test_new_stages_show_a_forced_mismatch_then_fail_once_landed(self) -> None:
-        """A control per stage P-t adds: a forced mismatch in the stage's rows is shown while the stage is
-        pending (the gate passes), and fails the gate once the stage is landed."""
-        for stage in ('C3-5', 'C3-6', 'd1_calls'):
+    def test_stages_landed_at_the_cut_fail_a_forced_mismatch(self) -> None:
+        """A control per stage P-cut lands: a forced mismatch in the stage's rows fails the gate, and the
+        same mismatch is only shown (the gate passes) with the stage pending."""
+        for stage in ('C1-3b', 'C3-5', 'C3-6', 'd1_calls', 'cutover'):
             with self.subTest(stage=stage):
-                row = next(r for r, st in self.gate['rows'].items() if st == stage)
-                sess = self.rows[row]['session']
-                if sess.get('cases'):
-                    cid = sess['cases'][0]
+                pending = copy.deepcopy(self.gate)
+                pending['landed'].remove(stage)
+                # An id of the stage that no other landed stage gates too.
+                kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=True)
+                                 if x not in gated_ids(pending, self.rows, landed_only=True))
+                if kind == 'cases':
                     got = json.loads((self.out / cid / 'session-vm.json').read_text())
                     saved = json.loads(json.dumps(got))
                     got['steps'][-1]['value'] = {'t': 'str', 'v': 'forced mismatch'}
                 else:
-                    cid = sess['probes'][0]
                     got = json.loads((self.out / cid / 'session-vm.json').read_text())
                     saved = json.loads(json.dumps(got))
                     got['events'] = got['events'] + [{'ev': 'refused', 'cls': 'forced', 'msg': 'mismatch'}]
                 self.write(cid, 'vm', got)
-                self.assertNotIn(stage, self.gate['landed'])
-                self.assertEqual(self.assert_gate(), 0)
-                landed = copy.deepcopy(self.gate)
-                landed['landed'].append(stage)
-                self.assertEqual(self.assert_gate(landed), 1)
+                self.assertIn(stage, self.gate['landed'])
+                self.assertEqual(self.assert_gate(), 1)
+                self.assertEqual(self.assert_gate(pending), 0)
                 self.write(cid, 'vm', saved)
 
     def test_landed_c3_4_fails_on_missing_exception_data(self) -> None:

@@ -1,5 +1,5 @@
 // The session engine's probes: API-level transcripts through dart_monty_core's
-// internal pool session (`MontyPool`, `PoolSession`), the path that becomes
+// internal pool session (`Monty`, `MontySession`), the path that becomes
 // core's public `Monty` / `MontySession` at the cutover. Each probe emits the
 // events tool/parity/oracle/run_probes.py records for upstream, and
 // tool/parity/probes_compare.py compares the two with no named exception:
@@ -17,18 +17,16 @@ import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyComplete, MontyError, MontySyntaxError, MontyTypingError;
+import 'package:dart_monty_core/src/worker/monty.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
-import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
-import 'package:dart_monty_core/src/worker/pool_session.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
-import 'package:dart_monty_core/src/worker/resource_limits.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/src/host_probes.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// Starts a pool with [options] for one probe; the probe closes it.
-typedef StartPool = Future<MontyPool> Function(PoolOptions options);
+typedef StartPool = Future<Monty> Function(PoolOptions options);
 
 /// How many workers the runner's pools have started so far.
 typedef SpawnCount = int Function();
@@ -40,13 +38,7 @@ SpawnCount _spawned = () => 0;
 typedef _Ev = Map<String, Object?>;
 
 /// What a probe the session cannot run yet waits for, by probe id.
-const _pending = <String, String>{
-  'sp_collect_string': _needsCollectors,
-  'sp_collect_streams': _needsCollectors,
-  'sp_collect_overflow': _needsCollectors,
-};
-
-const _needsCollectors = 'needs CollectString and CollectStreams (cutover)';
+const _pending = <String, String>{};
 
 /// One byte past the frame limit (256 MiB): run_probes.py's `OVERSIZED`.
 const int _oversized = 256 * 1024 * 1024 + 1;
@@ -69,14 +61,15 @@ final class _T {
 Future<Map<String, Object?>> runSessionProbe(
   String id,
   String backend,
-  MontyPool shared,
+  Monty shared,
   StartPool start,
-  SpawnCount spawned,
-) async {
+  SpawnCount spawned, {
+  String engine = 'session',
+}) async {
   _spawned = spawned;
   final out = <String, Object?>{
     'probe': id,
-    'engine': 'session',
+    'engine': engine,
     'backend': backend,
     'events': const <Object?>[],
     'runner_error': null,
@@ -99,38 +92,231 @@ Future<Map<String, Object?>> runSessionProbe(
 /// Every probe id this engine knows: the ones it runs and the pending ones.
 Set<String> get sessionProbeIds => {..._probes.keys, ..._pending.keys};
 
-final Map<
-  String,
-  Future<void> Function(_T t, MontyPool shared, StartPool start)
->
+final Map<String, Future<void> Function(_T t, Monty shared, StartPool start)>
 _probes = {
   // ------------------------------------------- host objects (host_probes.dart)
   for (final id in hostProbeIds)
     id: (t, shared, start) => runHostProbe(id, start, t.add),
+  // ------------------------------------------- the API surface (core rules)
+  // The core engine's own probes, through the public Monty / MontySession.
+  // run_probes.py records the run's error with no traceback.
+  'api_run_blocking': (t, shared, _) async {
+    await shared.withSession((s) async {
+      await _run(t, () => s.feedRun('x = 21\nx * 2'));
+      try {
+        t.add({
+          'ev': 'complete',
+          'value': identityCanon(await s.feedRun('1 / 0')),
+        });
+      } on MontyRuntimeError catch (e) {
+        t.add({
+          'ev': 'error',
+          'type': e.exception.excType,
+          'message': e.exception.message,
+        });
+      }
+    });
+    await shared.withSession(
+      (s) =>
+          _run(t, () => s.feedRun('x * 2', inputs: {'x': const MontyInt(21)})),
+    );
+  },
+  'api_start_program': (t, shared, _) => shared.withSession((s) async {
+    final x = await s.feedStart('y = fetch(1, k=2)\ny + 1');
+    if (x is! FunctionSnapshot) {
+      t.add({'ev': 'other', 'repr': '$x'});
+
+      return;
+    }
+    t.add({
+      'ev': 'suspend',
+      'name': x.functionName,
+      'args': [for (final a in x.args) identityCanon(a)],
+      'kwargs': {
+        for (final MapEntry(:key, :value) in x.kwargs.entries)
+          key: identityCanon(value),
+      },
+    });
+    final d = await x.resume(const ExternalReturnValue(MontyInt(10)));
+    t.add(
+      d is MontyComplete
+          ? {'ev': 'complete', 'value': identityCanon(d.output)}
+          : {'ev': 'other', 'repr': '$d'},
+    );
+  }),
+  // Removed with MontyRepl at the cutover: no public continuation detection.
+  'api_interactive_continuation': (t, shared, _) async => t.add({
+    'ev': 'absent',
+    'what': 'no continuation-mode detection on Monty / MontySession',
+  }),
+  'api_create_repl': (t, shared, _) => shared.withSession((s) async {
+    await s.feedRun('x = 41\ndef inc(v):\n    return v + 1');
+    await _run(t, () => s.feedRun('inc(x)'));
+  }),
+  'api_recover_repl_after_error': (t, shared, _) => shared.withSession((
+    s,
+  ) async {
+    await s.feedRun('x = 1');
+    for (final code in [
+      '1 / 0',
+      'def r():\n    return r()\nr()',
+      'x = (',
+      'undefined_name',
+    ]) {
+      Map<String, Object?>? error;
+      try {
+        await s.feedRun(code);
+      } on MontyRuntimeError catch (e) {
+        error = {'type': e.exception.excType, 'message': e.exception.message};
+      } on MontySyntaxError catch (e) {
+        error = {'type': e.exception.excType, 'message': e.exception.message};
+      } on Object catch (e) {
+        error = {'type': e.runtimeType.toString(), 'message': '$e'};
+      }
+      if (error == null) {
+        t.add({'ev': 'no_error', 'code': code});
+      } else {
+        t.add({
+          'ev': 'error',
+          'code': code,
+          ...error,
+          'after': identityCanon(await s.feedRun('x + 1')),
+        });
+      }
+    }
+  }),
+  'api_write_budget_feed1': (t, shared, _) => _writeBudget(t, shared, 1),
+  'api_write_budget_feed2': (t, shared, _) => _writeBudget(t, shared, 2),
+  'api_memory_budget': (t, shared, _) => shared.withSession((s) async {
+    final h = memoryMountedOsHandler(
+      mounts: const [MountDir(virtualPath: '/data', memoryUsageLimit: 1000)],
+      files: [],
+    );
+    await _run(t, () => s.feedRun(_mCode, os: h));
+  }),
+  'api_callback_files': (t, shared, _) => shared.withSession((s) async {
+    final store = {'v': 'initial'};
+    final h = memoryMountedOsHandler(
+      mounts: const [MountDir(virtualPath: '/cb')],
+      files: [_CbFile('/cb/f.txt', t, store)],
+    );
+    const code =
+        "from pathlib import Path\np = Path('/cb/f.txt')\na = p.read_text()\n"
+        "p.write_text('new')\nb = p.read_text()\n(a, b, p.exists())";
+    await _run(t, () => s.feedRun(code, os: h));
+  }),
+  'api_boundary_uuid': (t, shared, _) => shared.withSession((s) async {
+    await s.feedRun('class A:\n    pass\na1 = A()\na2 = A()');
+    final i1 = await s.feedRun('a1');
+    final i1b = await s.feedRun('a1');
+    final i2 = await s.feedRun('a2');
+    final uuidRe = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    );
+    String? id(MontyValue v) => v is MontyClassProxy ? v.instanceId : null;
+    t.add({
+      'ev': 'ids',
+      'is_uuid': id(i1) != null && uuidRe.hasMatch(id(i1)!),
+      'stable': id(i1) != null && id(i1) == id(i1b),
+      'distinct': id(i1) != null && id(i1) != id(i2),
+    });
+  }),
+  // Upstream re-checks each snippet against the session's earlier
+  // definitions and starts a fresh checker with a new session.
+  'api_reset_type_checker': (t, shared, _) async {
+    Future<String?> check(MontySession s, String code) async {
+      try {
+        await s.feedRun(code, printCallback: _quiet);
+
+        return null;
+      } on MontyTypingError catch (e) {
+        return e.display();
+      }
+    }
+
+    await shared.withSessionWith((s) async {
+      await s.feedRun('x: int = 1', printCallback: _quiet);
+      final same = await check(s, 'y: int = x\ny');
+      t.add({
+        'ev': 'checked',
+        'with_prior_definition': same == null ? 'ok' : 'MontyTypingError',
+      });
+    }, const SessionConfig(typeCheck: true));
+    await shared.withSessionWith((s) async {
+      final fresh = await check(s, 'y: int = x\ny');
+      t.add({
+        'ev': 'checked',
+        'fresh_unresolved':
+            fresh != null && fresh.contains('unresolved-reference'),
+      });
+    }, const SessionConfig(typeCheck: true));
+  },
+  'api_compile_program': (t, shared, _) async =>
+      t.add({'ev': 'absent', 'what': 'no compile API'}),
+  'api_compiled_source': (t, shared, _) async =>
+      t.add({'ev': 'absent', 'what': 'Monty has no code accessor'}),
+  // ------------------------------------------- print collectors
+  'sp_collect_string': (t, shared, _) => shared.withSession((s) async {
+    final c = CollectString();
+    await _run(
+      t,
+      () => s.feedRun(
+        "import sys\nprint('a')\nprint('b', file=sys.stderr)\n1",
+        printCallback: c.call,
+      ),
+    );
+    t.add({'ev': 'collected', 'output': c.output});
+  }),
+  'sp_collect_streams': (t, shared, _) => shared.withSessionWith((s) async {
+    final c = CollectStreams();
+    await _run(
+      t,
+      () => s.feedRun(
+        "import sys\nprint('a')\nprint('b')\nprint('c', file=sys.stderr)\n"
+        "print('d')\n1",
+        printCallback: c.call,
+      ),
+    );
+    t.add({
+      'ev': 'collected',
+      'output': [
+        for (final (stream, text) in c.output) [stream, text],
+      ],
+    });
+  }, const SessionConfig(printFlushInterval: Duration.zero)),
+  'sp_collect_overflow': (t, shared, _) => shared.withSession((s) async {
+    final c = CollectString(maxBytes: 4);
+    await _run(
+      t,
+      () => s.feedRun("print('hello world')\n1", printCallback: c.call),
+    );
+    t.add({'ev': 'collected', 'output': c.output});
+    await _run(t, () => s.feedRun('2'));
+  }),
   // ------------------------------------------- suspensions, step by step
-  'k_function': (t, shared, _) => shared.withSession((s) async {
+  'k_function': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart("g = 1\ny = f(2, k='é')\ny"));
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
   }),
-  'k_os': (t, shared, _) => shared.withSession((s) async {
+  'k_os': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart(_readCode));
     await _step(
       t,
       () => _fn(x).resume(const ExternalReturnValue(MontyString('hi'))),
     );
   }),
-  'k_os_not_handled': (t, shared, _) => shared.withSession((s) async {
+  'k_os_not_handled': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart(_readCode));
     await _step(t, () => _fn(x).resumeNotHandled());
   }),
-  'k_name': (t, shared, _) => shared.withSession((s) async {
+  'k_name': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart('total = 1 + missing\ntotal'));
     await _step(
       t,
       () => (x! as NameLookupSnapshot).resume(value: const MontyInt(41)),
     );
   }),
-  'k_future': (t, shared, _) => shared.withSession((s) async {
+  'k_future': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(
       t,
       () => s.feedStart(
@@ -146,20 +332,20 @@ _probes = {
       }),
     );
   }),
-  'pos_utf8': (t, shared, _) => shared.withSession(
+  'pos_utf8': (t, shared, _) => shared.withSessionWith(
     (s) => _step(t, () => s.feedStart("x = 'é'\ny = add(x, 2)")),
   ),
-  'pos_earlier_feed': (t, shared, _) => shared.withSession((s) async {
+  'pos_earlier_feed': (t, shared, _) => shared.withSessionWith((s) async {
     await s.feedRun(
       'def helper(n):\n    return fetch(n)',
       printCallback: _quiet,
     );
     await _step(t, () => s.feedStart('helper(3)'));
   }),
-  'pos_eval': (t, shared, _) => shared.withSession(
+  'pos_eval': (t, shared, _) => shared.withSessionWith(
     (s) => _step(t, () => s.feedStart("eval('  1 + fetch()')")),
   ),
-  'inputs_typed': (t, shared, _) => shared.withSession((s) async {
+  'inputs_typed': (t, shared, _) => shared.withSessionWith((s) async {
     const shared = MontyList([MontyInt(1)]);
     final x = await _step(
       t,
@@ -207,7 +393,7 @@ _probes = {
           t,
           () => _fn(a2).resume(const ExternalReturnValue(MontyInt(7))),
         );
-        while (b2 != null && b2 is! SessionComplete) {
+        while (b2 != null && b2 is! MontyComplete) {
           final next = b2;
           b2 = await _step(t, () => _fn(next).resumeAuto());
         }
@@ -217,7 +403,7 @@ _probes = {
       }
     },
   ),
-  'async_gather': (t, shared, _) => shared.withSession(
+  'async_gather': (t, shared, _) => shared.withSessionWith(
     (s) => _run(
       t,
       () => s.feedRun(
@@ -242,7 +428,7 @@ _probes = {
   // Gathered async host functions run concurrently: each waits until both
   // have started (a barrier with a 10 s watchdog), which a driver that
   // awaited one call before starting the next could never pass.
-  'sp_async_gather_overlap': (t, shared, _) => shared.withSession((s) {
+  'sp_async_gather_overlap': (t, shared, _) => shared.withSessionWith((s) {
     final started = <int>[];
     final both = Completer<void>();
 
@@ -272,44 +458,45 @@ _probes = {
   // A coroutine resumed automatically: awaited in place when the sandbox
   // awaits the call at once, its value or exception delivered; a call
   // stored first gets a pending future, settled when it is awaited.
-  'sp_eager_coroutine_auto': (t, shared, _) => shared.withSession((s) async {
-    final fns = <String, ProtoExternalFunction>{
-      'f': coroutine((args, kwargs) async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+  'sp_eager_coroutine_auto': (t, shared, _) =>
+      shared.withSessionWith((s) async {
+        final fns = <String, ProtoExternalFunction>{
+          'f': coroutine((args, kwargs) async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
 
-        return const MontyInt(5);
-      }),
-      'g': coroutine(
-        (args, kwargs) async =>
-            throw const ExternalException('ValueError', 'bad'),
-      ),
-    };
-    for (final (code, name) in _eagerAutoCodes) {
-      try {
-        var x = await s.feedStart(code, externals: {name: fns[name]!});
-        t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
-        while (x is! SessionComplete) {
-          x = await _resumeAuto(x);
-          if (x is! SessionComplete) {
-            t.add({
-              'ev': 'suspend',
-              'kind': x is FutureSnapshot ? 'future' : 'call',
-            });
+            return const MontyInt(5);
+          }),
+          'g': coroutine(
+            (args, kwargs) async =>
+                throw const ExternalException('ValueError', 'bad'),
+          ),
+        };
+        for (final (code, name) in _eagerAutoCodes) {
+          try {
+            var x = await s.feedStart(code, externals: {name: fns[name]!});
+            t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
+            while (x is! MontyComplete) {
+              x = await _resumeAuto(x);
+              if (x is! MontyComplete) {
+                t.add({
+                  'ev': 'suspend',
+                  'kind': x is FutureSnapshot ? 'future' : 'call',
+                });
+              }
+            }
+            t.add({'ev': 'complete', 'value': identityCanon(x.output)});
+          } on MontyRuntimeError catch (e) {
+            t.add(_errEv(e.exception, e.traceback));
+          } on MontySyntaxError catch (e) {
+            t.add(_errEv(e.exception, e.traceback));
           }
         }
-        t.add({'ev': 'complete', 'value': identityCanon(x.output)});
-      } on MontyRuntimeError catch (e) {
-        t.add(_errEv(e.exception, e.traceback));
-      } on MontySyntaxError catch (e) {
-        t.add(_errEv(e.exception, e.traceback));
-      }
-    }
-  }),
+      }),
   // Gathered asyncio.sleeps overlap: every task has started its sleep
   // before any sleep ends (sleeps waited one after another would give [3],
   // [3, 1], [3, 1, 2]), and the gather waits at least its longest sleep, a
   // lower bound no scheduling delay can break.
-  'sp_async_sleep_order': (t, shared, _) => shared.withSession((s) async {
+  'sp_async_sleep_order': (t, shared, _) => shared.withSessionWith((s) async {
     final clock = Stopwatch()..start();
     try {
       final value = await s.feedRun(
@@ -330,7 +517,7 @@ _probes = {
       t.add(_errEv(e.exception, e.traceback));
     }
   }),
-  'abortctl_future': (t, shared, _) => shared.withSession((s) async {
+  'abortctl_future': (t, shared, _) => shared.withSessionWith((s) async {
     await s.feedRun('g = 1', printCallback: _quiet);
     var x = await _step(
       t,
@@ -352,17 +539,17 @@ _probes = {
     );
     await _step(t, () => s.feedStart('g'));
   }),
-  'abandon': (t, shared, _) => shared.withSession((s) async {
+  'abandon': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart('g = 2\nf(1)'));
     await _step(t, () => s.feedStart('g'));
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
     await _step(t, () => s.feedStart('g'));
   }),
   // ------------------------------------------- results and arguments
-  'api_ext_result_resume': (t, shared, _) => shared.withSession((s) async {
+  'api_ext_result_resume': (t, shared, _) => shared.withSessionWith((s) async {
     Future<void> complete(Future<MontySnapshot> Function() f) async => t.add({
       'ev': 'complete',
-      'value': identityCanon((await f() as SessionComplete).output),
+      'value': identityCanon((await f() as MontyComplete).output),
     });
     await complete(
       () async => _fn(
@@ -384,7 +571,7 @@ _probes = {
           _fn(await s.feedStart(_extResultCode, externals: {})).resumeAuto(),
     );
   }),
-  'api_ext_args_values': (t, shared, _) => shared.withSession((s) async {
+  'api_ext_args_values': (t, shared, _) => shared.withSessionWith((s) async {
     final snap = _fn(await s.feedStart(_extArgsCode));
     t.add({
       'ev': 'suspend',
@@ -397,7 +584,7 @@ _probes = {
     });
     await snap.resume(const ExternalReturnValue(MontyNone()));
   }),
-  'api_ext_args_identity': (t, shared, _) => shared.withSession((s) async {
+  'api_ext_args_identity': (t, shared, _) => shared.withSessionWith((s) async {
     final snap = _fn(await s.feedStart(_extArgsCode));
     t.add({
       'ev': 'identity',
@@ -405,7 +592,7 @@ _probes = {
     });
     await snap.resume(const ExternalReturnValue(MontyNone()));
   }),
-  'api_futures_gather': (t, shared, _) => shared.withSession((s) async {
+  'api_futures_gather': (t, shared, _) => shared.withSessionWith((s) async {
     var snap = await s.feedStart(
       'import asyncio\nr = await asyncio.gather(f(1), f(2))\nr',
     );
@@ -422,10 +609,10 @@ _probes = {
     });
     t.add({
       'ev': 'complete',
-      'value': identityCanon((done as SessionComplete).output),
+      'value': identityCanon((done as MontyComplete).output),
     });
   }),
-  'api_futures_error': (t, shared, _) => shared.withSession((s) async {
+  'api_futures_error': (t, shared, _) => shared.withSessionWith((s) async {
     final snap = _fn(
       await s.feedStart(
         'try:\n    r = await f(1)\nexcept ValueError as e:\n'
@@ -440,17 +627,17 @@ _probes = {
     });
     t.add({
       'ev': 'complete',
-      'value': identityCanon((done as SessionComplete).output),
+      'value': identityCanon((done as MontyComplete).output),
     });
   }),
-  'api_eager_coroutine': (t, shared, _) => shared.withSession((s) async {
+  'api_eager_coroutine': (t, shared, _) => shared.withSessionWith((s) async {
     final a = _fn(await s.feedStart('r = f()\nr'));
     t.add({'ev': 'eager', 'sync_call': a.allowEagerAwait});
     await a.resume(const ExternalReturnValue(MontyInt(1)));
     final b = _fn(await s.feedStart('r = await f()\nr'));
     t.add({'ev': 'eager', 'await_call': b.allowEagerAwait});
   }),
-  'sp_futures_partial': (t, shared, _) => shared.withSession((s) async {
+  'sp_futures_partial': (t, shared, _) => shared.withSessionWith((s) async {
     var x = await _step(
       t,
       () => s.feedStart(
@@ -478,7 +665,7 @@ _probes = {
       () => z.resume({ids.first: const ExternalReturnValue(MontyInt(10))}),
     );
   }),
-  'sp_resume_validated': (t, shared, _) => shared.withSession((s) async {
+  'sp_resume_validated': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart('f()'));
     await _step(
       t,
@@ -486,7 +673,9 @@ _probes = {
     );
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
   }),
-  'sp_resume_unconvertible': (t, shared, _) => shared.withSession((s) async {
+  'sp_resume_unconvertible': (t, shared, _) => shared.withSessionWith((
+    s,
+  ) async {
     final x = await _step(t, () => s.feedStart('f()'));
     final items = <MontyValue>[];
     final cyclic = MontyList(items);
@@ -494,7 +683,7 @@ _probes = {
     await _step(t, () => _fn(x).resume(ExternalReturnValue(cyclic)));
     await _step(t, () => _fn(x).resume(const ExternalReturnValue(MontyInt(5))));
   }),
-  'sp_oversized_resume': (t, shared, _) => shared.withSession((s) async {
+  'sp_oversized_resume': (t, shared, _) => shared.withSessionWith((s) async {
     final x = await _step(t, () => s.feedStart('f()'));
     await _step(
       t,
@@ -506,12 +695,12 @@ _probes = {
     await _run(t, () => s.feedRun('3'));
     _refusalKind(t);
   }),
-  'sp_checkout_script_name': (t, shared, _) => shared.withSession(
+  'sp_checkout_script_name': (t, shared, _) => shared.withSessionWith(
     (s) async {
       await _run(t, () => s.feedRun('__file__'));
       await _run(t, () => s.feedRun('def f():\n    return 1 / 0\nf()'));
     },
-    options: const SessionConfig(scriptName: 'job.py'),
+    const SessionConfig(scriptName: 'job.py'),
   ),
   // The second checkout gets the same worker back: one worker started in
   // all.
@@ -519,8 +708,8 @@ _probes = {
     final before = _spawned();
 
     return _withPool(start, const PoolOptions(maxProcesses: 1), (p) async {
-      await p.withSession((s) => _run(t, () => s.feedRun('x = 1\nx')));
-      await p.withSession((s) => _run(t, () => s.feedRun('x')));
+      await p.withSessionWith((s) => _run(t, () => s.feedRun('x = 1\nx')));
+      await p.withSessionWith((s) => _run(t, () => s.feedRun('x')));
       t.add({'ev': 'reused', 'same_worker': _spawned() - before == 1});
     });
   },
@@ -554,7 +743,7 @@ _probes = {
         maxProcesses: 1,
         checkoutTimeout: Duration(milliseconds: 300),
       ),
-      (p) => p.withSession((_) => _enterTimed(t, p)),
+      (p) => p.withSessionWith((_) => _enterTimed(t, p)),
     );
   },
   // Two workers: two checkouts are held at once, a third waits until one
@@ -575,7 +764,7 @@ _probes = {
         try {
           await _run(t, () => s1.feedRun('1'));
           await _run(t, () => s2.feedRun('2'));
-          waiting = p.withSession((s3) async {
+          waiting = p.withSessionWith((s3) async {
             t.add({'ev': 'checkout'});
             await _run(t, () => s3.feedRun('3'));
           });
@@ -594,7 +783,7 @@ _probes = {
   },
   'sp_pool_close': (t, _, start) async {
     final p = await start(const PoolOptions(maxProcesses: 2));
-    final PoolSession s;
+    final MontySession s;
     try {
       s = await p.checkout();
     } on Object {
@@ -622,7 +811,7 @@ _probes = {
       checkoutTimeout: Duration(seconds: 10),
     ),
     (p) async {
-      await p.withSession((s) async {
+      await p.withSessionWith((s) async {
         await _run(t, () => s.feedRun('sum(range(1000))'));
         // Host code is not a turn: a callback longer than the deadline is
         // not timed out.
@@ -661,12 +850,12 @@ _probes = {
         }
         await _run(t, () => s.feedRun('1'));
       });
-      await p.withSession((s) => _run(t, () => s.feedRun('1 + 1')));
+      await p.withSessionWith((s) => _run(t, () => s.feedRun('1 + 1')));
     },
   ),
   // The host function raises ValueError, the session's way today (core's
   // ExternalException naming the type); the sandbox catches it.
-  'api_ext_result_callback': (t, shared, _) => shared.withSession(
+  'api_ext_result_callback': (t, shared, _) => shared.withSessionWith(
     (s) => _run(
       t,
       () => s.feedRun(
@@ -678,7 +867,7 @@ _probes = {
       ),
     ),
   ),
-  'sp_oversized_input': (t, shared, _) => shared.withSession((s) async {
+  'sp_oversized_input': (t, shared, _) => shared.withSessionWith((s) async {
     await _run(
       t,
       () => s.feedRun(
@@ -688,7 +877,7 @@ _probes = {
     );
     await _run(t, () => s.feedRun('1'));
   }),
-  'sp_oversized_answer': (t, shared, _) => shared.withSession((s) async {
+  'sp_oversized_answer': (t, shared, _) => shared.withSessionWith((s) async {
     await _run(
       t,
       () => s.feedRun(
@@ -698,7 +887,7 @@ _probes = {
     );
     await _run(t, () => s.feedRun('2'));
   }),
-  'sp_sync_sleep_waited': (t, shared, _) => shared.withSession((s) async {
+  'sp_sync_sleep_waited': (t, shared, _) => shared.withSessionWith((s) async {
     final clock = Stopwatch()..start();
     try {
       final value = await s.feedRun('import time\ntime.sleep(0.3)\n1');
@@ -718,7 +907,7 @@ _probes = {
   }),
   // With a long flush interval, output is held until a host call or the
   // end of the run, then delivered.
-  'sp_print_batched': (t, shared, _) => shared.withSession(
+  'sp_print_batched': (t, shared, _) => shared.withSessionWith(
     (s) => _run(
       t,
       () => s.feedRun(
@@ -734,9 +923,9 @@ _probes = {
         },
       ),
     ),
-    options: const SessionConfig(printFlushInterval: Duration(seconds: 10)),
+    const SessionConfig(printFlushInterval: Duration(seconds: 10)),
   ),
-  'sp_print_lines': (t, shared, _) => shared.withSession(
+  'sp_print_lines': (t, shared, _) => shared.withSessionWith(
     (s) => _run(
       t,
       () => s.feedRun(
@@ -750,9 +939,9 @@ _probes = {
         }),
       ),
     ),
-    options: const SessionConfig(printFlushInterval: Duration.zero),
+    const SessionConfig(printFlushInterval: Duration.zero),
   ),
-  'sp_print_raise': (t, shared, _) => shared.withSession(
+  'sp_print_raise': (t, shared, _) => shared.withSessionWith(
     (s) async {
       await s.feedRun('x = 1', printCallback: _quiet);
       await _failed(
@@ -764,9 +953,9 @@ _probes = {
       );
       await _run(t, () => s.feedRun('x'));
     },
-    options: const SessionConfig(printFlushInterval: Duration.zero),
+    const SessionConfig(printFlushInterval: Duration.zero),
   ),
-  'sp_print_raise_then_error': (t, shared, _) => shared.withSession(
+  'sp_print_raise_then_error': (t, shared, _) => shared.withSessionWith(
     (s) async {
       await _failed(
         t,
@@ -777,7 +966,7 @@ _probes = {
       );
       await _run(t, () => s.feedRun('9'));
     },
-    options: const SessionConfig(printFlushInterval: Duration.zero),
+    const SessionConfig(printFlushInterval: Duration.zero),
   ),
   // ---------------------------------------------- dump and load (C1-5)
   'api_fork_session': (t, _, start) => _withPool(
@@ -795,12 +984,12 @@ _probes = {
       final before = Uint8List.fromList(bytes);
       late MontyValue v2;
       late MontyValue v3;
-      await p.withSession((s2) async {
+      await p.withSessionWith((s2) async {
         await s2.loadSession(bytes);
         await s2.feedRun('x.append(2)', printCallback: _quiet);
         v2 = await s2.feedRun('x', printCallback: _quiet);
       });
-      await p.withSession((s3) async {
+      await p.withSessionWith((s3) async {
         await s3.loadSession(bytes);
         v3 = await s3.feedRun('x', printCallback: _quiet);
       });
@@ -817,7 +1006,7 @@ _probes = {
     const PoolOptions(maxProcesses: 2),
     (p) async {
       late Uint8List b;
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         await _run(
           t,
           () => a.feedRun(
@@ -832,23 +1021,23 @@ _probes = {
           () => a.feedRun('x.append(2)\nx', printCallback: _quiet),
         );
       });
-      await p.withSession((c) async {
+      await p.withSessionWith((c) async {
         await _tried(t, () => c.loadSession(b));
         await _run(
           t,
           () => c.feedRun('x.append(3)\n[inc(10), x]', printCallback: _quiet),
         );
       });
-      await p.withSession((d) async {
+      await p.withSessionWith((d) async {
         await _tried(t, () => d.loadSession(b));
         await _run(t, () => d.feedRun('[inc(10), x]', printCallback: _quiet));
       });
       late Uint8List fresh;
-      await p.withSession((e) async {
+      await p.withSessionWith((e) async {
         fresh = await e.dump();
         _dumped(t, fresh);
       });
-      await p.withSession((f) async {
+      await p.withSessionWith((f) async {
         await _tried(t, () => f.loadSession(fresh));
         await _run(t, () => f.feedRun('2 + 2', printCallback: _quiet));
       });
@@ -858,7 +1047,7 @@ _probes = {
     start,
     const PoolOptions(maxProcesses: 2),
     (p) async {
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(
           t,
           () => a.feedStart("y = 5\nv = f(1, k='é')\n[v, y]"),
@@ -867,7 +1056,7 @@ _probes = {
         _dumped(t, snap);
         final mid = await a.dump();
         _dumped(t, mid);
-        await p.withSession((b) async {
+        await p.withSessionWith((b) async {
           final r = await _tried(t, () => b.loadSnapshot(snap));
           _announced(t, r);
           await _step(
@@ -876,7 +1065,7 @@ _probes = {
           );
           await _run(t, () => b.feedRun('[v, y]', printCallback: _quiet));
         });
-        await p.withSession((c) async {
+        await p.withSessionWith((c) async {
           final r2 = await _tried(t, () => c.loadSnapshot(mid));
           _announced(t, r2);
           await _step(
@@ -896,13 +1085,13 @@ _probes = {
     start,
     const PoolOptions(maxProcesses: 2),
     (p) async {
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(
           t,
           () => a.feedStart('total = 1 + missing\ntotal'),
         );
         final state = await (x! as NameLookupSnapshot).dump();
-        await p.withSession((b) async {
+        await p.withSessionWith((b) async {
           final r = await _tried(t, () => b.loadSnapshot(state));
           _announced(t, r);
           await _step(
@@ -911,10 +1100,10 @@ _probes = {
           );
         });
       });
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(t, () => a.feedStart(_readCode));
         final state = await _fn(x).dump();
-        await p.withSession((b) async {
+        await p.withSessionWith((b) async {
           final r = await _tried(t, () => b.loadSnapshot(state));
           _announced(t, r);
           await _step(
@@ -923,7 +1112,7 @@ _probes = {
           );
         });
       });
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(
           t,
           () => a.feedStart(
@@ -932,7 +1121,7 @@ _probes = {
         );
         final y = await _step(t, () => _fn(x).resume(const ExternalFuture()));
         final state = await (y! as FutureSnapshot).dump();
-        await p.withSession((b) async {
+        await p.withSessionWith((b) async {
           final r = await _tried(t, () => b.loadSnapshot(state));
           _announced(t, r);
           final futures = r! as FutureSnapshot;
@@ -952,7 +1141,7 @@ _probes = {
     start,
     const PoolOptions(maxProcesses: 2),
     (p) async {
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(t, () => a.feedStart('f(1)'));
         await _step(
           t,
@@ -973,7 +1162,7 @@ _probes = {
     (p) async {
       late Uint8List suspended;
       late Uint8List idle;
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         final x = await _step(t, () => a.feedStart('f(1)'));
         suspended = await _fn(x).dump();
         await _step(
@@ -983,15 +1172,15 @@ _probes = {
         await _run(t, () => a.feedRun('x = 1', printCallback: _quiet));
         idle = await a.dump();
       });
-      await p.withSession((b) async {
+      await p.withSessionWith((b) async {
         await _tried(t, () => b.loadSession(suspended));
         await _run(t, () => b.feedRun('1', printCallback: _quiet));
       });
-      await p.withSession((c) async {
+      await p.withSessionWith((c) async {
         await _tried(t, () => c.loadSnapshot(idle));
         await _run(t, () => c.feedRun('1', printCallback: _quiet));
       });
-      await p.withSession((d) async {
+      await p.withSessionWith((d) async {
         await _tried(t, () => d.loadSession(idle));
         await _run(t, () => d.feedRun('x', printCallback: _quiet));
       });
@@ -1003,7 +1192,7 @@ _probes = {
     (p) async {
       late Uint8List idle;
       late Uint8List suspended;
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         await _run(t, () => a.feedRun('x = 1', printCallback: _quiet));
         idle = await a.dump();
         final x = await _step(t, () => a.feedStart('f(1)'));
@@ -1013,13 +1202,13 @@ _probes = {
           () => _fn(x).resume(const ExternalReturnValue(MontyInt(1))),
         );
       });
-      await p.withSession((b) async {
+      await p.withSessionWith((b) async {
         await _run(t, () => b.feedRun('1', printCallback: _quiet));
         await _tried(t, () => b.loadSession(idle));
         await _tried(t, () => b.loadSnapshot(suspended));
         await _run(t, () => b.feedRun('2', printCallback: _quiet));
       });
-      await p.withSession((c) async {
+      await p.withSessionWith((c) async {
         await _tried(t, () => c.loadSession(idle));
         await _tried(t, () => c.loadSession(idle));
         await _tried(t, () => c.loadSnapshot(suspended));
@@ -1029,11 +1218,11 @@ _probes = {
   ),
   'sp_load_garbage': (t, shared, _) async {
     final garbage = Uint8List.fromList('garbage'.codeUnits);
-    await shared.withSession((a) async {
+    await shared.withSessionWith((a) async {
       await _tried(t, () => a.loadSession(garbage));
       await _run(t, () => a.feedRun('6', printCallback: _quiet));
     });
-    await shared.withSession((b) async {
+    await shared.withSessionWith((b) async {
       await _tried(t, () => b.loadSnapshot(garbage));
       await _run(t, () => b.feedRun('7', printCallback: _quiet));
     });
@@ -1045,26 +1234,26 @@ _probes = {
       late Uint8List checked;
       late Uint8List plain;
       late Uint8List state;
-      await p.withSession((a) async {
+      await p.withSessionWith((a) async {
         await _run(t, () => a.feedRun('x: int = 1\nx', printCallback: _quiet));
         checked = await a.dump();
-      }, options: const SessionConfig(typeCheck: true));
-      await p.withSession((b) async {
+      }, const SessionConfig(typeCheck: true));
+      await p.withSessionWith((b) async {
         await _tried(t, () => b.loadSession(checked));
         await _typed(
           t,
           () => b.feedRun('y: int = "a"\ny', printCallback: _quiet),
         );
       });
-      await p.withSession((c) async => plain = await c.dump());
-      await p.withSession((d) async {
+      await p.withSessionWith((c) async => plain = await c.dump());
+      await p.withSessionWith((d) async {
         await _tried(t, () => d.loadSession(plain));
         await _typed(
           t,
           () => d.feedRun('z: int = "a"\nz', printCallback: _quiet),
         );
-      }, options: const SessionConfig(typeCheck: true));
-      await p.withSession(
+      }, const SessionConfig(typeCheck: true));
+      await p.withSessionWith(
         (e) async {
           final x = await _step(
             t,
@@ -1072,15 +1261,15 @@ _probes = {
           );
           state = await _fn(x).dump();
         },
-        options: const SessionConfig(limits: ResourceLimits(maxSuspensions: 5)),
+        const SessionConfig(limits: ResourceLimits(maxSuspensions: 5)),
       );
       for (final ceiling in <int?>[null, 0, 1, 2]) {
-        await p.withSession(
+        await p.withSessionWith(
           (g) async {
             var r = await _tried(t, () => g.loadSnapshot(state));
             _announced(t, r);
             for (var n = 0; n < 3; n++) {
-              if (r == null || r is SessionComplete) break;
+              if (r == null || r is MontyComplete) break;
               final next = r;
               r = await _step(
                 t,
@@ -1095,14 +1284,14 @@ _probes = {
               ),
             );
           },
-          options: ceiling == null
+          ceiling == null
               ? const SessionConfig()
               : SessionConfig(limits: ResourceLimits(maxSuspensions: ceiling)),
         );
       }
     },
   ),
-  'sp_print_raise_suspended': (t, shared, _) => shared.withSession(
+  'sp_print_raise_suspended': (t, shared, _) => shared.withSessionWith(
     (s) async {
       await _failed(
         t,
@@ -1124,7 +1313,7 @@ _probes = {
       );
       await _run(t, () => s.feedRun('8'));
     },
-    options: const SessionConfig(printFlushInterval: Duration.zero),
+    const SessionConfig(printFlushInterval: Duration.zero),
   ),
 };
 
@@ -1132,7 +1321,7 @@ _probes = {
 Future<void> _withPool(
   StartPool start,
   PoolOptions options,
-  Future<void> Function(MontyPool pool) body,
+  Future<void> Function(Monty pool) body,
 ) async {
   final pool = await start(options);
   try {
@@ -1167,7 +1356,7 @@ Future<MontySnapshot> _resumeAuto(MontySnapshot snapshot) => switch (snapshot) {
   FunctionSnapshot() => snapshot.resumeAuto(),
   FutureSnapshot() => snapshot.resumeAuto(),
   NameLookupSnapshot() => snapshot.resumeAuto(),
-  SessionComplete() => throw StateError('the feed is complete'),
+  MontyComplete() => throw StateError('the feed is complete'),
 };
 
 /// Records what the last event refused, as run_probes.py's `refusal_kind`:
@@ -1211,7 +1400,7 @@ Future<MontySnapshot?> _step(
 
 /// run_probes.py's `ev_of`.
 _Ev _evOf(MontySnapshot snapshot) => switch (snapshot) {
-  SessionComplete(:final output) => {
+  MontyComplete(:final output) => {
     'ev': 'complete',
     'value': identityCanon(output),
   },
@@ -1261,8 +1450,8 @@ Future<void> _run(_T t, Future<MontyValue> Function() feed) async {
 }
 
 /// Records whether [pool] grants a checkout (returned at once) or refuses.
-Future<void> _enter(_T t, MontyPool pool) async {
-  final PoolSession s;
+Future<void> _enter(_T t, Monty pool) async {
+  final MontySession s;
   try {
     s = await pool.checkout();
   } on Object catch (e) {
@@ -1276,9 +1465,9 @@ Future<void> _enter(_T t, MontyPool pool) async {
 
 /// Records whether [pool] grants a checkout (returned at once), or refuses
 /// it after waiting its 300 ms timeout (between 250 ms and 2 s).
-Future<void> _enterTimed(_T t, MontyPool pool) async {
+Future<void> _enterTimed(_T t, Monty pool) async {
   final clock = Stopwatch()..start();
-  final PoolSession s;
+  final MontySession s;
   try {
     s = await pool.checkout();
   } on Object {
@@ -1398,4 +1587,85 @@ _Ev _errEv(MontyExceptionValue exception, List<Frame> traceback) {
         ? null
         : {'line': last.line, 'function': last.functionName},
   };
+}
+
+/// Two feeds of [_wCode] against one mount with a 10-byte write budget;
+/// records feed [feed]'s value.
+Future<void> _writeBudget(_T t, Monty shared, int feed) =>
+    shared.withSession((s) async {
+      final h = memoryMountedOsHandler(
+        mounts: const [MountDir(virtualPath: '/data', writeBytesLimit: 10)],
+        files: [],
+      );
+      for (final n in [1, 2]) {
+        if (n == feed) {
+          await _run(t, () => s.feedRun(_wCode, os: h));
+        } else {
+          await s.feedRun(_wCode, os: h);
+        }
+      }
+    });
+
+const _wCode = """
+from pathlib import Path
+res = []
+for n in ('a', 'b'):
+    try:
+        Path('/data/' + n + '.txt').write_text('xxxxxx')
+        res.append('ok')
+    except Exception as e:
+        res.append(type(e).__name__ + ': ' + str(e))
+res""";
+
+const _mCode = """
+from pathlib import Path
+res = []
+def w(n):
+    try:
+        Path('/data/' + n).write_text('y' * 300)
+        res.append('ok')
+    except Exception as e:
+        res.append(type(e).__name__ + ': ' + str(e))
+w('a')
+w('b')
+w('c')
+w('d')
+try:
+    Path('/data/a').unlink()
+    res.append('unlinked')
+except Exception as e:
+    res.append(type(e).__name__ + ': ' + str(e))
+w('d')
+res""";
+
+/// A file whose content the host serves and records.
+final class _CbFile implements VfsFile {
+  _CbFile(this.path, this.t, this.store);
+
+  @override
+  String path;
+  final _T t;
+  final Map<String, String> store;
+
+  @override
+  int get permissions => 0x1A4;
+
+  @override
+  VfsContent get content {
+    t.add({'ev': 'host', 'op': 'read', 'path': path});
+
+    return VfsText(store['v']!);
+  }
+
+  @override
+  set content(VfsContent value) {
+    t.add({
+      'ev': 'host',
+      'op': 'write',
+      'path': path,
+      'type': value.runtimeType.toString(),
+      'text': value.text,
+    });
+    store['v'] = 'callback-saw:${value.text}';
+  }
 }

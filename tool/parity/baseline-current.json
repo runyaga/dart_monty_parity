@@ -1,32 +1,31 @@
 {
- "subject": "dart_monty_core main (0.23.1: 5873ec5 plus the stabilisation changes); rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
- "note": "`rows`, `cells`, `present` and `totals` are as measured on arm64. `platforms` gives each architecture's PRESENT totals and the rows and cases whose result differs there, with the cause.",
+ "subject": "dart_monty_core at the flip (core #253, head afa20f9: Monty / MontySession on the worker, 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 36,
-  "dart2js": 35,
-  "dart2wasm": 35
+  "vm": 69,
+  "dart2js": 69,
+  "dart2wasm": 69
  },
  "totals": {
   "vm": {
-   "ABSENT": 71,
-   "PRESENT": 36,
-   "PARTIAL": 51,
+   "ABSENT": 47,
+   "PRESENT": 69,
+   "PARTIAL": 42,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 66,
-   "PRESENT": 35,
-   "PARTIAL": 52,
+   "ABSENT": 43,
+   "PRESENT": 69,
+   "PARTIAL": 44,
    "N/A": 27,
-   "REFUSED": 5
+   "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 66,
-   "PRESENT": 35,
-   "PARTIAL": 52,
+   "ABSENT": 43,
+   "PRESENT": 69,
+   "PARTIAL": 44,
    "N/A": 27,
-   "REFUSED": 5
+   "REFUSED": 2
   }
  },
  "platforms": {
@@ -34,9 +33,9 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 36,
-    "dart2js": 35,
-    "dart2wasm": 35
+    "vm": 69,
+    "dart2js": 69,
+    "dart2wasm": 69
    }
   },
   "x86_64": {
@@ -48,9 +47,9 @@
     }
    },
    "present": {
-    "vm": 35,
-    "dart2js": 35,
-    "dart2wasm": 34
+    "vm": 68,
+    "dart2js": 69,
+    "dart2wasm": 68
    },
    "cause": {
     "float_values": "float(\"nan\") reaches the host with the sign bit set on x86_64 (fff8000000000000; upstream 7ff8000000000000): a core defect, recorded as measured"
@@ -173,6 +172,557 @@
    "to": "DIVERGE",
    "rule": "oracle",
    "why": "the oracle now tracks a class proxy's identity: the one instance the case returns twice is one object upstream, written once and then referenced; core's public API returns two equal copies. The row stays PARTIAL"
+  },
+  {
+   "row": "time_duration_zone_values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "exception_value_conversion",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "builtin_type_function_handles",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "lossy_output_placeholders",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "boundary_value_graph",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_eager_attributes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_instance_value",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_class_value",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_constructor_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_value_conversion_hook",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "async_os_sleep",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "os_calendar_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "os_entropy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "os_clock_reads",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "os_sync_sleep",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "working_directory",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "clock_source",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "sleep_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "random_initialization",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "configure_os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "raised_exception",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "traceback_frames",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "recursion_limit",
+   "backends": [
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "REFUSED",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "resource_failure_semantics",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": [
+    "PARTIAL",
+    "REFUSED"
+   ],
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "feed_execution_limit",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": [
+    "ABSENT",
+    "REFUSED"
+   ],
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_suspension_budget",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "host_sleep_budget",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "source_nesting_guard",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "exception_taxonomy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "structured_exception_data",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "process_clock_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "interactive_continuation",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PRESENT",
+   "to": "ABSENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the flip deletes MontyRepl (core #253); Monty / MontySession has no continuation-mode detection, so api_interactive_continuation records `absent`"
+  },
+  {
+   "row": "external_call_result",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "external_call_arguments",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "register_pending_future",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "eager_coroutine_completion",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "run_progress_variants",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "resume_os_call",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "snapshot_auto_resume",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "feed_repl_suspendable",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "suspension_source_position",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+  },
+  {
+   "row": "abandon_suspended_feed",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
   }
  ],
  "rows": {
@@ -232,9 +782,9 @@
    "dart2wasm": "PRESENT"
   },
   "time_duration_zone_values": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "path_value_conversion": {
    "vm": "PRESENT",
@@ -242,34 +792,34 @@
    "dart2wasm": "PRESENT"
   },
   "exception_value_conversion": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "builtin_type_function_handles": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "lossy_output_placeholders": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "boundary_value_graph": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_eager_attributes": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
-  },
-  "host_instance_value": {
    "vm": "PARTIAL",
    "dart2js": "PARTIAL",
    "dart2wasm": "PARTIAL"
+  },
+  "host_instance_value": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_class_type_proxy": {
    "vm": "ABSENT",
@@ -282,19 +832,19 @@
    "dart2wasm": "ABSENT"
   },
   "host_class_value": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_constructor_policy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "host_value_conversion_hook": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "os_path_predicates": {
    "vm": "PRESENT",
@@ -382,54 +932,54 @@
    "dart2wasm": "ABSENT"
   },
   "async_os_sleep": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "os_calendar_calls": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "os_entropy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "os_clock_reads": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "os_sync_sleep": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "working_directory": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "clock_source": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "sleep_policy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "random_initialization": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "configure_os_policy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "file_mode_inspection": {
    "vm": "PARTIAL",
@@ -442,29 +992,29 @@
    "dart2wasm": "PARTIAL"
   },
   "raised_exception": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "traceback_frames": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "recursion_limit": {
    "vm": "PRESENT",
-   "dart2js": "REFUSED",
-   "dart2wasm": "REFUSED"
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "resource_failure_semantics": {
-   "vm": "PARTIAL",
-   "dart2js": "REFUSED",
-   "dart2wasm": "REFUSED"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "feed_execution_limit": {
-   "vm": "ABSENT",
-   "dart2js": "REFUSED",
-   "dart2wasm": "REFUSED"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "turn_execution_limit": {
    "vm": "ABSENT",
@@ -472,19 +1022,19 @@
    "dart2wasm": "ABSENT"
   },
   "host_suspension_budget": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_sleep_budget": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "source_nesting_guard": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "garbage_collection_interval": {
    "vm": "ABSENT",
@@ -492,19 +1042,19 @@
    "dart2wasm": "ABSENT"
   },
   "exception_taxonomy": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "structured_exception_data": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "process_clock_policy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "run_blocking": {
    "vm": "PRESENT",
@@ -517,9 +1067,9 @@
    "dart2wasm": "PRESENT"
   },
   "interactive_continuation": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "create_repl": {
    "vm": "PRESENT",
@@ -532,19 +1082,19 @@
    "dart2wasm": "PRESENT"
   },
   "external_call_result": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "external_call_arguments": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "register_pending_future": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "mount_write_budget": {
    "vm": "PARTIAL",
@@ -587,19 +1137,19 @@
    "dart2wasm": "ABSENT"
   },
   "eager_coroutine_completion": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "run_progress_variants": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "resume_os_call": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "resolve_pending_futures": {
    "vm": "PRESENT",
@@ -612,24 +1162,24 @@
    "dart2wasm": "PRESENT"
   },
   "snapshot_auto_resume": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "feed_repl_suspendable": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "suspension_source_position": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "abandon_suspended_feed": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   }
  },
  "cells": {
@@ -842,9 +1392,9 @@
     "dart2wasm": "MATCH"
    },
    "i_time": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "i_timedelta": {
     "vm": "MATCH",
@@ -857,9 +1407,9 @@
     "dart2wasm": "MATCH"
    },
    "r_time_td_tz": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "path_value_conversion": {
@@ -881,14 +1431,14 @@
   },
   "exception_value_conversion": {
    "v_exception": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "i_exception": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_exception": {
     "vm": "MATCH",
@@ -913,85 +1463,85 @@
     "dart2wasm": "MATCH"
    },
    "i_type": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_type": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_b05_std_type_proxy": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "lossy_output_placeholders": {
    "v_cycle_list": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "v_cycle_dict": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_cycle": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "v_function": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_function": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "v_repr": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "boundary_value_graph": {
    "v_alias": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "v_alias_nested": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "i_alias": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "i_alias_is": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_alias": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_eager_attributes": {
    "h_x01_eager_all": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x02_eager_list": {
     "vm": "DIVERGE",
@@ -1011,9 +1561,9 @@
     "dart2wasm": "MATCH"
    },
    "h_b02_proxy_nested": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_b03_dataclass_proxy": {
     "vm": "MATCH",
@@ -1021,16 +1571,16 @@
     "dart2wasm": "MATCH"
    },
    "h_x17_return_original": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_class_type_proxy": {
    "h_b07_restore_type_proxy": {
-    "vm": "REFUSED",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_b08_restore_class_eager": {
     "vm": "DIVERGE",
@@ -1047,16 +1597,16 @@
   },
   "host_class_value": {
    "h_x09_class_init": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_constructor_policy": {
    "h_x09_class_init": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x11_class_methods": {
     "vm": "DIVERGE",
@@ -1066,9 +1616,9 @@
   },
   "host_value_conversion_hook": {
    "h_x13_convert_upper": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x14_convert_redact": {
     "vm": "DIVERGE",
@@ -1076,9 +1626,9 @@
     "dart2wasm": "DIVERGE"
    },
    "h_x15_convert_wrap": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_path_predicates": {
@@ -1797,84 +2347,84 @@
   },
   "async_os_sleep": {
    "b14_async_sleep_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_async_sleep_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_calendar_calls": {
    "b14_date_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_callhost_tz": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_entropy": {
    "b14_urandom": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_urandom_unhandled": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_clock_reads": {
    "b14_time_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_time_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_sync_sleep": {
    "b14_sleep_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_zero": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_negative": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l16_sync_sleep": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "working_directory": {
    "b14_getcwd_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_getcwd_set": {
     "vm": "DIVERGE",
@@ -1899,9 +2449,9 @@
   },
   "clock_source": {
    "b14_date_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_fixed": {
     "vm": "DIVERGE",
@@ -1909,145 +2459,145 @@
     "dart2wasm": "DIVERGE"
    },
    "b14_date_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "sleep_policy": {
    "b14_sleep_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_zero": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "random_initialization": {
    "x25_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_no_draw": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_reseed_first": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_short": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_unhandled": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_wrongtype": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_default_unseeded_instance": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_bigint": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_bytes": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_float": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_int": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_negint": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_str": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_vs_sandbox_seed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_system": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "configure_os_policy": {
    "c02_process_time_zero": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "c03_process_time_elapsed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "c04_elapsed_excludes_sleep": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l17_sleep_zero_policy": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_async_sleep_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_callhost_all_unhandled": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_callhost_tz": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_fixed": {
     "vm": "DIVERGE",
@@ -2055,84 +2605,84 @@
     "dart2wasm": "DIVERGE"
    },
    "b14_sleep_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_zero": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_time_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_no_draw": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_reseed_first": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_short": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_unhandled": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_callhost_wrongtype": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_bigint": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_bytes": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_float": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_int": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_negint": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_str": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x25_seed_vs_sandbox_seed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "file_mode_inspection": {
@@ -2387,8 +2937,8 @@
    },
    "b12_assert__fail": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_assert__fail_msg": {
     "vm": "MATCH",
@@ -2421,14 +2971,14 @@
     "dart2wasm": "MATCH"
    },
    "b12_builtin__exec_import_traceback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_builtin__exec_traceback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_builtin__filter_not_iterable": {
     "vm": "MATCH",
@@ -2447,8 +2997,8 @@
    },
    "b12_builtin__next_stop_iteration": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_builtin__print_invalid_kwarg": {
     "vm": "MATCH",
@@ -2511,14 +3061,14 @@
     "dart2wasm": "MATCH"
    },
    "b12_complex__error_ordering": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_complex__error_zero_power": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_comprehension__unbound_local": {
     "vm": "MATCH",
@@ -2592,8 +3142,8 @@
    },
    "b12_execute_raise__error_no_args": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_execute_raise__error_string_arg": {
     "vm": "MATCH",
@@ -2607,8 +3157,8 @@
    },
    "b12_execute_raise__error_type": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_execute_raise__raise_instance_via_var": {
     "vm": "MATCH",
@@ -2632,13 +3182,13 @@
    },
    "b12_execute_raise__raise_type_direct": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_execute_raise__raise_type_via_var": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_fstring__error_eq_align_on_str": {
     "vm": "MATCH",
@@ -2746,9 +3296,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_function__err_repeated_keyword": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_function__err_too_many_posonly": {
     "vm": "MATCH",
@@ -2836,9 +3386,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_generic_alias__not_subscriptable": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_global__error_assigned_before": {
     "vm": "MATCH",
@@ -3186,29 +3736,29 @@
     "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_call_chained": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_call_in_expr": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_call_in_function": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_call_with_args": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_global": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_name_error__undefined_global_in_function": {
     "vm": "MATCH",
@@ -3396,9 +3946,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_traceback__undefined_call": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_traceback__undefined_raise": {
     "vm": "MATCH",
@@ -3581,9 +4131,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_unpack__err_multiple_starred": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_unpack__non_sequence": {
     "vm": "MATCH",
@@ -3758,9 +4308,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_assert__fail_msg": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_attr__get_int_error": {
     "vm": "MATCH",
@@ -3788,14 +4338,14 @@
     "dart2wasm": "MATCH"
    },
    "b12_builtin__exec_import_traceback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_builtin__exec_traceback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_builtin__filter_not_iterable": {
     "vm": "MATCH",
@@ -3878,14 +4428,14 @@
     "dart2wasm": "MATCH"
    },
    "b12_complex__error_ordering": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_complex__error_zero_power": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_comprehension__unbound_local": {
     "vm": "MATCH",
@@ -4203,9 +4753,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_generic_alias__not_subscriptable": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_global__error_assigned_before": {
     "vm": "MATCH",
@@ -4948,9 +5498,9 @@
     "dart2wasm": "MATCH"
    },
    "b12_unpack__err_multiple_starred": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b12_unpack__non_sequence": {
     "vm": "MATCH",
@@ -5006,47 +5556,47 @@
   "recursion_limit": {
    "l01_recursion": {
     "vm": "MATCH",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l02_recursion_catch": {
     "vm": "MATCH",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "resource_failure_semantics": {
    "l02_recursion_catch": {
     "vm": "MATCH",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l07_feed_timeout_catch": {
-    "vm": "DIVERGE",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l05_mem_catch": {
     "vm": "MATCH",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "feed_execution_limit": {
    "l06_feed_timeout": {
-    "vm": "DIVERGE",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l08_feed_reset_after_timeout": {
-    "vm": "DIVERGE",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l09_feed_reset_sum": {
-    "vm": "DIVERGE",
-    "dart2js": "REFUSED",
-    "dart2wasm": "REFUSED"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "turn_execution_limit": {
@@ -5058,48 +5608,48 @@
   },
   "host_suspension_budget": {
    "l12_suspensions": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l13_suspension_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_sleep_budget": {
    "l14_total_sleep": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "l15_total_sleep_catch": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "source_nesting_guard": {
    "n01_unary_chain": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "n02_bracket_chain": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "n03_power_chain": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "n04_lambda_chain": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "n05_moderate": {
     "vm": "MATCH",
@@ -5121,43 +5671,43 @@
     "dart2wasm": "MATCH"
    },
    "t02_host_raise_subclass": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "structured_exception_data": {
    "t03_unicode_uncaught": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "t05_json_uncaught": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "process_clock_policy": {
    "c01_process_time_default": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "c02_process_time_zero": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "c03_process_time_elapsed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "c04_elapsed_excludes_sleep": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "run_blocking": {
@@ -5176,9 +5726,9 @@
   },
   "interactive_continuation": {
    "api_interactive_continuation": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "create_repl": {
@@ -5202,9 +5752,9 @@
     "dart2wasm": "MATCH"
    },
    "api_ext_result_callback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "external_call_arguments": {
@@ -5214,9 +5764,9 @@
     "dart2wasm": "MATCH"
    },
    "api_ext_args_identity": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "register_pending_future": {
@@ -5226,9 +5776,9 @@
     "dart2wasm": "MATCH"
    },
    "api_futures_error": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "mount_write_budget": {
@@ -5294,9 +5844,9 @@
   },
   "eager_coroutine_completion": {
    "api_eager_coroutine": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "run_progress_variants": {
@@ -5316,9 +5866,9 @@
     "dart2wasm": "MATCH"
    },
    "k_name": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "resume_os_call": {
@@ -5328,9 +5878,9 @@
     "dart2wasm": "MATCH"
    },
    "k_os_not_handled": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "resolve_pending_futures": {
@@ -5354,9 +5904,9 @@
   },
   "snapshot_auto_resume": {
    "auto_interleave": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "feed_repl_suspendable": {
@@ -5366,33 +5916,33 @@
     "dart2wasm": "MATCH"
    },
    "inputs_typed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "suspension_source_position": {
    "pos_utf8": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "pos_earlier_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "pos_eval": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "abandon_suspended_feed": {
    "abandon": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   }
  }
