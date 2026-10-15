@@ -11,9 +11,7 @@
    }
   },
   {
-   "ev": "refused",
-   "cls": "MontyTypingError",
-   "msg": "error[invalid-assignment]: Object of type `Literal[\"a\"]` is not assignable to `int`\n --> main.py:1:10\n  |\n1 | y: int = \"a\"\n  |    ---   ^^^ Incompatible value of type `Literal[\"a\"]`\n  |    |\n  |    Declared type\n2 | y\n  |\n\n"
+   "ev": "typing_error"
   },
   {
    "ev": "complete",

@@ -1047,7 +1047,7 @@ _probes = {
       }, options: const SessionConfig(typeCheck: true));
       await p.withSession((b) async {
         await _tried(t, () => b.loadSession(checked));
-        await _run(
+        await _typed(
           t,
           () => b.feedRun('y: int = "a"\ny', printCallback: _quiet),
         );
@@ -1055,7 +1055,7 @@ _probes = {
       await p.withSession((c) async => plain = await c.dump());
       await p.withSession((d) async {
         await _tried(t, () => d.loadSession(plain));
-        await _run(
+        await _typed(
           t,
           () => d.feedRun('z: int = "a"\nz', printCallback: _quiet),
         );
@@ -1337,6 +1337,22 @@ Future<void> _failed(_T t, Future<MontyValue> Function() feed) async {
 /// run_probes.py's `dumped`: a dump gave opaque, non-empty bytes.
 void _dumped(_T t, Uint8List state) =>
     t.add({'ev': 'dumped', 'bytes': state.isNotEmpty});
+
+/// run_probes.py's `typed`: a feed's value as `complete`, a type-check
+/// rejection as `typing_error`, any other error as [_run] records it.
+Future<void> _typed(_T t, Future<MontyValue> Function() feed) async {
+  try {
+    t.add({'ev': 'complete', 'value': identityCanon(await feed())});
+  } on MontyTypingError {
+    t.add({'ev': 'typing_error'});
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on MontySyntaxError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on Object catch (e) {
+    t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+  }
+}
 
 /// run_probes.py's `announced`: the suspension a load re-announced.
 void _announced(_T t, MontySnapshot? s) =>

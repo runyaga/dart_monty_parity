@@ -675,6 +675,17 @@ def tried(t: T, fn: Any) -> Any:
         return None
 
 
+def typed(t: T, fn: Any) -> None:
+    """A feed's value as `complete`, a type-check rejection as `typing_error` (a distinct event, so a session that
+    merely refuses to run cannot pass for one that type-checks), any other error as usual."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except pm.MontyTypingError:
+        t.add({'ev': 'typing_error'})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+
+
 def announced(t: T, s: Any) -> None:
     """Records the suspension a load re-announced, or that none came."""
     t.add(ev_of(s) if s is not None else {'ev': 'none'})
@@ -827,12 +838,12 @@ def sp_load_adopts_dump(pool: pm.Monty, t: T) -> None:
         checked = a.dump()
     with pool.checkout() as b:
         tried(t, lambda: b.load_session(checked))
-        run(t, lambda: b.feed_run('y: int = "a"\ny'))
+        typed(t, lambda: b.feed_run('y: int = "a"\ny'))
     with pool.checkout() as c:
         plain = c.dump()
     with pool.checkout(type_check=True) as d:
         tried(t, lambda: d.load_session(plain))
-        run(t, lambda: d.feed_run('z: int = "a"\nz'))
+        typed(t, lambda: d.feed_run('z: int = "a"\nz'))
     with pool.checkout(limits={'max_suspensions': 5}) as e:
         x = t.step(lambda: e.feed_start('f(1)\nf(2)\nf(3)\n"done"'))
         state = x.dump()
