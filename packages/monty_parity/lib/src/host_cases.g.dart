@@ -745,6 +745,64 @@ const hostCasesJson = r'''
   ]
  },
  {
+  "id": "convert_lazy",
+  "objects": {
+   "o": [
+    1,
+    2
+   ]
+  },
+  "wrappers": [
+   [
+    "T",
+    [
+     "T",
+     {
+      "eager": null,
+      "lazy": null,
+      "methods": null
+     },
+     {
+      "convert": "redact"
+     }
+    ]
+   ],
+   [
+    "p",
+    [
+     "I",
+     "o",
+     {
+      "eager": null,
+      "lazy": [
+       "x",
+       "y",
+       "norm1"
+      ],
+      "methods": null
+     },
+     {
+      "class": "T"
+     }
+    ]
+   ]
+  ],
+  "steps": [
+   [
+    "open",
+    "s"
+   ],
+   [
+    "feed",
+    "s",
+    "(p.x, p.y, p.norm1)",
+    [
+     "p"
+    ]
+   ]
+  ]
+ },
+ {
   "id": "identity",
   "objects": {
    "o": [

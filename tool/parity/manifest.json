@@ -1,10 +1,10 @@
 {
  "generator": {
-  "sha256": "bc26b20015e6088d2c346231240a178675c2874018f2a1f7d3f3f621e83bf8f6",
+  "sha256": "a6a5f24547683e1575d85a2ce038ae395afdf73a4747da59531980ae186a49e9",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
    "tool/parity/oracle/run_probes.py": "7ebf770b6542febf2fc26dd85c8ba8ad585d9d19f11c35ae973a533f9c9789b6",
-   "tool/parity/oracle/host_cases.py": "f7356c37983880dc94ec5be7723a07bb9323f0a01401248debb9d12583332488",
+   "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -5028,6 +5028,11 @@
   "sp_host_convert_hook": {
    "outcomes": {
     "ref-py": "4a28058652b93f33571dc44c74aa2efb4a55de7bd2b972a2d9a9acc21d401190"
+   }
+  },
+  "sp_host_convert_lazy": {
+   "outcomes": {
+    "ref-py": "160a197cec362c4794eeb7c9aae48623ef17b03e80462c80568c439ee742046d"
    }
   },
   "sp_host_eager_all": {

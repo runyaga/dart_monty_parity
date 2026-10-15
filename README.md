@@ -118,7 +118,7 @@ OS-call or future suspension, from the snapshot or from the session while it wai
 of dump, bytes the worker cannot load, the dump's own type-check setting and the suspension ceiling on a load, all
 against upstream's outcomes.
 
-`C1-6` is landed: host objects through the session (`sp_host_*`, eighteen probes of core's host-object cases on one host
+`C1-6` is landed: host objects through the session (`sp_host_*`, nineteen probes of core's host-object cases on one host
 class: eager and lazy attributes, methods, class values, construction, the conversion hook, identity, re-wrapping, the
 id alias refusal and the empty registry after a load; and the `h_*` cases whose `host` block the session engine now
 builds from core's wrappers: `host_world.dart`). Rows `host_eager_attributes`, `host_instance_value`,

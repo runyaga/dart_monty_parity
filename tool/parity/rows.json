@@ -512,10 +512,11 @@
      "h_x15_convert_wrap"
     ],
     "probes": [
-     "sp_host_convert_hook"
+     "sp_host_convert_hook",
+     "sp_host_convert_lazy"
     ],
     "not_run": {
-     "h_x14_convert_redact": "a lazy read logs its `lookup` before its `convert` upstream; core logs only the `convert` (a lazy read reaches no host code before the policy check)"
+     "h_x14_convert_redact": "a lazy read logs its `lookup` before its `convert` upstream; core logs only the `convert` (a lazy read reaches no host code before the policy check); `sp_host_convert_lazy` measures the conversion of a lazy read by outcome"
     }
    }
   },

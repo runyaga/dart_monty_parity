@@ -182,6 +182,13 @@ CASES: list[tuple[str, dict[str, Any], list[Any], list[list[Any]]]] = [
         ['open', 's'],
         feed('s', '(p.x, p.y, p.norm1)', ['p']),
     ]),
+    ('convert_lazy', {'o': [1, 2]}, [
+        ['T', ['T', P(), {'convert': 'redact'}]],
+        ['p', ['I', 'o', P(lazy=['x', 'y', 'norm1']), {'class': 'T'}]],
+    ], [
+        ['open', 's'],
+        feed('s', '(p.x, p.y, p.norm1)', ['p']),
+    ]),
     ('identity', {'o': [1, 2], 'o2': [5, 6]}, [
         ['p', ['I', 'o', P(eager='all'), {}]],
         ['q', ['I', 'o2', P(), {}]],
