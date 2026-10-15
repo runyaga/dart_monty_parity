@@ -660,6 +660,194 @@ def refusal_kind(t: T) -> None:
     t.add({'ev': 'refusal_kind', 'kind': kind})
 
 
+# ------------------------------------------------------- dump and load (C1-5)
+def dumped(t: T, state: Any) -> None:
+    """Records that a dump gave opaque, non-empty bytes (the bytes themselves are the worker's)."""
+    t.add({'ev': 'dumped', 'bytes': isinstance(state, bytes) and len(state) > 0})
+
+
+def tried(t: T, fn: Any) -> Any:
+    """Calls fn and records a refusal; returns its result, or None when it was refused."""
+    try:
+        return fn()
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+        return None
+
+
+def announced(t: T, s: Any) -> None:
+    """Records the suspension a load re-announced, or that none came."""
+    t.add(ev_of(s) if s is not None else {'ev': 'none'})
+
+
+@probe
+def sp_dump_idle(pool: pm.Monty, t: T) -> None:
+    """Between feeds: globals and functions travel; a never-fed session dumps; the source runs on; one dump
+    loaded twice gives two independent sessions."""
+    with pool.checkout() as a:
+        run(t, lambda: a.feed_run('x = [1]\ndef inc(n):\n    return n + x[0]\nx'))
+        b = a.dump()
+        dumped(t, b)
+        run(t, lambda: a.feed_run('x.append(2)\nx'))
+    with pool.checkout() as c:
+        tried(t, lambda: c.load_session(b))
+        run(t, lambda: c.feed_run('x.append(3)\n[inc(10), x]'))
+    with pool.checkout() as d:
+        tried(t, lambda: d.load_session(b))
+        run(t, lambda: d.feed_run('[inc(10), x]'))
+    with pool.checkout() as e:
+        fresh = e.dump()
+        dumped(t, fresh)
+    with pool.checkout() as f:
+        tried(t, lambda: f.load_session(fresh))
+        run(t, lambda: f.feed_run('2 + 2'))
+
+
+@probe
+def sp_dump_suspended_function(pool: pm.Monty, t: T) -> None:
+    """A suspension's dump (the snapshot's, or the session's while it waits) restores the same call on a fresh
+    session; the original is unspent and runs on."""
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start("y = 5\nv = f(1, k='é')\n[v, y]"))
+        snap = x.dump()
+        dumped(t, snap)
+        mid = a.dump()
+        dumped(t, mid)
+        with pool.checkout() as b:
+            r = tried(t, lambda: b.load_snapshot(snap))
+            announced(t, r)
+            t.step(lambda: r.resume({'return_value': 37}))
+            run(t, lambda: b.feed_run('[v, y]'))
+        with pool.checkout() as c:
+            r2 = tried(t, lambda: c.load_snapshot(mid))
+            announced(t, r2)
+            t.step(lambda: r2.resume({'return_value': 38}))
+        t.step(lambda: x.resume({'return_value': 1}))
+        run(t, lambda: a.feed_run('[v, y]'))
+
+
+@probe
+def sp_dump_suspended_kinds(pool: pm.Monty, t: T) -> None:
+    """A name lookup, an OS call and a future suspension each dump, load and resume on a fresh session."""
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start('total = 1 + missing\ntotal'))
+        state = x.dump()
+        with pool.checkout() as b:
+            r = tried(t, lambda: b.load_snapshot(state))
+            announced(t, r)
+            t.step(lambda: r.resume(value=41))
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start("from pathlib import Path\nPath('/x').read_text()"))
+        state = x.dump()
+        with pool.checkout() as b:
+            r = tried(t, lambda: b.load_snapshot(state))
+            announced(t, r)
+            t.step(lambda: r.resume({'return_value': 'hi'}))
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start('async def m():\n    a = await f(1)\n    return a + 1\nawait m()'))
+        y = t.step(lambda: x.resume({'future': ...}))
+        state = y.dump()
+        with pool.checkout() as b:
+            r = tried(t, lambda: b.load_snapshot(state))
+            announced(t, r)
+            t.step(lambda: r.resume({r.pending_call_ids[0]: {'return_value': 9}}))
+
+
+@probe
+def sp_dump_spent_snapshot(pool: pm.Monty, t: T) -> None:
+    """A snapshot that has been resumed cannot be dumped; a finished session dumps nothing."""
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start('f(1)'))
+        t.step(lambda: x.resume({'return_value': 3}))
+        tried(t, lambda: x.dump())
+        refusal_kind(t)
+    with pool.checkout() as b:
+        b.feed_run('1')
+    tried(t, lambda: b.dump())
+
+
+@probe
+def sp_load_wrong_kind(pool: pm.Monty, t: T) -> None:
+    """A dump of the other kind is refused, and the session that took it is finished; the dump itself is intact."""
+    with pool.checkout() as a:
+        x = t.step(lambda: a.feed_start('f(1)'))
+        suspended = x.dump()
+        t.step(lambda: x.resume({'return_value': 1}))
+        run(t, lambda: a.feed_run('x = 1'))
+        idle = a.dump()
+    with pool.checkout() as b:
+        tried(t, lambda: b.load_session(suspended))
+        run(t, lambda: b.feed_run('1'))
+    with pool.checkout() as c:
+        tried(t, lambda: c.load_snapshot(idle))
+        run(t, lambda: c.feed_run('1'))
+    with pool.checkout() as d:
+        tried(t, lambda: d.load_session(idle))
+        run(t, lambda: d.feed_run('x'))
+
+
+@probe
+def sp_load_not_fresh(pool: pm.Monty, t: T) -> None:
+    """A load is only for a session never fed or loaded: after a feed or an earlier load it is refused."""
+    with pool.checkout() as a:
+        run(t, lambda: a.feed_run('x = 1'))
+        idle = a.dump()
+        x = t.step(lambda: a.feed_start('f(1)'))
+        suspended = x.dump()
+        t.step(lambda: x.resume({'return_value': 1}))
+    with pool.checkout() as b:
+        run(t, lambda: b.feed_run('1'))
+        tried(t, lambda: b.load_session(idle))
+        tried(t, lambda: b.load_snapshot(suspended))
+        run(t, lambda: b.feed_run('2'))
+    with pool.checkout() as c:
+        tried(t, lambda: c.load_session(idle))
+        tried(t, lambda: c.load_session(idle))
+        tried(t, lambda: c.load_snapshot(suspended))
+        run(t, lambda: c.feed_run('x'))
+
+
+@probe
+def sp_load_garbage(pool: pm.Monty, t: T) -> None:
+    """Bytes the worker cannot load are refused, and the session runs on."""
+    with pool.checkout() as a:
+        tried(t, lambda: a.load_session(b'garbage'))
+        run(t, lambda: a.feed_run('6'))
+    with pool.checkout() as b:
+        tried(t, lambda: b.load_snapshot(b'garbage'))
+        run(t, lambda: b.feed_run('7'))
+
+
+@probe
+def sp_load_adopts_dump(pool: pm.Monty, t: T) -> None:
+    """A load adopts the dump's own type-check setting, and its suspension limit stands under the loader's as a
+    ceiling: the count restarts and the re-announced call counts."""
+    with pool.checkout(type_check=True) as a:
+        run(t, lambda: a.feed_run('x: int = 1\nx'))
+        checked = a.dump()
+    with pool.checkout() as b:
+        tried(t, lambda: b.load_session(checked))
+        run(t, lambda: b.feed_run('y: int = "a"\ny'))
+    with pool.checkout() as c:
+        plain = c.dump()
+    with pool.checkout(type_check=True) as d:
+        tried(t, lambda: d.load_session(plain))
+        run(t, lambda: d.feed_run('z: int = "a"\nz'))
+    with pool.checkout(limits={'max_suspensions': 5}) as e:
+        x = t.step(lambda: e.feed_start('f(1)\nf(2)\nf(3)\n"done"'))
+        state = x.dump()
+    for ceiling in (None, 0, 1, 2):
+        kw = {} if ceiling is None else {'limits': {'max_suspensions': ceiling}}
+        with pool.checkout(**kw) as g:
+            r = tried(t, lambda: g.load_snapshot(state))
+            announced(t, r)
+            for n in range(3):
+                if r is None or not hasattr(r, 'resume'):
+                    break
+                r = t.step(lambda: r.resume({'return_value': n}))
+            run(t, lambda: g.feed_run('import time\ntime.sleep(0)\n7'))
+
+
 # ------------------------------------------------------- API surface
 @probe
 def api_run_blocking(pool: pm.Monty, t: T) -> None:

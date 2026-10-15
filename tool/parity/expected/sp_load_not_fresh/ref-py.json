@@ -1,0 +1,79 @@
+{
+ "probe": "sp_load_not_fresh",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "none"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-1>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "load_session / load_snapshot is only valid on a fresh session, before any feed_run / feed_start / load_session / load_snapshot"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "load_session / load_snapshot is only valid on a fresh session, before any feed_run / feed_start / load_session / load_snapshot"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "load_session / load_snapshot is only valid on a fresh session, before any feed_run / feed_start / load_session / load_snapshot"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "load_session / load_snapshot is only valid on a fresh session, before any feed_run / feed_start / load_session / load_snapshot"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  }
+ ],
+ "runner_error": null
+}

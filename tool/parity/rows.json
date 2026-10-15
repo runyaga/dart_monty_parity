@@ -2235,6 +2235,38 @@
     ]
    }
   },
+  "dump_session": {
+   "session": {
+    "probes": [
+     "sp_dump_idle",
+     "sp_dump_spent_snapshot"
+    ]
+   }
+  },
+  "load_session": {
+   "session": {
+    "probes": [
+     "sp_load_not_fresh",
+     "sp_load_adopts_dump"
+    ]
+   }
+  },
+  "snapshot_state_kinds": {
+   "session": {
+    "probes": [
+     "sp_dump_suspended_function",
+     "sp_dump_suspended_kinds"
+    ]
+   }
+  },
+  "snapshot_errors": {
+   "session": {
+    "probes": [
+     "sp_load_wrong_kind",
+     "sp_load_garbage"
+    ]
+   }
+  },
   "pool_capacity": {
    "session": {
     "probes": [

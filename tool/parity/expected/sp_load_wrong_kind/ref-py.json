@@ -1,0 +1,65 @@
+{
+ "probe": "sp_load_wrong_kind",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "none"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this dump is a suspended snapshot — use load_snapshot() to resume it"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this dump is an idle session — use load_session() to restore it"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  }
+ ],
+ "runner_error": null
+}

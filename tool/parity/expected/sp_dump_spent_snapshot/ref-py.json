@@ -1,0 +1,46 @@
+{
+ "probe": "sp_dump_spent_snapshot",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "cannot dump a snapshot that has already been resumed"
+  },
+  {
+   "ev": "refusal_kind",
+   "kind": "spent"
+  },
+  {
+   "ev": "refused",
+   "cls": "RuntimeError",
+   "msg": "this checkout has already been finished"
+  }
+ ],
+ "runner_error": null
+}
