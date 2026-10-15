@@ -2468,6 +2468,11 @@
     "diverge": [
      "w_graph_cycle_ret"
     ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_resume_unconvertible"
+    ]
    }
   },
   "timezone_database": {
@@ -2565,6 +2570,27 @@
    "core_also": {
     "probes": [
      "api_reset_type_checker"
+    ]
+   }
+  },
+  "type_check_stubs": {
+   "core_also": {
+    "probes": [
+     "sp_type_check_stubs"
+    ]
+   }
+  },
+  "type_check_diagnostics": {
+   "core_also": {
+    "probes": [
+     "sp_type_check_diagnostics"
+    ]
+   }
+  },
+  "skip_feed_type_check": {
+   "core_also": {
+    "probes": [
+     "sp_type_check_skip_feed"
     ]
    }
   }

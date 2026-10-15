@@ -1,0 +1,54 @@
+{
+ "probe": "sp_type_check_skip_feed",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "a"
+   }
+  },
+  {
+   "ev": "typing_error",
+   "display": "error[invalid-assignment]: Object of type `Literal[\"b\"]` is not assignable to `int`\n --> main.py:1:10\n  |\n1 | y: int = \"b\"\n  |    ---   ^^^ Incompatible value of type `Literal[\"b\"]`\n  |    |\n  |    Declared type\n2 | y\n  |\n\n"
+  },
+  {
+   "ev": "typing_error",
+   "display": "error[unresolved-reference]: Name `x` used when not defined\n --> main.py:1:1\n  |\n1 | x + \"!\"\n  | ^\n\n"
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "str",
+     "v": "d"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-1>",
+    "start": 13,
+    "end": 17
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "c"
+   }
+  }
+ ],
+ "runner_error": null
+}

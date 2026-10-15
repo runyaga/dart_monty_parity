@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "a6a5f24547683e1575d85a2ce038ae395afdf73a4747da59531980ae186a49e9",
+  "sha256": "64276a1a50a5562c7045ecbbec6096554f4406353f513dabc546b8f0085a39e4",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "7ebf770b6542febf2fc26dd85c8ba8ad585d9d19f11c35ae973a533f9c9789b6",
+   "tool/parity/oracle/run_probes.py": "fa3afd4c30dd55de2008f470fba795bfe1fef4fc3157a6a359cea1b349cbae68",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -5190,6 +5190,21 @@
   "sp_sync_sleep_waited": {
    "outcomes": {
     "ref-py": "aa3a53504d7f0f5cd4db032b5fe148dc3a12b21c909e8ccac590197098542b4b"
+   }
+  },
+  "sp_type_check_diagnostics": {
+   "outcomes": {
+    "ref-py": "2d55054c8d81c0e45567ad2764c192efa2faebbf767bdf393c08967ac9ecda04"
+   }
+  },
+  "sp_type_check_skip_feed": {
+   "outcomes": {
+    "ref-py": "33e888a34e8151ab627cf92e0c47e1a1932ff040497a62e2f70ba74657509ddb"
+   }
+  },
+  "sp_type_check_stubs": {
+   "outcomes": {
+    "ref-py": "140102b9d6955e946697cb138a229b4331c2245326938accfc8f5bc7fb5bbb25"
    }
   }
  }
