@@ -32,7 +32,7 @@ TGT1 = {
     'snapshot_trust': ('owner-exception', 'N/A', BACKENDS),
     'resource_accounting': ('owner-exception', 'N/A', BACKENDS),
     'resource_failure_disposal': ('owner-exception', 'N/A', BACKENDS),
-    'exception_value_conversion': ('owner-exception', 'PARTIAL', BACKENDS),
+    'exception_value_conversion': ('owner-exception', 'PARTIAL', BACKENDS),  # cells: w_exc_unicode_version_in
     'file_handle_value_conversion': ('browser-divergence', 'PARTIAL', ['dart2js', 'dart2wasm']),
     'worker_diagnostics': ('browser-divergence', 'ABSENT', ['dart2js', 'dart2wasm']),
 }
@@ -208,6 +208,44 @@ class TargetTest(unittest.TestCase):
         t['rows'][cid]['allowed']['status'] = 'ABSENT'
         _, fails = score.score_target(t, st, BACKENDS)
         self.assertEqual(fails, 1)  # vm PARTIAL*
+
+    def test_an_allowed_entry_scoped_to_cells_needs_every_other_cell_to_match(self) -> None:
+        """`cells` scopes an entry: the row passes as allowed only if each of its other cells MATCHes."""
+        from unittest import mock  # noqa: PLC0415
+
+        t = copy.deepcopy(self.target)
+        cid = 'file_handle_value_conversion'
+        self.assertEqual(t['rows'][cid]['allowed']['cells'], ['x8handle_pos2p53', 'x8handle_pos2p63m1'])
+        core = {cid: {b: {'cells': [{'case': 'x8handle_pos5', 'class': 'MATCH'},
+                                    {'case': 'x8handle_pos2p53', 'class': 'DIVERGE'},
+                                    {'case': 'x8handle_pos2p63m1', 'class': 'DIVERGE'}]} for b in BACKENDS}}
+        rules = {cid: {}}
+        mine = lambda m: {k: v for k, v in m.items() if k[0] == cid}  # noqa: E731 (the other scoped rows have no cells here)
+        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: [{'case': 'w_fh_in', 'class': 'MATCH'}]):
+            misses = mine(score.scope_misses(t, core, rules, BACKENDS, Path('/nonexistent'), Path('/nonexistent'), {}))
+        self.assertEqual(misses, {})
+        st = self.statuses()
+        st[cid] = {b: ('PARTIAL', 'measured') for b in BACKENDS}
+        _, fails = score.score_target(t, st, BACKENDS, misses)
+        self.assertEqual(fails, 1)  # vm only: the entry is for the web
+        # The negative control: one more diverging cell outside the scope (x8hostmode_neg) fails the entry.
+        for b in BACKENDS:
+            core[cid][b]['cells'].append({'case': 'x8hostmode_neg', 'class': 'DIVERGE'})
+        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: [{'case': 'w_fh_in', 'class': 'NO-ORACLE'}]):
+            misses = mine(score.scope_misses(t, core, rules, BACKENDS, Path('/nonexistent'), Path('/nonexistent'), {}))
+        self.assertEqual(misses, {(cid, 'dart2js'): ['x8hostmode_neg'], (cid, 'dart2wasm'): ['x8hostmode_neg']})
+        lines, fails = score.score_target(t, st, BACKENDS, misses)
+        self.assertEqual(fails, 3)
+        self.assertIn('PARTIAL FAIL (outside the allowed cells: x8hostmode_neg)', '\n'.join(lines))
+        # A scoped cell the row does not have is a miss too (a renamed case cannot widen the scope silently).
+        core[cid]['dart2js']['cells'] = [c for c in core[cid]['dart2js']['cells'] if c['case'] != 'x8handle_pos2p63m1']
+        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: []):
+            misses = score.scope_misses(t, core, rules, BACKENDS, None, Path('/nonexistent'), {})
+        self.assertIn('x8handle_pos2p63m1 (no such cell)', misses[(cid, 'dart2js')])
+        # The shape: `cells`, when present, is a non-empty list of names.
+        for bad in ([], 'x8handle_pos2p53', [1]):
+            t['rows'][cid]['allowed']['cells'] = bad
+            self.assertIn('`cells`', '\n'.join(score.target_problems(t, self.in_scope)), bad)
 
     def test_a_forced_mismatch_is_shown_and_counted(self) -> None:
         st = self.statuses()

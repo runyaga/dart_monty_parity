@@ -594,8 +594,12 @@
      "dart2js",
      "dart2wasm"
     ],
-    "reason": "On the web the worker is a wasm32 build, whose usize is 32 bits: f.read() converts the handle's position with usize::try_from (upstream crates/monty/src/types/file.rs, compute_slice), so a host-returned position of 2^32 or more raises OverflowError 'Python int too large to convert to C ssize_t' (x8handle_pos2p53, x8handle_pos2p63m1), where the 64-bit python oracle reads b''. Upstream's own wasm32 build does the same: @pydantic/monty 1.1.0's `@pydantic/monty/wasm` under Node raises that OverflowError for positions 2^32, 2^40 and 2^53-1 and reads [5..9] at 5 and b'' at 2^31 and 2^31-1, while its native build reads b'' at every one of them. The handle itself crosses intact (worker w_fh_large_in MATCH). Scoped to the large-position cases; the row is a target on the VM, where it must be PRESENT.",
-    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); measured against upstream's wasm32 build"
+    "reason": "On the web the worker is a wasm32 build, whose usize is 32 bits: f.read() converts the handle's position with usize::try_from (upstream crates/monty/src/types/file.rs, compute_slice), so a host-returned position of 2^32 or more raises OverflowError 'Python int too large to convert to C ssize_t' (x8handle_pos2p53, x8handle_pos2p63m1), where the 64-bit python oracle reads b''. Upstream's own wasm32 build does the same: @pydantic/monty 1.1.0's `@pydantic/monty/wasm` under Node raises that OverflowError for positions 2^32, 2^40 and 2^53-1 and reads [5..9] at 5 and b'' at 2^31 and 2^31-1, while its native build reads b'' at every one of them. The handle itself crosses intact (worker w_fh_large_in MATCH). Scoped (`cells`) to the two large-position cases: every other cell of the row must MATCH on the web; the row is a target on the VM, where it must be PRESENT.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); measured against upstream's wasm32 build",
+    "cells": [
+     "x8handle_pos2p53",
+     "x8handle_pos2p63m1"
+    ]
    }
   },
   "exception_value_conversion": {
@@ -613,8 +617,11 @@
      "dart2js",
      "dart2wasm"
     ],
-    "reason": "Every exception-value cell matches the oracle except the recorded worker divergence w_exc_unicode_version_in (rows.json `unicode-version`): a KeyError argument with an unpaired surrogate goes out as its repr, and core's repr keeps U+1FAE9, which its Unicode tables assign, where the oracle's CPython 3.12 (Unicode 15.0) escapes it. The difference is the oracle interpreter's Unicode version, not upstream Monty's behaviour. Revisit when the oracle moves to a CPython with Unicode 15.1 or later: the case then matches and this entry goes stale.",
-    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag)"
+    "reason": "Every exception-value cell matches the oracle except the recorded worker divergence w_exc_unicode_version_in (rows.json `unicode-version`): a KeyError argument with an unpaired surrogate goes out as its repr, and core's repr keeps U+1FAE9, which its Unicode tables assign, where the oracle's CPython 3.12 (Unicode 15.0) escapes it. The difference is the oracle interpreter's Unicode version, not upstream Monty's behaviour. U+1FAE9 was assigned in Unicode 16.0, so revisit when the oracle moves to a CPython whose Unicode tables are 16.0 or later: the case then matches and this entry goes stale. Scoped (`cells`) to that case: every other cell of the row must MATCH.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag)",
+    "cells": [
+     "w_exc_unicode_version_in"
+    ]
    }
   },
   "builtin_type_function_handles": {
