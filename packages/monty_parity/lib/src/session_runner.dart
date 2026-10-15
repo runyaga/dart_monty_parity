@@ -180,12 +180,12 @@ final class _PoolCaseSession implements CaseSession {
   /// (feed_start, then one resume per suspension;
   /// tool/parity/oracle/run_cases.py): a method
   /// call or a lazy attribute of a host object is logged where it suspends,
-  /// before the policy check, as the oracle's wrapper logs it. Every
-  /// suspension then resumes as `feedRun` would (`resumeAuto`, which consults
-  /// [onOsCall] for an OS call core does not service itself). An OS answer
-  /// core refuses to build ([HostAnswerRefused]) is the host's refusal, as
-  /// upstream's host raises it before resuming: the feed's result is
-  /// discarded, the session replaced, and the refusal thrown.
+  /// before the policy check, as the oracle's wrapper logs it. An OS call's
+  /// answer is built from [onOsCall] before the suspension resumes: one core
+  /// refuses to build ([HostAnswerRefused]) is the host's refusal, as
+  /// upstream's host raises it, so the suspension is abandoned unresumed, the
+  /// session replaced and the refusal thrown. Every suspension then resumes
+  /// as `feedRun` would (`resumeAuto`).
   @override
   Future<MontyValue> feed(
     String code, {
@@ -203,41 +203,19 @@ final class _PoolCaseSession implements CaseSession {
         printCallback: onPrint,
       );
     }
-    HostAnswerRefused? refused;
-    Future<MontySnapshot> guarded(
-      Future<MontySnapshot> Function() resume,
-    ) async {
-      try {
-        final next = await resume();
-        if (refused case final r?) throw r;
+    // An OS answer built before its suspension resumes, replayed to core.
+    MontyValue Function()? built;
+    var snap = await _session.feedStart(
+      code,
+      inputs: inputs,
+      externalLookup: hostFunctions(externals),
+      os: (name, args, kwargs) {
+        final answer = built;
+        built = null;
 
-        return next;
-      } on Object {
-        if (refused case final r?) {
-          await _replace();
-          throw r;
-        }
-        rethrow;
-      }
-    }
-
-    var snap = await guarded(
-      () => _session.feedStart(
-        code,
-        inputs: inputs,
-        externalLookup: hostFunctions(externals),
-        // Synchronous, as the handler is: core reads a not-handled throw
-        // from the call itself.
-        os: (name, args, kwargs) {
-          try {
-            return onOsCall(name, args, kwargs);
-          } on HostAnswerRefused catch (e) {
-            refused = e;
-            rethrow;
-          }
-        },
-        printCallback: onPrint,
-      ),
+        return answer == null ? onOsCall(name, args, kwargs) : answer();
+      },
+      printCallback: onPrint,
     );
     while (true) {
       switch (snap) {
@@ -245,16 +223,29 @@ final class _PoolCaseSession implements CaseSession {
           return output;
         case NameLookupSnapshot(:final String objectId, :final variableName):
           _host.logObjectLookup(objectId, variableName);
-          snap = await guarded(snap.resumeAuto);
+          snap = await _host.resuming<MontySnapshot>(objectId, snap.resumeAuto);
         case FunctionSnapshot(:final String objectId, :final functionName):
           _host.logObjectCall(objectId, functionName);
-          snap = await guarded(snap.resumeAuto);
+          snap = await _host.resuming<MontySnapshot>(objectId, snap.resumeAuto);
+        case final FunctionSnapshot f when f.isOsFunction:
+          // The answer first: a value core refuses to build is the host's
+          // refusal, and the suspension is abandoned unresumed.
+          try {
+            final value = await onOsCall(f.functionName, f.args, f.kwargs);
+            built = () => value;
+          } on HostAnswerRefused {
+            await _replace();
+            rethrow;
+          } on Object catch (e, st) {
+            built = () => Error.throwWithStackTrace(e, st);
+          }
+          snap = await f.resumeAuto();
         case final FunctionSnapshot f:
-          snap = await guarded(f.resumeAuto);
+          snap = await f.resumeAuto();
         case final NameLookupSnapshot n:
-          snap = await guarded(n.resumeAuto);
+          snap = await n.resumeAuto();
         case final FutureSnapshot f:
-          snap = await guarded(f.resumeAuto);
+          snap = await f.resumeAuto();
       }
     }
   }

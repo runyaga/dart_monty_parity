@@ -79,10 +79,15 @@ final class SessionHost extends CoreHost {
   void logObjectLookup(String objectId, String name) =>
       _logReceiver('lookup', objectId, name);
 
-  /// The entry whose receiver is an id this host has not seen yet: an object
-  /// the sandbox built, whose wrapper core made. The first host access that
-  /// sees the receiver itself (its method body, its field) fills it in.
-  ({Map<String, Object?> entry, String id})? _unresolved;
+  /// Entries whose receiver is an id this host has not seen yet (an object
+  /// the sandbox built, whose wrapper core made), by that id. They are filled
+  /// in when that object's own suspension resumes into host code that sees
+  /// it (its method body, its field); a refused access runs none, so its
+  /// entries wait for a later one.
+  final _unresolved = <String, List<Map<String, Object?>>>{};
+
+  /// The unresolved id whose suspension is resuming, if any.
+  String? _resumingId;
 
   void _logReceiver(String op, String objectId, String name) {
     final known =
@@ -97,15 +102,29 @@ final class SessionHost extends CoreHost {
       'name': name,
     };
     log.add(entry);
-    _unresolved = known == null ? (entry: entry, id: objectId) : null;
+    if (known == null) (_unresolved[objectId] ??= []).add(entry);
   }
 
-  /// [o] is the receiver of the entry still unresolved, if there is one.
+  @override
+  Future<T> resuming<T>(String objectId, Future<T> Function() resume) async {
+    _resumingId = _unresolved.containsKey(objectId) ? objectId : null;
+    try {
+      return await resume();
+    } finally {
+      _resumingId = null;
+    }
+  }
+
+  /// [o] is the receiver of the suspension resuming, if its id is unresolved.
   void _resolve(HostObj o) {
-    final pending = _unresolved;
-    if (pending == null) return;
-    _unresolved = null;
-    pending.entry['obj'] = _receivers[pending.id] = _canon(o);
+    final id = _resumingId;
+    if (id == null) return;
+    _resumingId = null;
+    final canon = _receivers[id] = _canon(o);
+    for (final entry
+        in _unresolved.remove(id) ?? const <Map<String, Object?>>[]) {
+      entry['obj'] = canon;
+    }
   }
 
   /// The label of the host object [v] decodes to, if it is one.

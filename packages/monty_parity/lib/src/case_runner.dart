@@ -400,6 +400,11 @@ class CoreHost {
   /// does.
   void logObjectLookup(String objectId, String name) {}
 
+  /// Runs [resume], the resumption of the suspension on host object or class
+  /// [objectId], so a host access it makes can be told whose it is.
+  Future<T> resuming<T>(String objectId, Future<T> Function() resume) =>
+      resume();
+
   /// Throws [Inexpressible] for [what] when [publicOnly]; else null.
   Never? internal(String what) => publicOnly
       ? throw Inexpressible("core's public API cannot construct $what")

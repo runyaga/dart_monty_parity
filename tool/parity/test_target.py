@@ -377,6 +377,12 @@ class TargetTest(unittest.TestCase):
             self.assertEqual(got({**host, 'exception': {**host['exception'], 'traceback': [frame]}})[0], 'DIVERGE')
             self.assertEqual(got({**host, 'thrown': 'MontyRuntimeError'})[0], 'DIVERGE')
             self.assertEqual(got({**host, 'value': {'t': 'int', 'v': '1'}})[0], 'DIVERGE')
+            # An oracle step with a traceback is no host refusal: nothing is normalized.
+            ref_tb = copy.deepcopy(ref)
+            ref_tb['steps'][0]['exception']['traceback'] = [frame]
+            with mock.patch.object(score, 'load', lambda path: ref_tb if path.name == 'ref-py.json'
+                                   else json.loads(path.read_text()) if path.exists() else None):
+                self.assertEqual(got(host)[0], 'DIVERGE')
             # Unmarked, the same step diverges on type and message.
             with mock.patch.object(score, 'local_refusal_cases', frozenset):
                 self.assertEqual(got(host)[0], 'DIVERGE')

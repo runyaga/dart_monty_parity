@@ -282,15 +282,17 @@ local_refusal_cases = functools.cache(_marked_local_refusal)
 
 def with_host_refusals(ref: dict, got: dict) -> dict:
     """[got] with each step the Dart host refused where the oracle's host refused too given the oracle's
-    exception: both hosts raised before anything resumed (`thrown: host`, or a `HOST:` type; no traceback, no
-    value), each in its own host language's words, as the worker engine's `local_refusal` rule matches them."""
+    type and message: both hosts raised before anything resumed (`thrown: host`, or a `HOST:` type; no traceback
+    and no value on either side), each in its own host language's words, as the worker engine's `local_refusal` rule matches them."""
     steps = []
     for n, g in enumerate(got.get('steps') or []):
         r = (ref.get('steps') or [])[n] if n < len(ref.get('steps') or []) else {}
         r_exc, g_exc = r.get('exception') or {}, g.get('exception') or {}
-        upstream_host = r.get('thrown') == 'host' or str(r_exc.get('type', '')).startswith('HOST:')
+        upstream_host = ((r.get('thrown') == 'host' or str(r_exc.get('type', '')).startswith('HOST:'))
+                         and r_exc.get('traceback') == [] and r.get('value') is None)
         dart_host = g.get('thrown') == 'host' and g_exc.get('traceback') == [] and g.get('value') is None
-        steps.append({**g, 'exception': r_exc} if upstream_host and dart_host and r.get('value') is None else g)
+        steps.append({**g, 'exception': {**g_exc, 'type': r_exc.get('type'), 'message': r_exc.get('message')}}
+                     if upstream_host and dart_host else g)
     return {**got, 'steps': steps}
 
 
