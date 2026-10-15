@@ -1,5 +1,5 @@
 {
- "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends. An `allowed` entry may carry `evidenced_by`: the core tests that evidence a row no binding exposes ({path, tests, exercises}; score.py --target --core DIR checks each file and test title exists). The owner's P-t decisions (PT1, 2026-10-14) are applied: J08's host_callback_authority and cpython_value_adapter are allowed N/A; J10's four protocol rows are allowed N/A, each evidenced by core's worker-channel tests and E0; protocol_value_arena, unstable_graph_access and timezone_database are mapped to worker cases (tool/parity/rows.json, `worker`).",
+ "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends. An `allowed` entry may carry `evidenced_by`: the core tests that evidence a row no binding exposes ({path, tests, exercises}; score.py --target --core DIR checks each file and test title exists). The owner's P-t decisions (PT1, 2026-10-14) are applied: J08's host_callback_authority and cpython_value_adapter are allowed N/A; J10's four protocol rows are allowed N/A, each evidenced by core's worker-channel tests and E0; protocol_value_arena, unstable_graph_access and timezone_database are mapped to worker cases (tool/parity/rows.json, `worker`). The owner's TGT1 decisions (2026-10-15) are applied: snapshot_trust, resource_accounting and resource_failure_disposal are allowed N/A (PT1 J01 keeps them IN), exception_value_conversion is allowed PARTIAL for the oracle's Unicode version, and file_handle_value_conversion (large positions on the wasm32 worker) and worker_diagnostics (no process id in a Web Worker) are browser divergences on dart2js and dart2wasm.",
  "clauses": {
   "A1": {
    "text": "area filesystem: mounts and the memory filesystem are M6 (C0a)",
@@ -586,7 +586,21 @@
    ],
    "judgement": [
     "J02"
-   ]
+   ],
+   "allowed": {
+    "kind": "browser-divergence",
+    "status": "PARTIAL",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "On the web the worker is a wasm32 build, whose usize is 32 bits: f.read() converts the handle's position with usize::try_from (upstream crates/monty/src/types/file.rs, compute_slice), so a host-returned position of 2^32 or more raises OverflowError 'Python int too large to convert to C ssize_t' (x8handle_pos2p53, x8handle_pos2p63m1), where the 64-bit python oracle reads b''. Upstream's own wasm32 build does the same: @pydantic/monty 1.1.0's `@pydantic/monty/wasm` under Node raises that OverflowError for positions 2^32, 2^40 and 2^53-1 and reads [5..9] at 5 and b'' at 2^31 and 2^31-1, while its native build reads b'' at every one of them. The handle itself crosses intact (worker w_fh_large_in MATCH). Scoped (`cells`) to the two large-position cases: every other cell of the row must MATCH on the web; the row is a target on the VM, where it must be PRESENT.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); measured against upstream's wasm32 build",
+    "cells": [
+     "x8handle_pos2p53",
+     "x8handle_pos2p63m1"
+    ]
+   }
   },
   "exception_value_conversion": {
    "area": "values",
@@ -594,7 +608,21 @@
     "vm",
     "dart2js",
     "dart2wasm"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "PARTIAL",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Every exception-value cell matches the oracle except the recorded worker divergence w_exc_unicode_version_in (rows.json `unicode-version`): a KeyError argument with an unpaired surrogate goes out as its repr, and core's repr keeps U+1FAE9, which its Unicode tables assign, where the oracle's CPython 3.12 (Unicode 15.0) escapes it. The difference is the oracle interpreter's Unicode version, not upstream Monty's behaviour. U+1FAE9 was assigned in Unicode 16.0, so revisit when the oracle moves to a CPython whose Unicode tables are 16.0 or later: the case then matches and this entry goes stale. Scoped (`cells`) to that case: every other cell of the row must MATCH.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag)",
+    "cells": [
+     "w_exc_unicode_version_in"
+    ]
+   }
   },
   "builtin_type_function_handles": {
    "area": "values",
@@ -779,7 +807,37 @@
    ],
    "judgement": [
     "J01"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Upstream's accounting accessors (ResourceTracker::{feed_elapsed,turn_elapsed}, MontyRepl::tracker) are Rust-only: neither binding exposes them, and the python oracle records per-feed usage as unsupported. Core exposes no accessor either. Core evidences the accounting it does perform: the suspension and sleep budgets it counts in Dart, the counts a loaded dump restarts under the session's limits (restored-budget metadata), and the real worker failing a feed past the suspension budget. The row stays a target per PT1 J01; nothing measures it, so the entry accepts its recorded baseline status only until a cell measures it.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); PT1 J01 keeps the row IN",
+    "evidenced_by": [
+     {
+      "path": "test/unit/worker/session_budget_test.dart",
+      "tests": [
+       "the suspension past the limit aborts; the count is kept",
+       "a sleep is charged at most the system-sleep maximum",
+       "the counts restart; the limits stay as ceilings",
+       "a smaller suspension limit is adopted; a larger one is not"
+      ],
+      "exercises": "the Dart session-budget accounting: the suspension count and its abort, the sleep charge, a loaded dump restarting the counts under the limits as ceilings, a reply only tightening a limit (unit tests, no worker)"
+     },
+     {
+      "path": "test/integration/worker/pool_session_io_test.dart",
+      "tests": [
+       "past 1000 host calls the feed fails in the sandbox"
+      ],
+      "exercises": "the real worker (VM) through a pool session: past 1000 suspensions the counted budget aborts the feed with a RuntimeError in the sandbox, and the session runs on"
+     }
+    ]
+   }
   },
   "dump_session": {
    "area": "snapshots",
@@ -836,7 +894,18 @@
    ],
    "judgement": [
     "J01"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "A documented non-guarantee: decoding a dump does not authenticate or fully validate it (upstream docs/snapshots.md:23; crates/monty-js/ts/session.ts:303-308). There is no behaviour for a binding to perform or a parity case to observe. Core states the same contract on MontySession.loadSession and loadSnapshot (the bytes are trusted; loading does not validate them). As with host_callback_authority (PT1 J08), the row is N/A. The row stays a target per PT1 J01; nothing measures it, so the entry accepts its recorded baseline status only until a cell measures it.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); PT1 J01 keeps the row IN"
+   }
   },
   "snapshot_host_state_reconstruction": {
    "area": "snapshots",
@@ -1002,7 +1071,26 @@
     "vm",
     "dart2js",
     "dart2wasm"
-   ]
+   ],
+   "allowed": {
+    "kind": "browser-divergence",
+    "status": "ABSENT",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Upstream's only binding-visible diagnostic is the worker's process id (python Checkout.worker_pid; js MontySession.workerPid), and a Web Worker has no process id: upstream's own wasm transport reports none (crates/monty-js/ts/worker/transport.ts:75, workerPid null), and core's MontySession.workerPid is null on the web by contract. Scoped to worker_pid on dart2js and dart2wasm; the row is a target on the VM, where it must be PRESENT.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag)",
+    "evidenced_by": [
+     {
+      "path": "test/unit/worker/pool_session_web_test.dart",
+      "tests": [
+       "workerPid is null: a Web Worker has no process id ($_backend)"
+      ],
+      "exercises": "a pool session on dart2js and dart2wasm reports no worker process id"
+     }
+    ]
+   }
   },
   "checkout_acquisition_timeout": {
    "area": "pool",
@@ -1373,7 +1461,48 @@
    ],
    "judgement": [
     "J01"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "N/A",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "An embedder obligation upstream documents (docs/security.md:444: after a resource failure the affected session is discarded, because heap and reference-count guarantees are lost), with no binding cite and no python-binding behaviour a parity case could compare. Core discharges it itself: a worker that dies of memory exhaustion (exit 65) finishes the session with a MemoryError and its slot serves a fresh worker; a worker that dies while idle is discarded; a deadline kill is followed by a fresh worker. The row stays a target per PT1 J01; nothing measures it, so the entry accepts its recorded baseline status only until a cell measures it.",
+    "cite": "owner decision TGT1, 2026-10-15 (the M3 target at the tag); PT1 J01 keeps the row IN",
+    "evidenced_by": [
+     {
+      "path": "test/unit/worker/pool_session_test.dart",
+      "tests": [
+       "exit 65 is a MemoryError and finishes the session"
+      ],
+      "exercises": "a scripted worker dying of memory exhaustion: the feed raises MemoryError, the session is finished, and the freed slot serves a fresh worker (pure Dart: VM, dart2js, dart2wasm)"
+     },
+     {
+      "path": "test/integration/worker/pool_session_io_test.dart",
+      "tests": [
+       "exit 65 is a MemoryError that finishes the session"
+      ],
+      "exercises": "the same through a real worker process (VM): exit 65 is a MemoryError and the session is finished"
+     },
+     {
+      "path": "test/unit/worker/worker_pool_test.dart",
+      "tests": [
+       "discards a worker that died while idle"
+      ],
+      "exercises": "the pool discards a worker that died between checkouts instead of handing it out again"
+     },
+     {
+      "path": "test/integration/worker/real_worker_test.dart",
+      "tests": [
+       "deadline kill, then a fresh worker answers"
+      ],
+      "exercises": "the real worker executable (VM): after a host-side kill a fresh worker answers"
+     }
+    ]
+   }
   },
   "host_callback_authority": {
    "area": "security",

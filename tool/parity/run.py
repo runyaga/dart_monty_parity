@@ -23,8 +23,8 @@ process under a 60 s cap, so a run that never ends cannot hang the batch; a
 case that hits the cap records `runner_error`. Its default cases are every
 suite except the worker engine's own (e0 and worker_values) and the display
 suite, whose expected renderings dart_monty_core's own tests check. The same
-run then runs the core rows' probes (rows.json `probes`) and writes
-OUTDIR/<probe>/core-<backend>.json.
+run then runs the core rows' probes (rows.json `probes`, and the target-only
+`core_also` `probes`) and writes OUTDIR/<probe>/core-<backend>.json.
 
 --engine worker drives core's internal monty-proto worker (each case on a
 fresh worker: a process on the VM, a Web Worker in the browser) and writes
@@ -102,8 +102,10 @@ def case_files(globs: list[str], engine: str) -> list[Path]:
 
 
 def core_probes() -> list[str]:
-    """Every probe of the core rows (rows.json `probes`)."""
-    return sorted({p for rule in json.loads(RULES.read_text())['rows'].values() for p in rule.get('probes') or []})
+    """Every probe of the core rows (rows.json `probes`), and every probe a row maps for the M3 target
+    (`core_also` `probes`), which may own a probe no row's `probes` names."""
+    rows = json.loads(RULES.read_text())['rows'].values()
+    return sorted({p for rule in rows for p in [*(rule.get('probes') or []), *(rule.get('core_also') or {}).get('probes', [])]})
 
 
 def gate_ids(kind: str) -> set[str]:

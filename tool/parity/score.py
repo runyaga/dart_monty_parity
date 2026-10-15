@@ -61,7 +61,9 @@ manifest rows M3 owns, each with the backends it must be PRESENT on (the rest of
 each under a named clause). It prints per-area PRESENT counts and every target row's status per backend
 (a row with no parity case keeps its recorded baseline status, marked `*`). A row passes on a backend when it
 is PRESENT there or an `allowed` entry (an approved exception: its kind, status, backends, reason and cite)
-accepts the status it has; an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
+accepts the status it has (an N/A entry accepts the recorded status of a row nothing measures there, and no
+measured status but N/A; an entry with `cells` accepts the row only while every cell of the row outside those
+cases and probes MATCHes); an `allowed` entry on a backend where the row is now PRESENT is STALE and fails.
 Shown, never fatal, unless --assert-target (landed at the cut). The file itself must be consistent (every
 in-scope row in exactly one list, a valid `allowed`): an inconsistent file exits non-zero either way.
 An `allowed` entry may carry `evidenced_by` ({path, tests, exercises} items: the core tests that evidence a
@@ -546,16 +548,18 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
                     problems.append(f'{row}: `session_also` {kind} {cid} is in no gated row\'s session rule')
                 elif cid in (rule.get('session') or {}).get(kind, []):
                     problems.append(f'{row}: `session_also` {kind} {cid} is already in the row\'s own session rule')
-    # The session engine's own cases and probes exist only for the gate: each must be in a gated rule.
+    # The session engine's own cases and probes exist only for the gate: each must be in a gated rule. A session
+    # probe a row maps for the M3 target (`core_also`) is run by the core engine, so it may sit there instead.
     suite, prefix = 'session', 'sp_'
+    core_owned = {p for rule in rows.values() for p in (rule.get('core_also') or {}).get('probes', [])}
     gated = {kind: {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
              for kind in ('cases', 'probes')}
     for cid, c in cases.items():
         if c['_suite'] == suite and cid not in gated['cases']:
             problems.append(f'{cid}: in tool/parity/cases/{suite} but in no gated session rule')
     for d in sorted(expected.glob(f'{prefix}*')):
-        if d.name not in gated['probes']:
-            problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule')
+        if d.name not in gated['probes'] and d.name not in core_owned:
+            problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule or `core_also`')
     for stage in set(gate.get('core_gated', {})) - set(stages):
         problems.append(f'`core_gated` names {stage!r}, which is not in `stages`')
     d1 = gate.get('d1_rules')
@@ -716,6 +720,9 @@ def target_problems(target: dict, in_scope: dict[str, dict]) -> list[str]:
         covered = set(allowed.get('backends') or [])
         if not allowed.get('status') or not covered or covered - set(row.get('backends', [])):
             problems.append(f'{cid}: `allowed` needs the status it accepts and a non-empty list of backends the row is a target on')
+        scope = allowed.get('cells')
+        if scope is not None and (not isinstance(scope, list) or not scope or not all(isinstance(c, str) and c for c in scope)):
+            problems.append(f'{cid}: `allowed` `cells`, when present, must be a non-empty list of case or probe names')
         problems += evidence_shape_problems(cid, allowed)
     return problems
 
@@ -872,9 +879,9 @@ def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dic
 
 def core_also_problems(rows: dict, cases: dict[str, dict], expected: Path) -> list[str]:
     """What is wrong with the rows' `core_also` mappings: each names core-engine cases (a case file the core run
-    runs) and probes (a core probe some row's `probes` owns, so the core run runs it), never its own."""
+    runs) and probes (an oracle probe, which the core run runs because `core_also` names it: run.py
+    core_probes), never its own."""
     problems = []
-    owned = {p for rule in rows.values() for p in rule.get('probes') or []}
     for row, rule in rows.items():
         also = rule.get('core_also')
         if also is None:
@@ -888,8 +895,8 @@ def core_also_problems(rows: dict, cases: dict[str, dict], expected: Path) -> li
             elif cid in rule.get('cases', []):
                 problems.append(f'{row}: `core_also` case {cid} is already a case of the row')
         for pid in also.get('probes', []):
-            if pid not in owned or not (expected / pid / 'ref-py.json').exists():
-                problems.append(f'{row}: `core_also` probe {pid} is in no row\'s `probes` (the core run would not run it)')
+            if pid in cases or not (expected / pid / 'ref-py.json').exists():
+                problems.append(f'{row}: `core_also` probe {pid} has no oracle outcome (tool/parity/expected/{pid}/ref-py.json)')
             elif pid in rule.get('probes', []):
                 problems.append(f'{row}: `core_also` probe {pid} is already a probe of the row')
     return problems
@@ -911,11 +918,39 @@ def with_engines(target: dict, statuses: dict, core_rows: dict, rules: dict, bac
     return merged
 
 
-def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], backends: list[str]) -> tuple[list[str], int]:
+def scope_misses(target: dict, core_rows: dict, rules: dict, backends: list[str], out: Path | None, expected: Path,
+                 cases: dict[str, dict], out_core: Path | None = None) -> dict[tuple[str, str], list[str]]:
+    """(row, backend) -> what breaks the scope of a row's `allowed` `cells` there: each of the row's other cells
+    (core-engine, and with [out] its session and worker cells) that is not a MATCH (no oracle outcome included), and
+    each scoped name that is no cell of the row. An entry without `cells` accepts the row's whole status and has no scope to break."""
+    misses = {}
+    for cid, row in target['rows'].items():
+        allowed = row.get('allowed') or {}
+        scope = allowed.get('cells')
+        if not scope:
+            continue
+        for b in backends:
+            if b not in allowed.get('backends', []):
+                continue
+            cells = list(core_rows[cid][b]['cells']) if cid in core_rows else []
+            if out is not None:
+                cells += engine_cells(rules.get(cid, {}), b, out, expected, cases, out_core)
+            names = {c['case'] for c in cells}
+            bad = sorted({c['case'] for c in cells if c['class'] != 'MATCH' and c['case'] not in scope})
+            bad += [f'{c} (no such cell)' for c in scope if c not in names]
+            if bad:
+                misses[(cid, b)] = bad
+    return misses
+
+
+def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], backends: list[str],
+                 misses: dict[tuple[str, str], list[str]] | None = None) -> tuple[list[str], int]:
     """Lines (and the failure count) for the target against [statuses] (row -> backend -> (status, source)).
 
     A target row passes on a backend it must be PRESENT on when it is PRESENT there, or when an `allowed`
-    entry accepts the status it has there; an `allowed` entry on a backend where the row is PRESENT is stale."""
+    entry accepts the status it has there: its own status, or, for an N/A entry, the recorded baseline status of a
+    row that nothing measures on that backend. An entry scoped to `cells` accepts it only when [misses] (scope_misses)
+    names nothing for that row and backend. An `allowed` entry on a backend where the row is PRESENT is stale."""
     rows = target['rows']
     lines, fails = [], 0
     per_area: dict[str, dict] = {}
@@ -934,11 +969,14 @@ def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], 
             area['present'][b] += status == 'PRESENT'
             if status == 'PRESENT':
                 verdict = 'STALE' if b in allowed.get('backends', []) else 'ok'
-            elif b in allowed.get('backends', []) and status == allowed.get('status'):
+            elif b in allowed.get('backends', []) and (status == allowed.get('status')
+                                                       or (allowed.get('status') == 'N/A' and source == 'recorded')):
                 verdict = 'allowed'
+                if (misses or {}).get((cid, b)):
+                    verdict = f'FAIL (outside the allowed cells: {", ".join(misses[(cid, b)])})'
             else:
                 verdict = 'FAIL'
-            fails += verdict in ('STALE', 'FAIL')
+            fails += verdict.startswith(('STALE', 'FAIL'))
             cells.append(f'{status}{"*" if source == "recorded" else ""}{"" if verdict == "ok" else f" {verdict}"}')
         detail.append(f'| {cid} | {row["area"]} | ' + ' | '.join(cells) + ' |')
     lines += ['The M3 parity target (shown; `--assert-target` makes a FAIL fatal). `*` = the status is the recorded baseline '
@@ -1189,7 +1227,9 @@ def main() -> int:
                 sys.exit('rows.json: ' + '; '.join(problems))
             statuses = with_engines(target, statuses, result['rows'], all_rules, backends, a.target_engines, a.expected,
                                     a.outcomes)
-        tlines, tfails = score_target(target, statuses, backends)
+        misses = scope_misses(target, result['rows'], all_rules, backends, a.target_engines, a.expected, case_index(),
+                              a.outcomes)
+        tlines, tfails = score_target(target, statuses, backends, misses)
         print('\n'.join(tlines))
         if a.markdown:
             with a.markdown.open('a') as f:

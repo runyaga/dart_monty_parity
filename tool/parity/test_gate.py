@@ -242,6 +242,15 @@ class GateTest(unittest.TestCase):
         self.assertIn('sp_print_raise_then_error: a session probe of the oracle but in no gated session rule', problems)
         self.assertIn("stage 'C1-9' gates no row", problems)
 
+    def test_a_session_probe_core_also_owns_needs_no_gated_rule(self) -> None:
+        """A row's `core_also` may own a session probe no gated rule names: the core run runs it (run.py core_probes)."""
+        cases = score.case_index()
+        rows = copy.deepcopy(self.rows)
+        rows['print_callback']['session']['probes'].remove('sp_print_raise_then_error')
+        rows['print_stream_routing'].setdefault('core_also', {})['probes'] = ['sp_print_raise_then_error']
+        problems = '\n'.join(score.gate_problems(self.gate, rows, cases, EXPECTED))
+        self.assertNotIn('sp_print_raise_then_error', problems)
+
     def test_stages_landed_at_the_cut_fail_a_forced_mismatch(self) -> None:
         """A control per stage P-cut and C5-v land: a forced mismatch in the stage's rows fails the gate,
         and the same mismatch is only shown (the gate passes) with the stage pending."""
