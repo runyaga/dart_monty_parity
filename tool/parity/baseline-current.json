@@ -1,28 +1,28 @@
 {
  "subject": "dart_monty_core at the flip (core #253, head afa20f9: Monty / MontySession on the worker, the 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 66,
-  "dart2js": 66,
-  "dart2wasm": 66
+  "vm": 65,
+  "dart2js": 65,
+  "dart2wasm": 65
  },
  "totals": {
   "vm": {
-   "ABSENT": 51,
-   "PRESENT": 66,
+   "ABSENT": 52,
+   "PRESENT": 65,
    "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 47,
-   "PRESENT": 66,
+   "ABSENT": 48,
+   "PRESENT": 65,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 47,
-   "PRESENT": 66,
+   "ABSENT": 48,
+   "PRESENT": 65,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
@@ -33,9 +33,9 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 66,
-    "dart2js": 66,
-    "dart2wasm": 66
+    "vm": 65,
+    "dart2js": 65,
+    "dart2wasm": 65
    }
   },
   "x86_64": {
@@ -47,9 +47,9 @@
     }
    },
    "present": {
-    "vm": 65,
-    "dart2js": 66,
-    "dart2wasm": 65
+    "vm": 64,
+    "dart2js": 65,
+    "dart2wasm": 64
    },
    "cause": {
     "float_values": "float(\"nan\") reaches the host with the sign bit set on x86_64 (fff8000000000000; upstream 7ff8000000000000): a core defect, recorded as measured"
@@ -595,6 +595,19 @@
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
+   "row": "async_host_driver",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PRESENT",
+   "to": "ABSENT",
+   "commit": "afa20f9",
+   "pr": 253,
+   "why": "the flip makes the `coroutine` marker for an async host function internal (C5-s), so the public-API probe async_gather records `absent`"
+  },
+  {
    "row": "snapshot_auto_resume",
    "backends": [
     "vm",
@@ -1079,9 +1092,9 @@
    "dart2wasm": "PRESENT"
   },
   "async_host_driver": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "snapshot_auto_resume": {
    "vm": "PRESENT",
@@ -5819,9 +5832,9 @@
   },
   "async_host_driver": {
    "async_gather": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "snapshot_auto_resume": {

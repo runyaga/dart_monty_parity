@@ -31,6 +31,10 @@ typedef StartPool = Future<Monty> Function(PoolOptions options);
 /// How many workers the runner's pools have started so far.
 typedef SpawnCount = int Function();
 
+/// Whether the running probe measures core's public API only (the `core`
+/// engine): a probe that needs an internal helper then records `absent`.
+var _publicOnly = false;
+
 /// The running probe's [SpawnCount].
 SpawnCount _spawned = () => 0;
 
@@ -67,6 +71,7 @@ Future<Map<String, Object?>> runSessionProbe(
   String engine = 'session',
 }) async {
   _spawned = spawned;
+  _publicOnly = engine == 'core';
   final out = <String, Object?>{
     'probe': id,
     'engine': engine,
@@ -403,28 +408,37 @@ _probes = {
       }
     },
   ),
-  'async_gather': (t, shared, _) => shared.withSession(
-    (s) => _run(
-      t,
-      () => s.feedRun(
-        'import asyncio\nawait asyncio.gather(af(1), af(2))',
-        printCallback: _quiet,
-        externals: {
-          'af': coroutine((args, kwargs) async {
-            final n = (args.first as MontyInt).value;
-            t.add({
-              'ev': 'handler',
-              'who': 'af',
-              'args': [identityCanon(args.first)],
-            });
-            await Future<void>.delayed(Duration(milliseconds: 10 * (3 - n)));
+  // The `coroutine` marker that makes a callback a sandbox coroutine is
+  // internal at the flip (C5-s).
+  'async_gather': (t, shared, _) async => _publicOnly
+      ? t.add({
+          'ev': 'absent',
+          'what': 'no public coroutine marker for an async host function',
+        })
+      : await shared.withSession(
+          (s) => _run(
+            t,
+            () => s.feedRun(
+              'import asyncio\nawait asyncio.gather(af(1), af(2))',
+              printCallback: _quiet,
+              externals: {
+                'af': coroutine((args, kwargs) async {
+                  final n = (args.first as MontyInt).value;
+                  t.add({
+                    'ev': 'handler',
+                    'who': 'af',
+                    'args': [identityCanon(args.first)],
+                  });
+                  await Future<void>.delayed(
+                    Duration(milliseconds: 10 * (3 - n)),
+                  );
 
-            return MontyInt(n * 10);
-          }),
-        },
-      ),
-    ),
-  ),
+                  return MontyInt(n * 10);
+                }),
+              },
+            ),
+          ),
+        ),
   // Gathered async host functions run concurrently: each waits until both
   // have started (a barrier with a 10 s watchdog), which a driver that
   // awaited one call before starting the next could never pass.
