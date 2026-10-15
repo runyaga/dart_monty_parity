@@ -292,6 +292,20 @@ class GateTest(unittest.TestCase):
         self.assertIn('rule 7: sp_print_raise is in no session rule of a `d1_calls` row', problems)
         self.assertIn('carries d1_r2_typed_baseexc, which is no D1-calls rule', problems)
 
+    def test_session_also_names_only_gated_cases_and_probes(self) -> None:
+        rows = copy.deepcopy(self.rows)
+        rows['abort_suspension']['session_also'] = {'cases': ['ss_budget_uncatchable', 'v_none'],
+                                                    'probes': ['no_such_probe']}
+        rows['create_worker_pool']['session_also'] = {'probes': []}
+        rows['host_eager_attributes']['session_also'] = {'cases': ['h_x01_eager_all']}  # already its own
+        problems = '\n'.join(score.gate_problems(self.gate, rows, score.case_index(), EXPECTED))
+        self.assertNotIn('ss_budget_uncatchable', problems)
+        self.assertIn('abort_suspension: `session_also` cases v_none is in no gated row', problems)
+        self.assertIn('abort_suspension: `session_also` probes no_such_probe is in no gated row', problems)
+        self.assertIn('create_worker_pool: `session_also` must map', problems)
+        self.assertIn("host_eager_attributes: `session_also` cases h_x01_eager_all is already in the row's own", problems)
+        self.assertNotIn('has a session rule but no stage', problems)  # a mapping, not a gate rule
+
 
 if __name__ == '__main__':
     unittest.main()

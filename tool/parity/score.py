@@ -529,6 +529,23 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
     for row, rule in rows.items():
         if 'session' in rule and row not in gate['rows']:
             problems.append(f'{row}: has a session rule but no stage in the gate manifest')
+    # `session_also`: session cases and probes a gated row's rule owns (so the session engine runs them), that
+    # another row maps too, for the M3 target only (score.py --target-engines); never a gate rule.
+    owned = {kind: {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
+             for kind in ('cases', 'probes')}
+    for row, rule in rows.items():
+        also = rule.get('session_also')
+        if also is None:
+            continue
+        if not isinstance(also, dict) or set(also) - {'cases', 'probes'} or not any(also.values()):
+            problems.append(f'{row}: `session_also` must map `cases` and/or `probes` to non-empty lists')
+            continue
+        for kind, ids in also.items():
+            for cid in ids:
+                if cid not in owned[kind]:
+                    problems.append(f'{row}: `session_also` {kind} {cid} is in no gated row\'s session rule')
+                elif cid in (rule.get('session') or {}).get(kind, []):
+                    problems.append(f'{row}: `session_also` {kind} {cid} is already in the row\'s own session rule')
     # The session engine's own cases and probes exist only for the gate: each must be in a gated rule.
     suite, prefix = 'session', 'sp_'
     gated = {kind: {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
@@ -823,15 +840,26 @@ def evidence_core_problems(target: dict, core: Path) -> list[str]:
     return problems
 
 
-def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dict[str, dict]) -> list[dict]:
-    """A row's session- and worker-engine cells on [backend] (rows.json `session` and `worker`), each classified
-    as --assert-gate and --assert-worker classify it."""
+def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dict[str, dict],
+                 out_core: Path | None = None) -> list[dict]:
+    """A row's cells on [backend] beyond its own core-engine rule: the core-engine cases and probes it maps in
+    `core_also` (outcomes in [out_core]), and its session and worker cells (rows.json `session`, `session_also`
+    and `worker`, outcomes in [out]), each classified as the core run, --assert-gate and --assert-worker do,
+    with no named exception."""
     cells = []
+    core = rule.get('core_also') or {}
+    for cid in core.get('cases', []):
+        cls, why, _ = classify_case(cid, backend, {}, out_core, expected)
+        cells.append({'case': cid, 'engine': 'core', 'class': cls, 'differs': why})
+    if core.get('probes'):
+        _, probe_cells = probe_status('', {'probes': core['probes']}, backend, out_core, expected)
+        cells += [{**c, 'engine': 'core'} for c in probe_cells]
     session = rule.get('session') or {}
-    for cid in session.get('cases', []):
+    also = rule.get('session_also') or {}
+    for cid in session.get('cases', []) + also.get('cases', []):
         cls, why = classify_session_case(cid, backend, out, expected, cases[cid])
         cells.append({'case': cid, 'engine': 'session', 'class': cls, 'differs': why})
-    for pid in session.get('probes', []):
+    for pid in session.get('probes', []) + also.get('probes', []):
         cls, why = classify_session_probe(pid, backend, out, expected)
         cells.append({'case': pid, 'engine': 'session', 'class': cls, 'differs': why})
     for kind, ids in (rule.get('worker') or {}).items():
@@ -842,15 +870,40 @@ def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dic
     return cells
 
 
+def core_also_problems(rows: dict, cases: dict[str, dict], expected: Path) -> list[str]:
+    """What is wrong with the rows' `core_also` mappings: each names core-engine cases (a case file the core run
+    runs) and probes (a core probe some row's `probes` owns, so the core run runs it), never its own."""
+    problems = []
+    owned = {p for rule in rows.values() for p in rule.get('probes') or []}
+    for row, rule in rows.items():
+        also = rule.get('core_also')
+        if also is None:
+            continue
+        if not isinstance(also, dict) or set(also) - {'cases', 'probes'} or not any(also.values()):
+            problems.append(f'{row}: `core_also` must map `cases` and/or `probes` to non-empty lists')
+            continue
+        for cid in also.get('cases', []):
+            if cid not in cases or cases[cid]['_suite'] in ('e0', 'worker_values', 'display', 'session'):
+                problems.append(f'{row}: `core_also` case {cid} is no case the core run runs')
+            elif cid in rule.get('cases', []):
+                problems.append(f'{row}: `core_also` case {cid} is already a case of the row')
+        for pid in also.get('probes', []):
+            if pid not in owned or not (expected / pid / 'ref-py.json').exists():
+                problems.append(f'{row}: `core_also` probe {pid} is in no row\'s `probes` (the core run would not run it)')
+            elif pid in rule.get('probes', []):
+                problems.append(f'{row}: `core_also` probe {pid} is already a probe of the row')
+    return problems
+
+
 def with_engines(target: dict, statuses: dict, core_rows: dict, rules: dict, backends: list[str], out: Path,
-                 expected: Path) -> dict:
+                 expected: Path, out_core: Path | None = None) -> dict:
     """[statuses] with each target row re-judged over its core-engine cells ([core_rows], this run's) and its
     session- and worker-engine cells in [out]; a row no engine case measures keeps the status it had."""
     cases = case_index()
     merged = {cid: dict(by_b) for cid, by_b in statuses.items()}
     for cid in target['rows']:
         for b in backends:
-            extra = engine_cells(rules.get(cid, {}), b, out, expected, cases)
+            extra = engine_cells(rules.get(cid, {}), b, out, expected, cases, out_core)
             if not extra:
                 continue
             core_cells = core_rows[cid][b]['cells'] if cid in core_rows else []
@@ -1131,7 +1184,11 @@ def main() -> int:
                               else (in_scope[cid][col.get(b, 'baseline_web')], 'recorded')) for b in backends}
                     for cid in target['rows']}
         if a.target_engines:
-            statuses = with_engines(target, statuses, result['rows'], all_rules, backends, a.target_engines, a.expected)
+            problems = core_also_problems(all_rules, case_index(), a.expected)
+            if problems:
+                sys.exit('rows.json: ' + '; '.join(problems))
+            statuses = with_engines(target, statuses, result['rows'], all_rules, backends, a.target_engines, a.expected,
+                                    a.outcomes)
         tlines, tfails = score_target(target, statuses, backends)
         print('\n'.join(tlines))
         if a.markdown:

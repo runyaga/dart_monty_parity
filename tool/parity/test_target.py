@@ -232,6 +232,20 @@ class TargetTest(unittest.TestCase):
         self.assertEqual(merged[untouched], statuses[untouched])  # nothing measures it: its recorded status stands
         self.assertEqual(statuses[both], {b: ('PRESENT', 'measured') for b in BACKENDS})  # the input is not changed
 
+    def test_core_also_mappings_are_checked(self) -> None:
+        self.assertEqual(score.core_also_problems(self.rules, self.cases, score.ROOT / 'tool/parity/expected'), [])
+        rules = copy.deepcopy(self.rules)
+        owned_probe = next(p for r in rules.values() for p in r.get('probes') or [])
+        rules['assert_annotations']['core_also'] = {'cases': ['no_such_case', 's01_int_bigint_input'],
+                                                    'probes': ['no_such_probe', owned_probe]}
+        rules['run_blocking']['core_also'] = {'cases': []}
+        problems = '\n'.join(score.core_also_problems(rules, self.cases, score.ROOT / 'tool/parity/expected'))
+        self.assertIn('case no_such_case is no case the core run runs', problems)
+        self.assertIn('case s01_int_bigint_input is no case the core run runs', problems)  # an e0 case
+        self.assertIn('probe no_such_probe is in no row', problems)
+        self.assertNotIn(owned_probe, problems)
+        self.assertIn('run_blocking: `core_also` must map', problems)
+
     def test_the_target_flags_are_not_silently_skipped(self) -> None:
         import contextlib  # noqa: PLC0415
         import io  # noqa: PLC0415

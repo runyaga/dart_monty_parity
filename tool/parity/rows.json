@@ -2271,6 +2271,14 @@
      "sp_host_methods_all",
      "sp_host_methods_denied"
     ]
+   },
+   "session_also": {
+    "cases": [
+     "h_x09_class_init"
+    ],
+    "probes": [
+     "sp_host_class_construct"
+    ]
    }
   },
   "host_object_identity_lifecycle": {
@@ -2278,6 +2286,11 @@
     "probes": [
      "sp_host_rewrap_replaces_policy",
      "sp_host_alias_refused"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_host_restore_store_empty"
     ]
    }
   },
@@ -2294,6 +2307,12 @@
      "sp_dump_idle",
      "sp_dump_spent_snapshot"
     ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_dump_suspended_function",
+     "sp_dump_suspended_kinds"
+    ]
    }
   },
   "load_session": {
@@ -2302,6 +2321,11 @@
      "sp_load_not_fresh",
      "sp_load_adopts_dump"
     ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_dump_idle"
+    ]
    }
   },
   "snapshot_state_kinds": {
@@ -2309,6 +2333,12 @@
     "probes": [
      "sp_dump_suspended_function",
      "sp_dump_suspended_kinds"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_dump_idle",
+     "sp_load_wrong_kind"
     ]
    }
   },
@@ -2372,6 +2402,12 @@
     "probes": [
      "sp_oversized_input",
      "sp_oversized_answer"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_checkout_timeout",
+     "sp_pool_close"
     ]
    }
   },
@@ -2443,6 +2479,92 @@
      "w_tzdb_lowercase",
      "w_tzdb_utc_name",
      "w_tzdb_unknown"
+    ]
+   }
+  },
+  "abort_suspension": {
+   "session_also": {
+    "cases": [
+     "ss_budget_uncatchable"
+    ]
+   }
+  },
+  "create_worker_pool": {
+   "session_also": {
+    "probes": [
+     "sp_capacity_two",
+     "sp_checkout_script_name"
+    ]
+   }
+  },
+  "binding_exposure_policy": {
+   "session_also": {
+    "probes": [
+     "sp_host_eager_named",
+     "sp_host_eager_unknown_name",
+     "sp_host_lazy_named",
+     "sp_host_lazy_denied",
+     "sp_host_methods",
+     "sp_host_methods_denied"
+    ]
+   }
+  },
+  "assert_annotations": {
+   "core_also": {
+    "cases": [
+     "a01_assert_default",
+     "a02_assert_off",
+     "a03_assert_bounded"
+    ]
+   }
+  },
+  "allocator_memory_limit": {
+   "core_also": {
+    "cases": [
+     "l04_mem_single",
+     "l05_mem_catch"
+    ]
+   }
+  },
+  "feed_repl_to_completion": {
+   "core_also": {
+    "probes": [
+     "api_create_repl",
+     "api_ext_result_callback"
+    ]
+   }
+  },
+  "resume_name_lookup": {
+   "core_also": {
+    "probes": [
+     "k_name"
+    ]
+   },
+   "session_also": {
+    "cases": [
+     "ss_budget_name_lookup_zero",
+     "ss_budget_name_lookup_one"
+    ],
+    "probes": [
+     "sp_host_lazy_named",
+     "sp_host_lazy_denied",
+     "sp_host_lazy_raises"
+    ]
+   }
+  },
+  "load_suspended_snapshot": {
+   "session_also": {
+    "probes": [
+     "sp_dump_suspended_function",
+     "sp_dump_suspended_kinds",
+     "sp_load_adopts_dump"
+    ]
+   }
+  },
+  "persistent_type_check_state": {
+   "core_also": {
+    "probes": [
+     "api_reset_type_checker"
     ]
    }
   }
@@ -2632,16 +2754,16 @@
      "items": [
       {
        "t": "str",
-       "v": "KeyError(\"'\ud83e\udee9\\\\ud800'\")"
+       "v": "KeyError(\"'🫩\\\\ud800'\")"
       },
       {
        "t": "str",
-       "v": "\"'\ud83e\udee9\\\\ud800'\""
+       "v": "\"'🫩\\\\ud800'\""
       },
       {
        "t": "exception",
        "type": "KeyError",
-       "arg": "'\ud83e\udee9\\ud800'"
+       "arg": "'🫩\\ud800'"
       }
      ]
     }
