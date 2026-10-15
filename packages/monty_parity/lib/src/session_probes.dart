@@ -379,11 +379,17 @@ _probes = {
         const code = 'r = [h(1), h(2)]\nr';
         final a = await _step(
           t,
-          () => s1.feedStart(code, externalLookup: {'h': handler('A', 10)}),
+          () => s1.feedStart(
+            code,
+            externalLookup: {'h': MontyHostFunction('h', handler('A', 10))},
+          ),
         );
         final b = await _step(
           t,
-          () => s2.feedStart(code, externalLookup: {'h': handler('B', 100)}),
+          () => s2.feedStart(
+            code,
+            externalLookup: {'h': MontyHostFunction('h', handler('B', 100))},
+          ),
         );
         final a2 = await _step(t, () => _fn(a).resumeAuto());
         // Spent: refused before the handler runs.
@@ -412,19 +418,22 @@ _probes = {
         'import asyncio\nawait asyncio.gather(af(1), af(2))',
         printCallback: _quiet,
         externalLookup: {
-          'af': coroutine((args, kwargs) async {
-            final n = (args.first as MontyInt).value;
-            t.add({
-              'ev': 'handler',
-              'who': 'af',
-              'args': [identityCanon(args.first)],
-            });
-            await Future<void>.delayed(
-              Duration(milliseconds: 10 * (3 - n)),
-            );
+          'af': MontyHostFunction(
+            'af',
+            coroutine((args, kwargs) async {
+              final n = (args.first as MontyInt).value;
+              t.add({
+                'ev': 'handler',
+                'who': 'af',
+                'args': [identityCanon(args.first)],
+              });
+              await Future<void>.delayed(
+                Duration(milliseconds: 10 * (3 - n)),
+              );
 
-            return MontyInt(n * 10);
-          }),
+              return MontyInt(n * 10);
+            }),
+          ),
         },
       ),
     ),
@@ -442,19 +451,22 @@ _probes = {
         'import asyncio\nawait asyncio.gather(af(1), af(2))',
         printCallback: _quiet,
         externalLookup: {
-          'af': coroutine((args, kwargs) async {
-            final n = (args.first as MontyInt).value;
-            started.add(n);
-            t.add({
-              'ev': 'handler',
-              'who': 'af',
-              'args': [identityCanon(args.first)],
-            });
-            if (started.length == 2) both.complete();
-            await both.future.timeout(const Duration(seconds: 10));
+          'af': MontyHostFunction(
+            'af',
+            coroutine((args, kwargs) async {
+              final n = (args.first as MontyInt).value;
+              started.add(n);
+              t.add({
+                'ev': 'handler',
+                'who': 'af',
+                'args': [identityCanon(args.first)],
+              });
+              if (started.length == 2) both.complete();
+              await both.future.timeout(const Duration(seconds: 10));
 
-            return MontyInt(n * 10);
-          }),
+              return MontyInt(n * 10);
+            }),
+          ),
         },
       ),
     );
@@ -476,7 +488,10 @@ _probes = {
     };
     for (final (code, name) in _eagerAutoCodes) {
       try {
-        var x = await s.feedStart(code, externalLookup: {name: fns[name]!});
+        var x = await s.feedStart(
+          code,
+          externalLookup: {name: MontyHostFunction(name, fns[name]!)},
+        );
         t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
         while (x is! MontyComplete) {
           x = await _resumeAuto(x);
@@ -824,11 +839,11 @@ _probes = {
           () => s.feedRun(
             'slow() + 1',
             externalLookup: {
-              'slow': (args, kwargs) async {
+              'slow': MontyHostFunction('slow', (args, kwargs) async {
                 await Future<void>.delayed(const Duration(milliseconds: 800));
 
                 return const MontyInt(1);
-              },
+              }),
             },
           ),
         );
@@ -865,8 +880,11 @@ _probes = {
       () => s.feedRun(
         _extResultCode,
         externalLookup: {
-          'f': (args, kwargs) =>
-              throw const ExternalException('ValueError', 'bad'),
+          'f': MontyHostFunction(
+            'f',
+            (args, kwargs) =>
+                throw const ExternalException('ValueError', 'bad'),
+          ),
         },
       ),
     ),
@@ -887,7 +905,10 @@ _probes = {
       () => s.feedRun(
         'f()',
         externalLookup: {
-          'f': (args, kwargs) => MontyBytes(Uint8List(_oversized)),
+          'f': MontyHostFunction(
+            'f',
+            (args, kwargs) => MontyBytes(Uint8List(_oversized)),
+          ),
         },
       ),
     );
@@ -921,11 +942,11 @@ _probes = {
         printCallback: (stream, text) =>
             t.add({'ev': 'print', 'stream': stream, 'text': text}),
         externalLookup: {
-          'f': (args, kwargs) {
+          'f': MontyHostFunction('f', (args, kwargs) {
             t.add({'ev': 'handler', 'who': 'f', 'args': <Object?>[]});
 
             return const MontyInt(1);
-          },
+          }),
         },
       ),
     ),
@@ -1305,7 +1326,10 @@ _probes = {
           "print('a')\nf(1)",
           printCallback: _raising(t),
           externalLookup: {
-            'f': (List<MontyValue> args, Map<String, MontyValue> kwargs) {
+            'f': MontyHostFunction('f', (
+              args,
+              kwargs,
+            ) {
               t.add({
                 'ev': 'handler',
                 'who': 'f',
@@ -1313,7 +1337,7 @@ _probes = {
               });
 
               return args.first;
-            },
+            }),
           },
         ),
       );

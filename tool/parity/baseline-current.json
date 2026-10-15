@@ -1,28 +1,28 @@
 {
- "subject": "dart_monty_core with the value family (core branch c5-v/value-family, head 24cb475: Monty / MontySession on the worker, the 0.110 surface less C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 66,
-  "dart2js": 66,
-  "dart2wasm": 66
+  "vm": 67,
+  "dart2js": 67,
+  "dart2wasm": 67
  },
  "totals": {
   "vm": {
-   "ABSENT": 51,
-   "PRESENT": 66,
+   "ABSENT": 50,
+   "PRESENT": 67,
    "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 47,
-   "PRESENT": 66,
+   "ABSENT": 46,
+   "PRESENT": 67,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 47,
-   "PRESENT": 66,
+   "ABSENT": 46,
+   "PRESENT": 67,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 66,
-    "dart2js": 66,
-    "dart2wasm": 66
+    "vm": 67,
+    "dart2js": 67,
+    "dart2wasm": 67
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 66,
-    "dart2js": 66,
-    "dart2wasm": 66
+    "vm": 67,
+    "dart2js": 67,
+    "dart2wasm": 67
    }
   }
  },
@@ -655,6 +655,19 @@
    "commit": "24cb475",
    "pr": null,
    "why": "core's value family (core branch c5-v/value-family): MontyComplex decodes and encodes, so v_complex, i_complex and r_complex MATCH (C5-v)"
+  },
+  {
+   "row": "async_host_driver",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "core exports the coroutine marker (C5-s, core #255), so the core engine's async_gather probe runs through the public API again"
   }
  ],
  "rows": {
@@ -1089,9 +1102,9 @@
    "dart2wasm": "PRESENT"
   },
   "async_host_driver": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "snapshot_auto_resume": {
    "vm": "PRESENT",
@@ -5829,9 +5842,9 @@
   },
   "async_host_driver": {
    "async_gather": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "snapshot_auto_resume": {

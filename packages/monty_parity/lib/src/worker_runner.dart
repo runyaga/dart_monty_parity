@@ -42,6 +42,15 @@ const _inexpressible = {
   'assert_message_annotations': 'no knob in the worker driver',
 };
 
+/// [functions] as core's `externalLookup` takes them: each a
+/// [MontyHostFunction] named by its key.
+Map<String, MontyValue> hostFunctions(
+  Map<String, ProtoExternalFunction> functions,
+) => {
+  for (final MapEntry(:key, :value) in functions.entries)
+    key: MontyHostFunction(key, value),
+};
+
 /// One case's session, whichever engine opened it.
 abstract interface class CaseSession {
   /// Runs [code] and completes with its value.
@@ -333,7 +342,7 @@ final class _ProtoCaseSession implements CaseSession {
     final result = await _session.feed(
       code,
       inputs: inputs,
-      externalLookup: externals,
+      externalLookup: hostFunctions(externals),
       onOsCall: onOsCall,
       onPrint: onPrint,
     );
