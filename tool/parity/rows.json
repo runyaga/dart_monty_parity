@@ -2685,6 +2685,13 @@
      "w_refuse_surrogate_in"
     ]
    }
+  },
+  "install_dependencies": {
+   "core_also": {
+    "probes": [
+     "sp_install_dependencies"
+    ]
+   }
   }
  },
  "rescored": {

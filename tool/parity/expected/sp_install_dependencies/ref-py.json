@@ -1,0 +1,61 @@
+{
+ "probe": "sp_install_dependencies",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "installed"
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "dependency installation is only supported by the CPython worker",
+   "tb_last": null
+  },
+  {
+   "ev": "error",
+   "type": "ValueError",
+   "message": "invalid requirement \"  \": must not be empty",
+   "tb_last": null
+  },
+  {
+   "ev": "error",
+   "type": "ValueError",
+   "message": "invalid requirement \" -e x\": must not start with '-' (it would be parsed as a uv option)",
+   "tb_last": null
+  },
+  {
+   "ev": "unencodable"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-1>",
+    "start": 0,
+    "end": 3
+   }
+  },
+  {
+   "ev": "pending"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  }
+ ],
+ "runner_error": null
+}

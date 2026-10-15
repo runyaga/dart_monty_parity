@@ -1097,6 +1097,22 @@ _probes = {
       await p.withSession((s) => _run(t, () => s.feedRun('3')));
     },
   ),
+  'sp_install_dependencies': (t, shared, _) => shared.withSession((s) async {
+    await _install(t, () => s.installDependencies([]));
+    await _install(t, () => s.installDependencies(['httpx']));
+    await _install(t, () => s.installDependencies(['httpx', '  ']));
+    await _install(t, () => s.installDependencies([' -e x']));
+    await _install(t, () => s.installDependencies(['a', '\udc80']));
+    await _run(t, () => s.feedRun('1'));
+    final x = await _step(t, () => s.feedStart('f()'));
+    await _install(t, () => s.installDependencies([]));
+    if (x != null) {
+      await _step(
+        t,
+        () => _fn(x).resume(const ExternalReturnValue(MontyInt(2))),
+      );
+    }
+  }),
   // The host function raises ValueError, the session's way today (core's
   // ExternalException naming the type); the sandbox catches it.
   'api_ext_result_callback': (t, shared, _) => shared.withSession(
@@ -2004,6 +2020,28 @@ Future<void> _finishedFeed(_T t, Future<MontyValue> Function() feed) async {
     t.add(
       e is StateError && e.message.contains('session is finished')
           ? {'ev': 'finished'}
+          : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'},
+    );
+  }
+}
+
+/// run_probes.py's `install`: an `installDependencies` call as
+/// `installed`, a [MontyRuntimeError] as its error, and each refusal by its
+/// kind (a requirement with no UTF-8 form; a call while a suspension is
+/// unanswered); anything else as `unexpected`, with its class and text.
+Future<void> _install(_T t, Future<void> Function() call) async {
+  try {
+    await call();
+    t.add({'ev': 'installed'});
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on Object catch (e) {
+    t.add(
+      e is ArgumentError
+          ? {'ev': 'unencodable'}
+          : e is StateError &&
+                e.message.contains('suspension is awaiting an answer')
+          ? {'ev': 'pending'}
           : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'},
     );
   }
