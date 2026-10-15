@@ -1,0 +1,399 @@
+{
+ "probe": "sp_fixed_offset_timezone",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "zone",
+   "offset_seconds": 19800,
+   "name": "IST"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 18:00:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 18:00:00+05:30"
+     },
+     {
+      "t": "str",
+      "v": "IST"
+     },
+     {
+      "t": "str",
+      "v": "5:30:00"
+     },
+     {
+      "t": "int",
+      "v": "-19800"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "IST"
+       },
+       {
+        "t": "str",
+        "v": "IST"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "IST +0530"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": -12600
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 09:00:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 09:00:00-03:30"
+     },
+     {
+      "t": "str",
+      "v": "UTC-03:30"
+     },
+     {
+      "t": "str",
+      "v": "-1 day, 20:30:00"
+     },
+     {
+      "t": "int",
+      "v": "12600"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "UTC-03:30"
+       },
+       {
+        "t": "str",
+        "v": "UTC-03:30"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "UTC-03:30 -0330"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": 0
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 12:30:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 12:30:00+00:00"
+     },
+     {
+      "t": "str",
+      "v": "UTC"
+     },
+     {
+      "t": "str",
+      "v": "0:00:00"
+     },
+     {
+      "t": "int",
+      "v": "0"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "UTC"
+       },
+       {
+        "t": "str",
+        "v": "UTC"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "UTC +0000"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": -86399,
+   "name": "x"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-02-29 12:30:01"
+     },
+     {
+      "t": "str",
+      "v": "2024-02-29 12:30:01-23:59:59"
+     },
+     {
+      "t": "str",
+      "v": "x"
+     },
+     {
+      "t": "str",
+      "v": "-1 day, 0:00:01"
+     },
+     {
+      "t": "int",
+      "v": "86399"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "x"
+       },
+       {
+        "t": "str",
+        "v": "x"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "x -235959"
+     },
+     {
+      "t": "str",
+      "v": "2024-02-29"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": 3600,
+   "name": ""
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 13:30:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 13:30:00+01:00"
+     },
+     {
+      "t": "str",
+      "v": ""
+     },
+     {
+      "t": "str",
+      "v": "1:00:00"
+     },
+     {
+      "t": "int",
+      "v": "-3600"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": ""
+       },
+       {
+        "t": "str",
+        "v": ""
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": " +0100"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": 3600,
+   "name": "Europe/London"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 13:30:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 13:30:00+01:00"
+     },
+     {
+      "t": "str",
+      "v": "Europe/London"
+     },
+     {
+      "t": "str",
+      "v": "1:00:00"
+     },
+     {
+      "t": "int",
+      "v": "-3600"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "Europe/London"
+       },
+       {
+        "t": "str",
+        "v": "Europe/London"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "Europe/London +0100"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "offset_seconds": 86400
+  },
+  {
+   "ev": "zone_refused",
+   "message": "timezone offset_seconds must be within -86399..=86399, got 86400"
+  },
+  {
+   "ev": "zone",
+   "iana": "Asia/Kolkata"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "tuple",
+    "items": [
+     {
+      "t": "str",
+      "v": "2024-03-01 18:00:00"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01 18:00:00+05:30"
+     },
+     {
+      "t": "str",
+      "v": "IST"
+     },
+     {
+      "t": "str",
+      "v": "5:30:00"
+     },
+     {
+      "t": "int",
+      "v": "-19800"
+     },
+     {
+      "t": "tuple",
+      "items": [
+       {
+        "t": "str",
+        "v": "IST"
+       },
+       {
+        "t": "str",
+        "v": "IST"
+       }
+      ]
+     },
+     {
+      "t": "str",
+      "v": "IST +0530"
+     },
+     {
+      "t": "str",
+      "v": "2024-03-01"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "zone",
+   "iana": "Mars/Olympus"
+  },
+  {
+   "ev": "zone_refused",
+   "message": "unknown timezone 'Mars/Olympus'"
+  }
+ ],
+ "runner_error": null
+}

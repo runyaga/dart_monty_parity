@@ -1,0 +1,5 @@
+{
+ "id": "vf03_format_spec",
+ "code": "[format(x, f) for x in (3.14159, 1234567.891, -0.5) for f in ('.3e', '.2f', 'g', '%', ',', '_', '>12.4', '+.1f', '010.2f', '.0f')] + [format(255, f) for f in ('x', '#X', 'b', 'o', ',', '08d', '^9')] + [f'{1e21}', f'{1e-7}', f'{2.5:.0f}', f'{3.5:.0f}', str(1e16), str(123456789.0)]",
+ "note": "value_formatting: format specs and str of floats (FormatFloat)"
+}

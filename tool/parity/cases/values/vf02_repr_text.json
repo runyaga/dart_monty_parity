@@ -1,0 +1,5 @@
+{
+ "id": "vf02_repr_text",
+ "code": "[repr(x) for x in ('a\\'b\"', 'it\\'s', 'é\\n\\t\\x00\\x7f', '\\u2028', b'\\x00\\xff\"\\'', b\"'\", ('t',), [b'x'], {'k': None})]",
+ "note": "value_formatting: string and bytes repr quoting and escapes, nested in containers"
+}

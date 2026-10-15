@@ -20,8 +20,11 @@ crashed{at_deadline}, failed{callback_error} and complete's waited.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import hashlib
 import json
+import re
+import struct
 import sys
 import tempfile
 import time
@@ -940,6 +943,103 @@ def sp_load_garbage(pool: pm.Monty, t: T) -> None:
     with pool.checkout() as b:
         tried(t, lambda: b.load_snapshot(b'garbage'))
         run(t, lambda: b.feed_run('7'))
+
+
+def with_version(dump: bytes, version: int) -> bytes:
+    """[dump] with its format version (the little-endian u16 after the 6-byte `MONTY\\0` magic) replaced."""
+    return dump[:6] + struct.pack('<H', version) + dump[8:]
+
+
+DUMP_VERSIONS = (13, 12, 8, 14, 65535)
+
+
+@probe
+def sp_dump_version_window(pool: pm.Monty, t: T) -> None:
+    """A dump carries its format version; a build loads only its own (13): an older one (12, or the 0.0.23
+    baseline's 8) and a newer one (14, 65535) are refused with the version window in the message, and the session
+    that refused it runs on. The same for a suspension's dump through `load_snapshot`."""
+    with pool.checkout() as a:
+        run(t, lambda: a.feed_run('x = 41'))
+        idle = a.dump()
+    t.add({'ev': 'version', 'kind': 'session', 'current': struct.unpack('<H', idle[6:8])[0]})
+    for v in DUMP_VERSIONS:
+        with pool.checkout() as s:
+            t.add({'ev': 'load', 'version': v})
+            tried(t, lambda: s.load_session(with_version(idle, v)))
+            run(t, lambda: s.feed_run('x + 1' if v == 13 else '1'))
+    with pool.checkout() as a:
+        snap = a.feed_start('f()')
+        suspended = snap.dump()
+    t.add({'ev': 'version', 'kind': 'snapshot', 'current': struct.unpack('<H', suspended[6:8])[0]})
+    for v in DUMP_VERSIONS:
+        with pool.checkout() as s:
+            t.add({'ev': 'load', 'version': v})
+            x = tried(t, lambda: s.load_snapshot(with_version(suspended, v)))
+            if x is not None:
+                announced(t, x)
+                t.step(lambda: x.resume({'return_value': 2}))
+            run(t, lambda: s.feed_run('3'))
+
+
+# A naive instant (UTC), so the zone alone decides the local time.
+TZ_INSTANT = datetime.datetime(2024, 3, 1, 12, 30, 0)
+TZ_CODE = ("import datetime, time\nn = datetime.datetime.now()\n"
+           "a = datetime.datetime.now(datetime.timezone.utc).astimezone()\n"
+           "(str(n), str(a), a.tzname(), str(a.utcoffset()), time.timezone, time.tzname, a.strftime('%Z %z'),"
+           " str(datetime.date.today()))")
+TZ_FIXED = ({'offset_seconds': 19800, 'name': 'IST'}, {'offset_seconds': -12600}, {'offset_seconds': 0},
+            {'offset_seconds': -86399, 'name': 'x'}, {'offset_seconds': 3600, 'name': ''},
+            {'offset_seconds': 3600, 'name': 'Europe/London'}, {'offset_seconds': 86400}, 'Asia/Kolkata', 'Mars/Olympus')
+
+
+@probe
+def sp_fixed_offset_timezone(pool: pm.Monty, t: T) -> None:
+    """A fixed-offset `TimeZone` as the sandbox's zone: the local clock, `astimezone()`, `tzname`, `time.timezone`,
+    `%Z %z` and the date follow the offset; without a name the zone is called `UTC+hh:mm`; a name is only a label
+    (an IANA name included); an offset of a whole day or more is refused at checkout. An IANA name resolves with its
+    rules, and an unknown one is refused at checkout with its own text."""
+    for zone in TZ_FIXED:
+        t.add({'ev': 'zone', **zone} if isinstance(zone, dict) else {'ev': 'zone', 'iana': zone})
+        # Only the zone check's own refusal, with its text, counts; any other failure is recorded as it is.
+        try:
+            with pool.checkout(os_policy={'datetime': TZ_INSTANT, 'timezone': zone}) as s:
+                run(t, lambda: s.feed_run(TZ_CODE))
+        except ValueError as e:
+            t.add({'ev': 'zone_refused', 'message': str(e)})
+        except Exception as e:  # noqa: BLE001 - recorded
+            t.add({'ev': 'unexpected', 'cls': type(e).__name__, 'msg': str(e)})
+
+
+def limit_error(t: T, fn: Any) -> None:
+    """As `run`, with the byte counts in a memory limit's message replaced by N (they are the worker's heap)."""
+    run(t, fn)
+    last = t.events[-1]
+    if last.get('ev') == 'error':
+        last['message'] = re.sub(r'\d+ bytes', 'N bytes', last['message'])
+
+
+@probe
+def sp_input_resource_failure(pool: pm.Monty, t: T) -> None:
+    """An input the session's memory limit cannot hold, nested in a list too: the input converts and the feed's code
+    starts (it prints first), then the limit's first check fails the feed with MemoryError. In 1.1.0 the import path
+    (crates/monty/src/object_bridge.rs, import_node) allocates without a resource check, so InvalidInputError's
+    resource arm, which the runner handles, is never produced from a binding's input. The session is not finished,
+    but upstream keeps the failed input on its heap, so the next feed fails the same way; a small input runs on the
+    next checkout. The probe has its own pool: a worker that served a type-checked session keeps about 3 MB that a
+    later session's memory limit counts (upstream and core alike), so the shared worker's history would decide the
+    outcome."""
+    limits = pm.ResourceLimits(max_memory=70_000)
+    code = "print('started')\nlen(x)"
+    with pm.Monty(max_processes=1, checkout_timeout=10) as p:
+        for x in ('a' * 60_000, ['b', ['c' * 60_000]]):
+            with p.checkout(limits=limits) as s:
+                printed: list[str] = []
+                limit_error(t, lambda: s.feed_run(code, inputs={'x': x},
+                                                  print_callback=lambda _stream, text: printed.append(text)))
+                t.add({'ev': 'printed', 'text': ''.join(printed)})
+                limit_error(t, lambda: s.feed_run('1'))
+        with p.checkout(limits=limits) as s:
+            limit_error(t, lambda: s.feed_run('len(x)', inputs={'x': 'a' * 10}))
 
 
 @probe

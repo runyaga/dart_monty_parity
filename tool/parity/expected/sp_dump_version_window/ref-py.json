@@ -1,0 +1,201 @@
+{
+ "probe": "sp_dump_version_window",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "none"
+   }
+  },
+  {
+   "ev": "version",
+   "kind": "session",
+   "current": 13
+  },
+  {
+   "ev": "load",
+   "version": 13
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "42"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 12
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 12 is older than 13, the oldest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 8
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 8 is older than 13, the oldest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 14
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 14 is newer than 13, the newest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 65535
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 65535 is newer than 13, the newest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "version",
+   "kind": "snapshot",
+   "current": 13
+  },
+  {
+   "ev": "load",
+   "version": 13
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 3
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 12
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 12 is older than 13, the oldest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 8
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 8 is older than 13, the oldest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 14
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 14 is newer than 13, the newest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "load",
+   "version": 65535
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: dump format version 65535 is newer than 13, the newest this build reads",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  }
+ ],
+ "runner_error": null
+}
