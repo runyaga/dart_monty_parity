@@ -1,5 +1,5 @@
 {
- "subject": "dart_monty_core at the flip (core #253, head 8ddc8ca: Monty / MontySession on the worker, the 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core at the flip (core #253, head 0bf42d4: Monty / MontySession on the worker, the 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
   "vm": 65,
   "dart2js": 65,
@@ -166,7 +166,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -179,7 +179,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -192,7 +192,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -205,7 +205,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -218,7 +218,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -231,7 +231,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -244,7 +244,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -257,7 +257,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -270,7 +270,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -283,7 +283,7 @@
    ],
    "from": "ABSENT",
    "to": "PARTIAL",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -296,7 +296,7 @@
    ],
    "from": "ABSENT",
    "to": "PARTIAL",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -309,7 +309,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -322,7 +322,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -335,7 +335,7 @@
    ],
    "from": "ABSENT",
    "to": "PARTIAL",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -348,7 +348,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -361,7 +361,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -373,7 +373,7 @@
    ],
    "from": "REFUSED",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -389,7 +389,7 @@
     "REFUSED"
    ],
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -405,7 +405,7 @@
     "REFUSED"
    ],
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -418,7 +418,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -431,7 +431,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -444,7 +444,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -457,7 +457,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -470,7 +470,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -483,7 +483,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -496,7 +496,7 @@
    ],
    "from": "PRESENT",
    "to": "ABSENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the flip deletes MontyRepl (core #253); Monty / MontySession has no continuation-mode detection, so api_interactive_continuation records `absent`"
   },
@@ -509,7 +509,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -522,7 +522,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -535,7 +535,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -548,7 +548,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -561,7 +561,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -574,7 +574,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -587,7 +587,7 @@
    ],
    "from": "PRESENT",
    "to": "ABSENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the flip makes the `coroutine` marker for an async host function internal (C5-s), so the public-API probe async_gather records `absent`"
   },
@@ -600,7 +600,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -613,7 +613,7 @@
    ],
    "from": "PARTIAL",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -626,7 +626,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
@@ -639,7 +639,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "8ddc8ca",
+   "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   }
