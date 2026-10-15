@@ -1,0 +1,98 @@
+{
+ "probe": "sp_execution_watchdogs",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "watchdog",
+   "limit": "max_feed_duration_secs",
+   "grace": 0.1
+  },
+  {
+   "ev": "crashed",
+   "timed_out": true,
+   "at_deadline": true
+  },
+  {
+   "ev": "finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "watchdog",
+   "limit": "max_feed_duration_secs",
+   "grace": null
+  },
+  {
+   "ev": "error",
+   "type": "TimeoutError",
+   "message": "feed time limit exceeded",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "watchdog",
+   "limit": "max_turn_duration_secs",
+   "grace": 0.1
+  },
+  {
+   "ev": "crashed",
+   "timed_out": true,
+   "at_deadline": true
+  },
+  {
+   "ev": "finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "watchdog",
+   "limit": "max_turn_duration_secs",
+   "grace": null
+  },
+  {
+   "ev": "error",
+   "type": "TimeoutError",
+   "message": "turn time limit exceeded",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "2"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  }
+ ],
+ "runner_error": null
+}

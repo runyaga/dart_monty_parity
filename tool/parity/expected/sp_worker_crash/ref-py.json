@@ -1,0 +1,22 @@
+{
+ "probe": "sp_worker_crash",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "crashed",
+   "timed_out": false
+  },
+  {
+   "ev": "finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  }
+ ],
+ "runner_error": null
+}

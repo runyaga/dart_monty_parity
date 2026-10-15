@@ -1,0 +1,24 @@
+{
+ "probe": "sp_hard_memory_ceiling",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "the worker exceeded its memory limit and was terminated",
+   "tb_last": null
+  },
+  {
+   "ev": "finished"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  }
+ ],
+ "runner_error": null
+}

@@ -2593,6 +2593,46 @@
      "sp_type_check_skip_feed"
     ]
    }
+  },
+  "worker_recycling": {
+   "core_also": {
+    "probes": [
+     "sp_worker_recycling"
+    ]
+   }
+  },
+  "worker_diagnostics": {
+   "core_also": {
+    "probes": [
+     "sp_worker_pid"
+    ]
+   }
+  },
+  "execution_watchdogs": {
+   "core_also": {
+    "probes": [
+     "sp_execution_watchdogs"
+    ]
+   }
+  },
+  "worker_failure_reporting": {
+   "core_also": {
+    "probes": [
+     "sp_worker_crash"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_request_timeout"
+    ]
+   }
+  },
+  "hard_memory_ceiling": {
+   "core_also": {
+    "probes": [
+     "sp_hard_memory_ceiling"
+    ]
+   }
   }
  },
  "rescored": {

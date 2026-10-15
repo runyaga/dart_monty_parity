@@ -944,6 +944,159 @@ _probes = {
       await p.withSession((s) => _run(t, () => s.feedRun('1 + 1')));
     },
   ),
+  // ------------------------------------------- pool (M3 target)
+  // run_probes.py's sp_worker_recycling. Upstream names each worker by its
+  // process id; here a new worker is one more worker started ([_spawned]),
+  // which no eager start can blur (minProcesses: 0).
+  'sp_worker_recycling': (t, _, start) async {
+    for (final (limit, n) in [(2, 5), (0, 3)]) {
+      await _withPool(
+        start,
+        PoolOptions(
+          minProcesses: 0,
+          maxProcesses: 1,
+          maxCheckoutsPerWorker: limit,
+          checkoutTimeout: const Duration(seconds: 10),
+        ),
+        (p) async {
+          var seen = _spawned();
+          for (var i = 0; i < n; i++) {
+            await p.withSession((s) async {
+              await _run(t, () => s.feedRun('$i'));
+              final now = _spawned();
+              t.add({'ev': 'worker', 'new': now != seen});
+              seen = now;
+            });
+          }
+        },
+      );
+    }
+  },
+  'sp_worker_pid': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 2, checkoutTimeout: Duration(seconds: 10)),
+    (p) => p.withSession(
+      (a) => p.withSession((b) async {
+        final first = a.workerPid;
+        await _run(t, () => a.feedRun('1'));
+        await _run(t, () => b.feedRun('2'));
+        final other = b.workerPid;
+        t.add({
+          'ev': 'pid',
+          'is_int': first != null && first > 0,
+          'stable': a.workerPid == first,
+          'distinct': other != null && other != first,
+        });
+      }),
+    ),
+  ),
+  'sp_execution_watchdogs': (t, _, start) async {
+    for (final turn in [false, true]) {
+      for (final grace in [const Duration(milliseconds: 100), null]) {
+        await _withPool(
+          start,
+          PoolOptions(
+            maxProcesses: 1,
+            checkoutTimeout: const Duration(seconds: 10),
+            feedDurationLimitGrace: turn
+                ? PoolOptions.defaultDurationLimitGrace
+                : grace,
+            turnDurationLimitGrace: turn
+                ? grace
+                : PoolOptions.defaultDurationLimitGrace,
+          ),
+          (p) async {
+            t.add({
+              'ev': 'watchdog',
+              'limit': turn
+                  ? 'max_turn_duration_secs'
+                  : 'max_feed_duration_secs',
+              'grace': grace == null ? null : grace.inMilliseconds / 1000,
+            });
+            const limit = Duration(milliseconds: 100);
+            await p.withSession(
+              (s) async {
+                final clock = Stopwatch()..start();
+                try {
+                  t.add({
+                    'ev': 'complete',
+                    'value': identityCanon(await s.feedRun(_slowPow)),
+                  });
+                } on MontyCrashedError catch (e) {
+                  final at = clock.elapsed;
+                  t.add({
+                    'ev': 'crashed',
+                    'timed_out': e.timedOut,
+                    'at_deadline':
+                        at >= const Duration(milliseconds: 150) &&
+                        at < const Duration(milliseconds: 800),
+                  });
+                } on MontyRuntimeError catch (e) {
+                  final ev = _errEv(e.exception, e.traceback);
+                  // The limit's own text, without the measured duration.
+                  t.add({...ev, 'message': '${ev['message']}'.split(':')[0]});
+                }
+                await _finishedFeed(t, () => s.feedRun('2'));
+              },
+              limits: turn
+                  ? const ResourceLimits(maxTurnDuration: limit)
+                  : const ResourceLimits(maxFeedDuration: limit),
+            );
+            await p.withSession((s) => _run(t, () => s.feedRun('3')));
+          },
+        );
+      }
+    }
+  },
+  'sp_worker_crash': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
+    (p) async {
+      await p.withSession(
+        (s) async {
+          try {
+            t.add({
+              'ev': 'complete',
+              'value': identityCanon(await s.feedRun(_deepCompare)),
+            });
+          } on MontyCrashedError catch (e) {
+            t.add({'ev': 'crashed', 'timed_out': e.timedOut});
+          } on MontyRuntimeError catch (e) {
+            t.add(_errEv(e.exception, e.traceback));
+          } on Object catch (e) {
+            t.add({
+              'ev': 'refused',
+              'cls': e.runtimeType.toString(),
+              'msg': '$e',
+            });
+          }
+          await _finishedFeed(t, () => s.feedRun('2'));
+        },
+        limits: const ResourceLimits(
+          maxMemory: 512 * 1024 * 1024,
+          maxRecursionDepth: 100000000,
+        ),
+      );
+      await p.withSession((s) => _run(t, () => s.feedRun('3')));
+    },
+  ),
+  'sp_hard_memory_ceiling': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
+    (p) async {
+      await p.withSession((s) async {
+        await _run(
+          t,
+          () => s.feedRun(
+            'len(x)',
+            inputs: {'x': MontyBytes(Uint8List(10000000))},
+          ),
+        );
+        await _finishedFeed(t, () => s.feedRun('2'));
+      }, limits: const ResourceLimits(maxMemory: 1000000));
+      await p.withSession((s) => _run(t, () => s.feedRun('3')));
+    },
+  ),
   // The host function raises ValueError, the session's way today (core's
   // ExternalException naming the type); the sandbox catches it.
   'api_ext_result_callback': (t, shared, _) => shared.withSession(
@@ -1671,6 +1824,34 @@ Future<void> _checked(_T t, Future<MontyValue> Function() feed) async {
 _Ev _argumentRefusal(String ev, Object e) => e is ArgumentError
     ? {'ev': ev, 'message': '${e.message}'}
     : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'};
+
+/// run_probes.py's `SLOW_POW`: an operation the sandbox cannot interrupt.
+const _slowPow = 'x = 3 ** 30_000_000\n1';
+
+/// run_probes.py's `finished_feed`: a feed on a session that should be
+/// finished. `finished` for the session's finished refusal; any other
+/// refusal (a crash included) as `unexpected`, with its class and text.
+Future<void> _finishedFeed(_T t, Future<MontyValue> Function() feed) async {
+  try {
+    t.add({'ev': 'complete', 'value': identityCanon(await feed())});
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on MontySyntaxError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on Object catch (e) {
+    t.add(
+      e is StateError && e.message.contains('session is finished')
+          ? {'ev': 'finished'}
+          : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'},
+    );
+  }
+}
+
+/// run_probes.py's `DEEP_COMPARE`: a comparison that overflows the worker's
+/// stack.
+const _deepCompare =
+    'x = []\nfor i in range(300000):\n    x = [x]\n'
+    'y = []\nfor i in range(300000):\n    y = [y]\nx == y';
 
 /// run_probes.py's `TC_STUBS`.
 const _tcStubs = 'def f(x: int) -> int: ...\n';
