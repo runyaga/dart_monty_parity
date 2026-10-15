@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_json_empty",
+ "code": "import json\njson.loads('')",
+ "note": "structured_exception_data: JSONDecodeError on an empty document",
+ "exact_strings": true
+}

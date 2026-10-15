@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_json_uncaught",
+ "code": "import json\njson.loads('{\"a\": x}')",
+ "note": "structured_exception_data: JSONDecodeError: doc, pos, lineno, colno",
+ "exact_strings": true
+}

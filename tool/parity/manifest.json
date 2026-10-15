@@ -4318,6 +4318,83 @@
     "ref-py": "1fb80f72ae38e0c8116aad20d1832ae26dfa708d7440cd9424561ad3a9603652"
    }
   },
+  "w_exc_data_bare_reraise": {
+   "suite": "worker_values",
+   "case": "0662fac13bd378ae102a153a8405a8750c05e435e0782e173a74fbc4609b19d1",
+   "outcomes": {
+    "ref-py": "782b9e3828651854c24df42640decffc8430a448ab02007cff079a32860d041e"
+   }
+  },
+  "w_exc_data_decode_ascii": {
+   "suite": "worker_values",
+   "case": "7d8916873a94f987df0661210f41cff5f868080742318bf86fba92a4667bd3e2",
+   "outcomes": {
+    "ref-py": "5ed78d3c4b3a1cf2235ee7a1148f9867979efbc68ca8b5106252a4f22e7022d4"
+   }
+  },
+  "w_exc_data_decode_uncaught": {
+   "suite": "worker_values",
+   "case": "737618c1ec313252db705511e648da7c1cd07d369de4e70f47545be45715bcb9",
+   "outcomes": {
+    "ref-py": "7680258919fbe1450d0aa3b65d112ee5060bf9e0a7fcbf29e35650bd0c308a33"
+   }
+  },
+  "w_exc_data_encode_uncaught": {
+   "suite": "worker_values",
+   "case": "935baf626e6827ddb304ece2d02fbae0da7d69681bd8c5dc9bfa02267a0deb30",
+   "outcomes": {
+    "ref-py": "79c87ab3727c3cce9112f50a4d6fb228feabc54d57b3bc2525827e62fa514915"
+   }
+  },
+  "w_exc_data_json_empty": {
+   "suite": "worker_values",
+   "case": "9159f7c84ba006fc3794da1bfb7219b2e20026b2115f7208c53bfd32c414dc1a",
+   "outcomes": {
+    "ref-py": "9cb9f774a139e6215a89b080a4e8083ad946708a29e7a998f86dde08ed469844"
+   }
+  },
+  "w_exc_data_json_uncaught": {
+   "suite": "worker_values",
+   "case": "9eeaa6934956eaa12fb3d292a5847de0426a7e4132402016dd70f9569b93463c",
+   "outcomes": {
+    "ref-py": "382cf13934073e80d99c3d23c4994e46afc537495ca19489e543df0b6067844c"
+   }
+  },
+  "w_exc_data_manual_decode": {
+   "suite": "worker_values",
+   "case": "4781f35e0a21e974d4f4e26e0ba961ddc9a591fee1d761e84f375e44ec822da4",
+   "outcomes": {
+    "ref-py": "571ae7a2cdc1e721b0b365cf8d5c4219db873675724e579b20a26ccbde2bfcec"
+   }
+  },
+  "w_exc_data_manual_encode": {
+   "suite": "worker_values",
+   "case": "41fb6898aabc9f93ad8a804cf4d26c2171b9c73814b14308c37220aca04d5f57",
+   "outcomes": {
+    "ref-py": "506f31d9ea31d3034dc10e95d812952c3f46432782bafc2504b6d4cd6b5d2901"
+   }
+  },
+  "w_exc_data_manual_json": {
+   "suite": "worker_values",
+   "case": "c63995c63b23979d25f1730ce617efc0aa88ba39c1587df2cd45f4b29d3c89f2",
+   "outcomes": {
+    "ref-py": "354ae1d73f6232d711af7f697e66a163ef2a22f28f5a7bfe6792cc76f9311eab"
+   }
+  },
+  "w_exc_data_then_ok": {
+   "suite": "worker_values",
+   "case": "f814918b74aa35f9c8b6394abe171e1ce16b15bab390b13fbe9020d457b5d754",
+   "outcomes": {
+    "ref-py": "d6e3dd6454d940f245887dd21df653db1c4d374f2b2781c9af8c2a9dc384c044"
+   }
+  },
+  "w_exc_data_wrapped": {
+   "suite": "worker_values",
+   "case": "61a404db716865c8ef181b41779a6c8ac0dbf91e8b2b3fa55876aaed491bae32",
+   "outcomes": {
+    "ref-py": "2f8d84e2b6bcaa3bd73809e863f9d7dd1e97b2c2b3f051daa1f114b1b87944ac"
+   }
+  },
   "w_exc_lossy_in": {
    "suite": "worker_values",
    "case": "9d899da09e56a7c49da06ae8a228408d20a50f8b60d617925d6f11ac03e9f9c7",

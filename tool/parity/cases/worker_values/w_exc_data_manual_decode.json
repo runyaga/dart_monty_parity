@@ -1,0 +1,6 @@
+{
+ "id": "w_exc_data_manual_decode",
+ "code": "raise UnicodeDecodeError('x')",
+ "note": "structured_exception_data: raised by hand, no data",
+ "exact_strings": true
+}

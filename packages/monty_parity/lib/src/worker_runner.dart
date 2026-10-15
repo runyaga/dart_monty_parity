@@ -20,6 +20,7 @@ import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
+import 'package:dart_monty_core/src/platform/exception_attributes.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/monty_snapshot.dart';
@@ -183,11 +184,19 @@ Future<Map<String, Object?>> runEngineCase(
         step['value'] = identityCanon(value);
         host.rawOutputs.add(value);
       } on MontyRuntimeError catch (e) {
-        step['exception'] = raisedDisplayed(e.display, e.traceback);
+        step['exception'] = raisedDisplayed(
+          e.display,
+          e.traceback,
+          exceptionAttributes(e.exception),
+        );
         step['thrown'] = 'MontyRuntimeError';
         host.rawOutputs.add(null);
       } on MontySyntaxError catch (e) {
-        step['exception'] = raisedDisplayed(e.display, e.traceback);
+        step['exception'] = raisedDisplayed(
+          e.display,
+          e.traceback,
+          exceptionAttributes(e.exception),
+        );
         step['thrown'] = 'MontySyntaxError';
         host.rawOutputs.add(null);
         // A dead worker is an outcome here.
@@ -540,8 +549,9 @@ List<Object?> identityCanonBatch(List<MontyValue> roots) {
 /// reads as `ValueError`).
 Map<String, Object?> raisedDisplayed(
   String Function([String format]) display,
-  List<Frame> traceback,
-) {
+  List<Frame> traceback, [
+  Map<String, MontyValue> attributes = const {},
+]) {
   final msg = display('msg');
   final typeMsg = display('type-msg');
   final type = msg.isNotEmpty && typeMsg.endsWith(': $msg')
@@ -552,8 +562,24 @@ Map<String, Object?> raisedDisplayed(
     'type': type,
     'message': msg,
     'traceback': [for (final f in traceback) _frameC(f)],
+    if (attributes.isNotEmpty) 'data': _excData(attributes),
   };
 }
+
+/// An exception's structured payload as the oracle's `exc_data` records it:
+/// the kind (`unicode` when the attributes name an encoding, else `json`),
+/// `object` in canonical form and the other attributes as plain ints and
+/// strings.
+Map<String, Object?> _excData(Map<String, MontyValue> attributes) => {
+  'kind': attributes.containsKey('encoding') ? 'unicode' : 'json',
+  for (final MapEntry(:key, :value) in attributes.entries)
+    key: switch (value) {
+      _ when key == 'object' => montyToCanon(value),
+      MontyInt(value: final n) => n,
+      MontyString(value: final text) => text,
+      _ => montyToCanon(value),
+    },
+};
 
 Map<String, Object?> _frameC(Frame f) => {
   'filename': f.filename,
