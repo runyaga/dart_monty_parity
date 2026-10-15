@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "75ec6017a3e88f98a69c73e54b12bb13eccb607871845fd1a7a6dde0c02a6030",
+  "sha256": "26294307fa20e4e764f8cb05d1da8790c8372cb757665201227f5ee59b42e475",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "75a98fe2cce65f9b25848d9db0134b5b8f226b200b50b4e950ba60707c07ef54",
+   "tool/parity/oracle/run_probes.py": "ee89dc18647c2a41f6802c0e97b23982445f942db8e9f6c90acdadcf02cf79c4",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -5158,6 +5158,11 @@
   "sp_input_resource_failure": {
    "outcomes": {
     "ref-py": "05ab6ace05821d12a9adec32026cb5194e120b64cebee0b10461298ab7b81e14"
+   }
+  },
+  "sp_install_dependencies": {
+   "outcomes": {
+    "ref-py": "995c79515c0c98743783dcd00d6a440f3bfb639a5b389a4ac219b2378f543ef1"
    }
   },
   "sp_load_adopts_dump": {

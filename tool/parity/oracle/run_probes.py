@@ -490,6 +490,43 @@ def sp_hard_memory_ceiling(pool: pm.Monty, t: T) -> None:
             run(t, lambda: s.feed_run('3'))
 
 
+def install(t: T, fn: Any) -> None:
+    """An `install_dependencies` call: `installed`, a MontyRuntimeError as its error, and each binding refusal by
+    its kind (a requirement with no UTF-8 form; a call while a suspension is unanswered); anything else as
+    `unexpected` with its class and text."""
+    try:
+        fn()
+        t.add({'ev': 'installed'})
+    except pm.MontyRuntimeError as e:
+        t.add(err_ev(e))
+    except UnicodeEncodeError:
+        t.add({'ev': 'unencodable'})
+    except Exception as e:  # noqa: BLE001 - recorded
+        if 'suspension is awaiting an answer' in str(e):
+            t.add({'ev': 'pending'})
+        else:
+            t.add({'ev': 'unexpected', 'cls': type(e).__name__, 'msg': str(e)})
+
+
+@probe
+def sp_install_dependencies(pool: pm.Monty, t: T) -> None:
+    """The pure-Monty worker installs nothing: an empty list succeeds; any requirement raises RuntimeError and the
+    session runs on. Each requirement is checked first, in order: a blank one, or one starting with `-`, raises
+    ValueError; one with no UTF-8 form is refused before any is checked. A call while a suspension is unanswered is
+    refused, and the suspension then resumes."""
+    with pool.checkout() as s:
+        install(t, lambda: s.install_dependencies([]))
+        install(t, lambda: s.install_dependencies(['httpx']))
+        install(t, lambda: s.install_dependencies(['httpx', '  ']))
+        install(t, lambda: s.install_dependencies([' -e x']))
+        install(t, lambda: s.install_dependencies(['a', '\udc80']))
+        run(t, lambda: s.feed_run('1'))
+        x = t.step(lambda: s.feed_start('f()'))
+        install(t, lambda: s.install_dependencies([]))
+        if x is not None:
+            t.step(lambda: x.resume({'return_value': 2}))
+
+
 @probe
 def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
     """A system `time.sleep` is waited, not skipped: 0.3 s passes before the feed ends."""
