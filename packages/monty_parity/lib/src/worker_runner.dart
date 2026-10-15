@@ -413,11 +413,12 @@ SessionConfig workerConfig(
 }
 
 /// A case's `os_policy` as core's [OsPolicy], or null when it has none. A
-/// fixed datetime without an offset is a UTC instant, as upstream reads a
-/// naive one. A form the case file spells but this reader does not build (a
-/// fixed datetime whose microseconds the platform's `DateTime` cannot hold:
-/// a web `DateTime` holds whole milliseconds) is recorded under
-/// `unsupported`, and the policy is left out.
+/// fixed datetime is read only in its naive form (`YYYY-MM-DDTHH:MM[:SS[.f]]`,
+/// no offset), as a UTC instant, as upstream reads a naive one. A form the
+/// case file spells but this reader does not build (a fixed datetime with an
+/// offset, or other than naive, or whose microseconds the platform's
+/// `DateTime` cannot hold) is recorded under `unsupported`, and the policy
+/// is left out.
 OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
   final p = (c['os_policy'] as Map?)?.cast<String, Object?>();
   if (p == null) return null;
@@ -443,7 +444,7 @@ OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
     fixed = _fixedInstant(iso);
     if (fixed == null) {
       unsupported['os_policy'] =
-          'a fixed datetime: a web DateTime holds whole milliseconds';
+          'a fixed datetime other than a naive one this DateTime holds exactly';
 
       return null;
     }
@@ -460,12 +461,16 @@ OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
   );
 }
 
-/// [iso] (an ISO 8601 instant; without an offset, UTC) as a [DateTime], or
-/// null when this platform's [DateTime] cannot hold its microseconds.
+/// [iso], a naive ISO 8601 datetime (`YYYY-MM-DDTHH:MM[:SS[.f]]`, no
+/// offset), as a UTC [DateTime]; null for any other form, or when this
+/// platform's [DateTime] cannot hold its microseconds.
 DateTime? _fixedInstant(String iso) {
-  final zoned = RegExp(r'(Z|[+-]\d\d:?\d\d)$').hasMatch(iso);
-  final instant = DateTime.parse(zoned ? iso : '${iso}Z');
-  final fraction = RegExp(r'\.(\d+)').firstMatch(iso)?.group(1) ?? '';
+  final naive = RegExp(
+    r'^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.(\d+))?)?$',
+  ).firstMatch(iso);
+  if (naive == null) return null;
+  final instant = DateTime.parse('${iso}Z');
+  final fraction = naive.group(1) ?? '';
   final micros = int.parse(fraction.padRight(6, '0').substring(0, 6));
 
   return instant.millisecond * 1000 + instant.microsecond == micros

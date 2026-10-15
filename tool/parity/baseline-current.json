@@ -1,28 +1,28 @@
 {
  "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine and host classes), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 73,
-  "dart2js": 73,
-  "dart2wasm": 73
+  "vm": 74,
+  "dart2js": 74,
+  "dart2wasm": 74
  },
  "totals": {
   "vm": {
-   "ABSENT": 44,
-   "PRESENT": 73,
+   "ABSENT": 43,
+   "PRESENT": 74,
    "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 40,
-   "PRESENT": 73,
+   "ABSENT": 39,
+   "PRESENT": 74,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 40,
-   "PRESENT": 73,
+   "ABSENT": 39,
+   "PRESENT": 74,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 73,
-    "dart2js": 73,
-    "dart2wasm": 73
+    "vm": 74,
+    "dart2js": 74,
+    "dart2wasm": 74
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 73,
-    "dart2js": 73,
-    "dart2wasm": 73
+    "vm": 74,
+    "dart2js": 74,
+    "dart2wasm": 74
    }
   }
  },
@@ -758,7 +758,7 @@
    "to": "PRESENT",
    "commit": "2b7d431",
    "pr": null,
-   "why": "the runner passes the case's fixed datetime to core's public OsPolicy.fixedDatetime (a naive ISO instant as UTC, as upstream reads it) instead of recording it unsupported; b14_date_fixed now MATCHes"
+   "why": "the runner passes the case's naive fixed datetime to core's public OsPolicy.fixedDatetime as a UTC instant (as upstream reads a naive one) instead of recording it unsupported; b14_date_fixed now MATCHes"
   },
   {
    "row": "clock_source",
@@ -771,7 +771,7 @@
    "to": "PRESENT",
    "commit": "2b7d431",
    "pr": null,
-   "why": "the runner passes the case's fixed datetime to core's public OsPolicy.fixedDatetime (a naive ISO instant as UTC, as upstream reads it) instead of recording it unsupported; b14_date_fixed now MATCHes"
+   "why": "the runner passes the case's naive fixed datetime to core's public OsPolicy.fixedDatetime as a UTC instant (as upstream reads a naive one) instead of recording it unsupported; b14_date_fixed now MATCHes"
   },
   {
    "row": "turn_execution_limit",
@@ -784,7 +784,20 @@
    "to": "PRESENT",
    "commit": "2b7d431",
    "pr": null,
-   "why": "the runner passes the case's max_turn_duration_secs to core's public ResourceLimits.maxTurnDuration instead of recording it unsupported; l11_turn_reset_on_resume now MATCHes"
+   "why": "the runner passes the case's max_turn_duration_secs to core's public ResourceLimits.maxTurnDuration (the worker and the session driver both) instead of recording it unsupported; l11_turn_reset_on_resume now MATCHes"
+  },
+  {
+   "row": "garbage_collection_interval",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the runner passes the case's gc_interval to core's public ResourceLimits.gcInterval (the worker and the session driver both) instead of recording it unsupported; g01_gc_interval_small now MATCHes"
   }
  ],
  "rows": {
@@ -1099,9 +1112,9 @@
    "dart2wasm": "PRESENT"
   },
   "garbage_collection_interval": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "exception_taxonomy": {
    "vm": "PRESENT",
@@ -5721,9 +5734,9 @@
   },
   "garbage_collection_interval": {
    "g01_gc_interval_small": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "exception_taxonomy": {
