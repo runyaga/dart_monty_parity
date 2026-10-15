@@ -114,6 +114,8 @@ SessionConfig sessionConfig(
             maxMemory: base?.maxMemory,
             maxRecursionDepth: base?.maxRecursionDepth,
             maxFeedDuration: base?.maxFeedDuration,
+            maxTurnDuration: base?.maxTurnDuration,
+            gcInterval: base?.gcInterval,
             maxSuspensions: suspensions,
             maxTotalSleep: sleep == null
                 ? null
