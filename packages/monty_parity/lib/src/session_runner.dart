@@ -20,6 +20,7 @@
 
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:monty_parity/src/case_runner.dart';
 import 'package:monty_parity/src/host_world.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
@@ -54,7 +55,12 @@ Future<Map<String, Object?>> runSessionCase(
       host is SessionHost && host.active ? host : null,
     ),
     configure: sessionConfig,
-    hostFor: SessionHost.new,
+    // The core engine builds values only through the public API; host
+    // objects need the internal HostClass (C5-s), so its cases run without
+    // their host world, as the old public engine's did.
+    hostFor: engine == 'core'
+        ? (c) => CoreHost(c, publicOnly: true)
+        : SessionHost.new,
     applies: _applies,
   );
 }

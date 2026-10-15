@@ -1,29 +1,29 @@
 {
- "subject": "dart_monty_core at the flip (core #253, head afa20f9: Monty / MontySession on the worker, 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core at the flip (core #253, head afa20f9: Monty / MontySession on the worker, the 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 69,
-  "dart2js": 69,
-  "dart2wasm": 69
+  "vm": 66,
+  "dart2js": 66,
+  "dart2wasm": 66
  },
  "totals": {
   "vm": {
-   "ABSENT": 47,
-   "PRESENT": 69,
-   "PARTIAL": 42,
+   "ABSENT": 51,
+   "PRESENT": 66,
+   "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 43,
-   "PRESENT": 69,
-   "PARTIAL": 44,
+   "ABSENT": 47,
+   "PRESENT": 66,
+   "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 43,
-   "PRESENT": 69,
-   "PARTIAL": 44,
+   "ABSENT": 47,
+   "PRESENT": 66,
+   "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -33,9 +33,9 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 69,
-    "dart2js": 69,
-    "dart2wasm": 69
+    "vm": 66,
+    "dart2js": 66,
+    "dart2wasm": 66
    }
   },
   "x86_64": {
@@ -47,9 +47,9 @@
     }
    },
    "present": {
-    "vm": 68,
-    "dart2js": 69,
-    "dart2wasm": 68
+    "vm": 65,
+    "dart2js": 66,
+    "dart2wasm": 65
    },
    "cause": {
     "float_values": "float(\"nan\") reaches the host with the sign bit set on x86_64 (fff8000000000000; upstream 7ff8000000000000): a core defect, recorded as measured"
@@ -184,7 +184,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "exception_value_conversion",
@@ -197,20 +197,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "builtin_type_function_handles",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "PARTIAL",
-   "to": "PRESENT",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "lossy_output_placeholders",
@@ -223,7 +210,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "boundary_value_graph",
@@ -236,72 +223,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "host_eager_attributes",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "ABSENT",
-   "to": "PARTIAL",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "host_instance_value",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "PARTIAL",
-   "to": "PRESENT",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "host_class_value",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "ABSENT",
-   "to": "PRESENT",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "host_constructor_policy",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "ABSENT",
-   "to": "PARTIAL",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
-  },
-  {
-   "row": "host_value_conversion_hook",
-   "backends": [
-    "vm",
-    "dart2js",
-    "dart2wasm"
-   ],
-   "from": "ABSENT",
-   "to": "PARTIAL",
-   "commit": "afa20f9",
-   "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "async_os_sleep",
@@ -314,7 +236,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "os_calendar_calls",
@@ -327,7 +249,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "os_entropy",
@@ -340,7 +262,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "os_clock_reads",
@@ -353,7 +275,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "os_sync_sleep",
@@ -366,7 +288,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "working_directory",
@@ -379,7 +301,7 @@
    "to": "PARTIAL",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "clock_source",
@@ -392,7 +314,7 @@
    "to": "PARTIAL",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "sleep_policy",
@@ -405,7 +327,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "random_initialization",
@@ -418,7 +340,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "configure_os_policy",
@@ -431,7 +353,7 @@
    "to": "PARTIAL",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "raised_exception",
@@ -444,7 +366,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "traceback_frames",
@@ -457,7 +379,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "recursion_limit",
@@ -469,7 +391,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "resource_failure_semantics",
@@ -485,7 +407,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "feed_execution_limit",
@@ -501,7 +423,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "host_suspension_budget",
@@ -514,7 +436,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "host_sleep_budget",
@@ -527,7 +449,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "source_nesting_guard",
@@ -540,7 +462,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "exception_taxonomy",
@@ -553,7 +475,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "structured_exception_data",
@@ -566,7 +488,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "process_clock_policy",
@@ -579,7 +501,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "interactive_continuation",
@@ -605,7 +527,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "external_call_arguments",
@@ -618,7 +540,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "register_pending_future",
@@ -631,7 +553,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "eager_coroutine_completion",
@@ -644,7 +566,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "run_progress_variants",
@@ -657,7 +579,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "resume_os_call",
@@ -670,7 +592,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "snapshot_auto_resume",
@@ -683,7 +605,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "feed_repl_suspendable",
@@ -696,7 +618,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "suspension_source_position",
@@ -709,7 +631,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   },
   {
    "row": "abandon_suspended_feed",
@@ -722,7 +644,7 @@
    "to": "PRESENT",
    "commit": "afa20f9",
    "pr": 253,
-   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core probes share the session engine's (P-cut)"
+   "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
   }
  ],
  "rows": {
@@ -797,9 +719,9 @@
    "dart2wasm": "PRESENT"
   },
   "builtin_type_function_handles": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "lossy_output_placeholders": {
    "vm": "PRESENT",
@@ -812,14 +734,14 @@
    "dart2wasm": "PRESENT"
   },
   "host_eager_attributes": {
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
+  },
+  "host_instance_value": {
    "vm": "PARTIAL",
    "dart2js": "PARTIAL",
    "dart2wasm": "PARTIAL"
-  },
-  "host_instance_value": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
   },
   "host_class_type_proxy": {
    "vm": "ABSENT",
@@ -832,19 +754,19 @@
    "dart2wasm": "ABSENT"
   },
   "host_class_value": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "host_constructor_policy": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "host_value_conversion_hook": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "os_path_predicates": {
    "vm": "PRESENT",
@@ -1463,9 +1385,9 @@
     "dart2wasm": "MATCH"
    },
    "i_type": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "r_type": {
     "vm": "MATCH",
@@ -1539,9 +1461,9 @@
   },
   "host_eager_attributes": {
    "h_x01_eager_all": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_x02_eager_list": {
     "vm": "DIVERGE",
@@ -1571,9 +1493,9 @@
     "dart2wasm": "MATCH"
    },
    "h_x17_return_original": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "host_class_type_proxy": {
@@ -1597,16 +1519,16 @@
   },
   "host_class_value": {
    "h_x09_class_init": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "host_constructor_policy": {
    "h_x09_class_init": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_x11_class_methods": {
     "vm": "DIVERGE",
@@ -1616,9 +1538,9 @@
   },
   "host_value_conversion_hook": {
    "h_x13_convert_upper": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    },
    "h_x14_convert_redact": {
     "vm": "DIVERGE",
@@ -1626,9 +1548,9 @@
     "dart2wasm": "DIVERGE"
    },
    "h_x15_convert_wrap": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "DIVERGE",
+    "dart2js": "DIVERGE",
+    "dart2wasm": "DIVERGE"
    }
   },
   "os_path_predicates": {

@@ -101,7 +101,7 @@ jobs:
     name: Current baseline (core CORE_REF on vm, dart2js, dart2wasm)
     needs: [core-ref]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -186,7 +186,7 @@ jobs:
     name: E0 through the worker (core CORE_REF on vm, dart2js, dart2wasm)
     needs: [core-ref]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

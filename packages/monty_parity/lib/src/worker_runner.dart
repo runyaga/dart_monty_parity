@@ -441,25 +441,28 @@ Map<String, Object?> _callRecord(
 /// a file handle, and a sandbox class instance the host names by id
 /// (`instance_id`, `class_id`), which the worker resolves, or the driver
 /// refuses when the id is not a canonical uuid.
-MontyValue? _workerExtra(Map<String, Object?> c) => switch (c['t']) {
-  'filehandle' => MontyFileHandle(
-    path: c['path']! as String,
-    mode: c['mode']! as String,
-    position: _position(c['position']! as String),
-  ),
-  'proxy' => montyClassProxy(
-    classType: montyClassTypeProxy(
-      name: c['class']! as String,
-      id: c['class_id']! as String,
-      hostDefined: false,
-      isDataclass: (c['dataclass'] as bool?) ?? false,
-      attrs: const {},
-    ),
-    instanceId: c['instance_id']! as String,
-    attrs: const {},
-  ),
-  _ => null,
-};
+CanonExtra _workerExtra(CoreHost host) =>
+    (c) => switch (c['t']) {
+      'filehandle' => MontyFileHandle(
+        path: c['path']! as String,
+        mode: c['mode']! as String,
+        position: _position(c['position']! as String),
+      ),
+      'proxy' =>
+        host.internal('a sandbox class proxy') ??
+            montyClassProxy(
+              classType: montyClassTypeProxy(
+                name: c['class']! as String,
+                id: c['class_id']! as String,
+                hostDefined: false,
+                isDataclass: (c['dataclass'] as bool?) ?? false,
+                attrs: const {},
+              ),
+              instanceId: c['instance_id']! as String,
+              attrs: const {},
+            ),
+      _ => null,
+    };
 
 /// A file position as an `int`; one an `int` cannot hold exactly on this
 /// compiler is inexpressible until the position is a `BigInt` (the cutover).
@@ -477,7 +480,7 @@ MontyValue _input(
   Map<String, Object?> c,
   CoreHost host,
   Map<int, MontyValue> memo,
-) => canonToMonty(c, host, memo, _workerExtra);
+) => canonToMonty(c, host, memo, _workerExtra(host));
 
 /// A scripted answer [a] for the call to [name], as the driver takes it.
 MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
@@ -485,7 +488,7 @@ MontyValue _answer(Map<String, Object?>? a, String name, CoreHost host) {
     throw ExternalException('NameError', "name '$name' is not defined");
   }
   if (a['return'] case final Map<Object?, Object?> ret) {
-    return canonToMonty(ret.cast(), host, null, _workerExtra);
+    return canonToMonty(ret.cast(), host, null, _workerExtra(host));
   }
   if (a['echo'] case final int step) {
     return host.rawOutputs[step] ??

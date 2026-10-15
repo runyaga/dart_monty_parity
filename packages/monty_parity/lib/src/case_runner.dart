@@ -304,10 +304,16 @@ MontyValue canonToMonty(
       c['type']! as String,
       c['arg'] as String?,
     ),
-    'type' => montyStdTypeProxy('type', c['name']! as String),
-    'builtin' => montyStdTypeProxy('function', c['name']! as String),
+    'type' =>
+      host.internal('a type proxy') ??
+          montyStdTypeProxy('type', c['name']! as String),
+    'builtin' =>
+      host.internal('a builtin proxy') ??
+          montyStdTypeProxy('function', c['name']! as String),
     'echo' => host.rawOutputs[c['step']! as int]!,
-    'wrap' => host.wrapperValue(c['w']! as String),
+    'wrap' =>
+      host.internal('a host-object proxy') ??
+          host.wrapperValue(c['w']! as String),
     'proxy' => throw const Inexpressible(
       'core: no way to rebuild a proxy from canonical',
     ),
@@ -328,12 +334,22 @@ MontyValue canonToMonty(
 /// conversion hooks.
 class CoreHost {
   /// Builds the host world a case's `host` block describes.
-  CoreHost(Map<String, Object?> c) {
+  CoreHost(Map<String, Object?> c, {this.publicOnly = false}) {
     final host = ((c['host'] as Map?) ?? const {}).cast<String, Object?>();
     classes = ((host['classes'] as Map?) ?? const {}).cast<String, Object?>();
     objects = ((host['objects'] as Map?) ?? const {}).cast<String, Object?>();
     wspecs = ((host['wrappers'] as Map?) ?? const {}).cast<String, Object?>();
   }
+
+  /// Whether the engine builds values only through core's public API (the
+  /// `core` engine): a value only an internal factory makes is then
+  /// inexpressible.
+  final bool publicOnly;
+
+  /// Throws [Inexpressible] for [what] when [publicOnly]; else null.
+  Never? internal(String what) => publicOnly
+      ? throw Inexpressible("core's public API cannot construct $what")
+      : null;
 
   /// Class specs by name.
   late final Map<String, Object?> classes;

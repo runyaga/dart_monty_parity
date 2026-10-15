@@ -139,27 +139,34 @@ def sh(cmd: list[str], log: Path, timeout: int | None = None) -> int:
             return -999
 
 
-def run_vm(cases: list[Path], out: Path, log: Path) -> None:
+def run_vm(cases: list[Path], out: Path, log: Path) -> int:
+    """The core engine on the VM; 1 if any runner process failed (a runner error, a leaked worker, a cap)."""
+    probes = core_probes()
+    clear_outcomes(cases, out, 'core', 'vm', probes)
+    failed = False
     batch = [c for c in cases if not json.loads(c.read_text()).get('isolate')]
     isolated = [c for c in cases if json.loads(c.read_text()).get('isolate')]
     runner = ['dart', 'run', 'bin/parity_session_vm.dart']
     if batch:
         rc = sh([*runner, str(out), *map(str, batch), '--engine=core'], log)
+        failed |= rc != 0
         print(f'vm batch: {len(batch)} cases, exit {rc}', flush=True)
     for c in isolated:
         cid = json.loads(c.read_text())['id']
         rc = sh([*runner, str(out), str(c), '--engine=core'], log, timeout=ISOLATE_SECS)
-        if rc != 0:
+        failed |= rc != 0
+        if rc == -999 or not (out / cid / 'core-vm.json').exists():
             write(out, placeholder(cid, 'vm', f'parity_session_vm exit {rc} (-999 = killed after {ISOLATE_SECS} s)'))
         print(f'vm {cid}: exit {rc}', flush=True)
     for c in cases:
         cid = json.loads(c.read_text())['id']
         if not (out / cid / 'core-vm.json').exists():
             write(out, placeholder(cid, 'vm', 'no outcome written'))
-    probes = core_probes()
     rc = sh([*runner, str(out), f'--probes={",".join(probes)}', '--engine=core'], log, timeout=600)
+    failed |= rc != 0
     print(f'vm probes: exit {rc}', flush=True)
     probe_placeholders(probes, out, 'core', 'vm', f'no outcome written (exit {rc})')
+    return 1 if failed else 0
 
 
 def bake(cases: list[Path], probes: list[str] = (), engine: str = 'session') -> None:
@@ -318,10 +325,11 @@ def main() -> int:
                 print(f'FAIL: the {a.engine} runner exited {rc}; see {log}', flush=True)
             if rc != 0 or not crashes_ok:
                 return 1
-        elif a.backend == 'vm':
-            run_vm(cases, out, log)
         else:
-            run_web(a.backend, cases, out, log, core)
+            rc = run_vm(cases, out, log) if a.backend == 'vm' else run_web(a.backend, cases, out, log, core)
+            if rc != 0:
+                print(f'FAIL: the core runner exited {rc}; see {log}', flush=True)
+                return 1
     finally:
         override.unlink(missing_ok=True)
     return 0
