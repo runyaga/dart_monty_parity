@@ -1,0 +1,65 @@
+{
+ "case": "vf02_repr_text",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "str",
+      "v": "'a\\'b\"'"
+     },
+     {
+      "t": "str",
+      "v": "\"it's\""
+     },
+     {
+      "t": "str",
+      "v": "'é\\n\\t\\x00\\x7f'"
+     },
+     {
+      "t": "str",
+      "v": "'\\u2028'"
+     },
+     {
+      "t": "str",
+      "v": "b'\\x00\\xff\"\\''"
+     },
+     {
+      "t": "str",
+      "v": "b\"'\""
+     },
+     {
+      "t": "str",
+      "v": "('t',)"
+     },
+     {
+      "t": "str",
+      "v": "[b'x']"
+     },
+     {
+      "t": "str",
+      "v": "{'k': None}"
+     }
+    ]
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

@@ -1,0 +1,5 @@
+{
+ "id": "vf01_repr_numbers",
+ "code": "[repr(x) for x in (1.0, 1e16, 1e-05, 0.1 + 0.2, float('nan'), -0.0, float('inf'), 1e300 * 10, 5e-324, 2 ** 70, -(2 ** 64), 1j, complex(1, -0.0), complex(-1.5, 2e20), True)]",
+ "note": "value_formatting: repr of floats (shortest round-trip, exponent switch), ints, complex"
+}

@@ -1,0 +1,5 @@
+{
+ "id": "vf04_str_containers",
+ "code": "[str(x) for x in (frozenset(), set(), {1: 2}, (1,), (), [None, True], {'a': [1, (2,)], 3: {4}}, frozenset({1}), Ellipsis, None)]",
+ "note": "value_formatting: str of containers and singletons"
+}

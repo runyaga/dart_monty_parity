@@ -2633,6 +2633,58 @@
      "sp_hard_memory_ceiling"
     ]
    }
+  },
+  "value_formatting": {
+   "core_also": {
+    "cases": [
+     "vf01_repr_numbers",
+     "vf02_repr_text",
+     "vf03_format_spec",
+     "vf04_str_containers",
+     "v_repr"
+    ]
+   }
+  },
+  "sandbox_timezone": {
+   "core_also": {
+    "probes": [
+     "sp_fixed_offset_timezone"
+    ]
+   },
+   "worker": {
+    "also": [
+     "w_tzdb_london",
+     "w_tzdb_new_york",
+     "w_tzdb_kolkata",
+     "w_tzdb_lowercase",
+     "w_tzdb_utc_name"
+    ]
+   },
+   "note": "Fixed offsets, an IANA name and an unknown name (refused with its own text) through the public session (core_also); named IANA zones through the worker (`also`, the timezone_database value cases). w_tzdb_unknown is not mapped: its local_refusal rule does not compare the refusal's text."
+  },
+  "snapshot_version_window": {
+   "core_also": {
+    "probes": [
+     "sp_dump_version_window"
+    ]
+   }
+  },
+  "execution_input_errors": {
+   "core_also": {
+    "probes": [
+     "sp_input_resource_failure"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_oversized_input"
+    ]
+   },
+   "worker": {
+    "also": [
+     "w_refuse_surrogate_in"
+    ]
+   }
   }
  },
  "rescored": {

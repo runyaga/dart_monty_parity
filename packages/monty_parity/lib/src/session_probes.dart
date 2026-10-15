@@ -1468,6 +1468,120 @@ _probes = {
       });
     },
   ),
+  // ------------------------------------------- M3 target: version window,
+  // fixed-offset zone, input resource failure
+  'sp_dump_version_window': (t, shared, _) async {
+    late Uint8List idle;
+    await shared.withSession((a) async {
+      await _run(t, () => a.feedRun('x = 41'));
+      idle = await a.dump();
+    });
+    t.add({'ev': 'version', 'kind': 'session', 'current': _versionOf(idle)});
+    for (final v in _dumpVersions) {
+      await shared.withSession((s) async {
+        t.add({'ev': 'load', 'version': v});
+        await _tried(t, () => s.loadSession(_withVersion(idle, v)));
+        await _run(t, () => s.feedRun(v == 13 ? 'x + 1' : '1'));
+      });
+    }
+    late Uint8List suspended;
+    await shared.withSession((a) async {
+      final snap = await a.feedStart('f()');
+      suspended = await _fn(snap).dump();
+    });
+    t.add({
+      'ev': 'version',
+      'kind': 'snapshot',
+      'current': _versionOf(suspended),
+    });
+    for (final v in _dumpVersions) {
+      await shared.withSession((s) async {
+        t.add({'ev': 'load', 'version': v});
+        final x = await _tried(
+          t,
+          () => s.loadSnapshot(_withVersion(suspended, v)),
+        );
+        if (x != null) {
+          _announced(t, x);
+          await _step(
+            t,
+            () => _fn(x).resume(const ExternalReturnValue(MontyInt(2))),
+          );
+        }
+        await _run(t, () => s.feedRun('3'));
+      });
+    }
+  },
+  'sp_fixed_offset_timezone': (t, shared, _) async {
+    for (final (offset, name) in _tzFixed) {
+      t.add({'ev': 'zone', 'offset_seconds': offset, 'name': ?name});
+      // Only the zone check's own refusal, with its text, counts; any other
+      // failure is recorded as it is.
+      try {
+        await shared.withSession(
+          (s) => _run(t, () => s.feedRun(_tzCode)),
+          osPolicy: OsPolicy(
+            fixedDatetime: DateTime.utc(2024, 3, 1, 12, 30),
+            fixedTimezone: TimeZone(offset, name: name),
+          ),
+        );
+      } on Object catch (e) {
+        t.add(_argumentRefusal('zone_refused', e));
+      }
+    }
+    for (final name in _tzNamed) {
+      t.add({'ev': 'zone', 'iana': name});
+      try {
+        await shared.withSession(
+          (s) => _run(t, () => s.feedRun(_tzCode)),
+          osPolicy: OsPolicy(
+            fixedDatetime: DateTime.utc(2024, 3, 1, 12, 30),
+            timezone: name,
+          ),
+        );
+      } on Object catch (e) {
+        t.add(_argumentRefusal('zone_refused', e));
+      }
+    }
+  },
+  // Its own pool: a worker that served a type-checked session keeps about
+  // 3 MB a later session's memory limit counts (upstream too).
+  'sp_input_resource_failure': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
+    (p) async {
+      const limits = ResourceLimits(maxMemory: 70000);
+      final inputs = <MontyValue>[
+        MontyString('a' * 60000),
+        MontyList([
+          const MontyString('b'),
+          MontyList([MontyString('c' * 60000)]),
+        ]),
+      ];
+      for (final x in inputs) {
+        await p.withSession((s) async {
+          final printed = StringBuffer();
+          await _limitError(
+            t,
+            () => s.feedRun(
+              "print('started')\nlen(x)",
+              inputs: {'x': x},
+              printCallback: (_, text) => printed.write(text),
+            ),
+          );
+          t.add({'ev': 'printed', 'text': '$printed'});
+          await _limitError(t, () => s.feedRun('1'));
+        }, limits: limits);
+      }
+      await p.withSession(
+        (s) => _limitError(
+          t,
+          () => s.feedRun('len(x)', inputs: {'x': MontyString('a' * 10)}),
+        ),
+        limits: limits,
+      );
+    },
+  ),
   'sp_load_garbage': (t, shared, _) async {
     final garbage = Uint8List.fromList('garbage'.codeUnits);
     await shared.withSession((a) async {
@@ -1824,6 +1938,54 @@ Future<void> _checked(_T t, Future<MontyValue> Function() feed) async {
 _Ev _argumentRefusal(String ev, Object e) => e is ArgumentError
     ? {'ev': ev, 'message': '${e.message}'}
     : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'};
+
+/// run_probes.py's `DUMP_VERSIONS`.
+const _dumpVersions = [13, 12, 8, 14, 65535];
+
+/// A dump's format version: the little-endian u16 after the 6-byte magic.
+int _versionOf(Uint8List dump) => dump[6] | dump[7] << 8;
+
+/// run_probes.py's `with_version`: [dump] with its format version replaced.
+Uint8List _withVersion(Uint8List dump, int version) => Uint8List.fromList(dump)
+  ..[6] = version & 0xff
+  ..[7] = version >> 8;
+
+/// run_probes.py's `TZ_CODE`.
+const _tzCode =
+    'import datetime, time\nn = datetime.datetime.now()\n'
+    'a = datetime.datetime.now(datetime.timezone.utc).astimezone()\n'
+    '(str(n), str(a), a.tzname(), str(a.utcoffset()), time.timezone, '
+    "time.tzname, a.strftime('%Z %z'), str(datetime.date.today()))";
+
+/// run_probes.py's `TZ_FIXED`: (offset, name).
+const _tzFixed = <(int, String?)>[
+  (19800, 'IST'),
+  (-12600, null),
+  (0, null),
+  (-86399, 'x'),
+  (3600, ''),
+  (3600, 'Europe/London'),
+  (86400, null),
+];
+
+/// run_probes.py's `limit_error`: as [_run], with the byte counts in a
+/// memory limit's message replaced by N.
+Future<void> _limitError(_T t, Future<MontyValue> Function() feed) async {
+  await _run(t, feed);
+  final last = t.events.last;
+  if (last['ev'] == 'error') {
+    t.events.last = {
+      ...last,
+      'message': '${last['message']}'.replaceAll(
+        RegExp(r'\d+ bytes'),
+        'N bytes',
+      ),
+    };
+  }
+}
+
+/// run_probes.py's IANA entries of `TZ_FIXED`, run after the fixed ones.
+const _tzNamed = ['Asia/Kolkata', 'Mars/Olympus'];
 
 /// run_probes.py's `SLOW_POW`: an operation the sandbox cannot interrupt.
 const _slowPow = 'x = 3 ** 30_000_000\n1';

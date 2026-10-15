@@ -1,0 +1,47 @@
+{
+ "probe": "sp_input_resource_failure",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "printed",
+   "text": "started\n"
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "printed",
+   "text": "started\n"
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "10"
+   }
+  }
+ ],
+ "runner_error": null
+}
