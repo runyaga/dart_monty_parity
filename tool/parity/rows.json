@@ -2565,7 +2565,7 @@
     "rows": [
      "timezone_database"
     ],
-    "what": "an unknown IANA zone name is refused at checkout by both: upstream raises ValueError \"unknown timezone 'Not/AZone'\" before any feed runs; core's session open raises ArgumentError \"protocol violation: invalid os_policy: invalid value for SandboxTimeZone.named: unknown timezone 'Not/AZone'\" (the worker's refusal of Configure). The case is a `local_refusal`, which matches on the refusal and ignores the type and wording, so the difference in type and message is recorded here, not asserted"
+    "what": "an unknown IANA zone name is refused at checkout by both: upstream raises ValueError \"unknown timezone 'Not/AZone'\" before any feed runs; core's session open raises ArgumentError \"unknown timezone 'Not/AZone'\" (checked against the host's zone database before Configure is sent; the runner then discards the worker). The case is a `local_refusal`, which matches on the refusal and ignores the type and wording, so the difference in type and message is recorded here, not asserted"
    }
   ],
   "diverge": {

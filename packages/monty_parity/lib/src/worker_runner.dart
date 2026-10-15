@@ -80,8 +80,19 @@ Future<Map<String, Object?>> runWorkerCase(
   backend,
   engine: 'worker',
   engineVersion: 'dart_monty_core (internal: ProtoSession)',
-  open: (config) async =>
-      _ProtoCaseSession(await ProtoSession.open(await spawn(), config)),
+  open: (config) async {
+    final channel = await spawn();
+    try {
+      return _ProtoCaseSession(await ProtoSession.open(channel, config));
+      // A setting refused before Configure is sent (an unknown timezone name,
+      // checked against the host's zone database) leaves the channel to its
+      // owner, which is this runner: it discards the worker, as upstream's
+      // failed checkout does, and the refusal is the case's outcome.
+    } on Object {
+      channel.kill();
+      rethrow;
+    }
+  },
 );
 
 /// Runs case [c] on [backend] as [engine], through a session [open] opens
