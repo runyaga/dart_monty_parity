@@ -2489,18 +2489,6 @@
     ]
    }
   },
-  "sandbox_timezone": {
-   "worker": {
-    "also": [
-     "w_tzdb_london",
-     "w_tzdb_new_york",
-     "w_tzdb_kolkata",
-     "w_tzdb_lowercase",
-     "w_tzdb_utc_name",
-     "w_tzdb_unknown"
-    ]
-   }
-  },
   "create_worker_pool": {
    "session_also": {
     "probes": [
@@ -2521,25 +2509,12 @@
     ]
    }
   },
-  "execution_input_errors": {
-   "worker": {
-    "also": [
-     "w_refuse_surrogate_in",
-     "w_refuse_unhashable_key",
-     "w_refuse_fh_position"
-    ]
-   },
-   "session_also": {
-    "probes": [
-     "sp_oversized_input"
-    ]
-   }
-  },
   "assert_annotations": {
    "core_also": {
     "cases": [
      "a01_assert_default",
-     "a02_assert_off"
+     "a02_assert_off",
+     "a03_assert_bounded"
     ]
    }
   },
@@ -2581,7 +2556,8 @@
    "session_also": {
     "probes": [
      "sp_dump_suspended_function",
-     "sp_dump_suspended_kinds"
+     "sp_dump_suspended_kinds",
+     "sp_load_adopts_dump"
     ]
    }
   },

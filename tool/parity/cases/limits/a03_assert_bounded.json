@@ -1,0 +1,9 @@
+{
+ "id": "a03_assert_bounded",
+ "code": "x = 'abcdefghij' * 10\nassert x == 'z'",
+ "assert_message_annotations": 8,
+ "note": "annotations bounded to 8 bytes of each operand: a long operand is truncated",
+ "on_refused_limits": "record",
+ "one_shot": true,
+ "isolate": true
+}

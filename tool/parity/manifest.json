@@ -2160,6 +2160,13 @@
     "ref-py": "6ee80a2e3346adf73ebf83ea5fdee4b50f4216a13b77dc15dfaa4a363702e3ef"
    }
   },
+  "a03_assert_bounded": {
+   "suite": "limits",
+   "case": "203818a467c596745f8408d174cb85d77586d4ebc94a8f4abf34ff3cb6008060",
+   "outcomes": {
+    "ref-py": "5f8020629a67d21d31cdfa246639fa952d6516a61ff2722870dc7e4cef7abb7a"
+   }
+  },
   "c01_process_time_default": {
    "suite": "limits",
    "case": "10ed2d1d9ddd66c7d88e9109f71c9b45ff947bba100819f0de55e34dda1fe895",
