@@ -67,6 +67,11 @@ in-scope row in exactly one list, a valid `allowed`): an inconsistent file exits
 An `allowed` entry may carry `evidenced_by` ({path, tests, exercises} items: the core tests that evidence a
 row no binding exposes); `--core DIR` checks each named file exists in that core checkout and holds each test
 title, and a mismatch exits non-zero like an inconsistent file.
+--target-engines DIR (with --target) also reads the worker and session engines' outcomes in DIR (run.py
+--engine worker and --engine session): a target row's status is then judged over every cell that measures it,
+its core-engine cases and probes, its session cases and probes (rows.json `session`) and its worker cases
+(rows.json `worker`, `also` included), with the strict rule of row_status. A recorded worker divergence
+(`diverge`) counts as the DIVERGE it is. Without it, a row with no core-engine case keeps its recorded status.
 
 --assert-e0 [FILE] (default tool/parity/e0.json) scores the E0 suite instead:
 the worker engine's outcomes (`worker-<backend>.json`, run.py --engine
@@ -818,6 +823,41 @@ def evidence_core_problems(target: dict, core: Path) -> list[str]:
     return problems
 
 
+def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dict[str, dict]) -> list[dict]:
+    """A row's session- and worker-engine cells on [backend] (rows.json `session` and `worker`), each classified
+    as --assert-gate and --assert-worker classify it."""
+    cells = []
+    session = rule.get('session') or {}
+    for cid in session.get('cases', []):
+        cls, why = classify_session_case(cid, backend, out, expected, cases[cid])
+        cells.append({'case': cid, 'engine': 'session', 'class': cls, 'differs': why})
+    for pid in session.get('probes', []):
+        cls, why = classify_session_probe(pid, backend, out, expected)
+        cells.append({'case': pid, 'engine': 'session', 'class': cls, 'differs': why})
+    for kind, ids in (rule.get('worker') or {}).items():
+        for cid in ids:
+            local = bool(cases.get(cid, {}).get('local_refusal'))
+            cls, why = classify_worker(cid, backend, out, expected, local)
+            cells.append({'case': cid, 'engine': f'worker {kind}', 'class': cls, 'differs': why})
+    return cells
+
+
+def with_engines(target: dict, statuses: dict, core_rows: dict, rules: dict, backends: list[str], out: Path,
+                 expected: Path) -> dict:
+    """[statuses] with each target row re-judged over its core-engine cells ([core_rows], this run's) and its
+    session- and worker-engine cells in [out]; a row no engine case measures keeps the status it had."""
+    cases = case_index()
+    merged = {cid: dict(by_b) for cid, by_b in statuses.items()}
+    for cid in target['rows']:
+        for b in backends:
+            extra = engine_cells(rules.get(cid, {}), b, out, expected, cases)
+            if not extra:
+                continue
+            core_cells = core_rows[cid][b]['cells'] if cid in core_rows else []
+            merged[cid][b] = (row_status([c['class'] for c in core_cells + extra]), 'measured')
+    return merged
+
+
 def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], backends: list[str]) -> tuple[list[str], int]:
     """Lines (and the failure count) for the target against [statuses] (row -> backend -> (status, source)).
 
@@ -943,6 +983,8 @@ def main() -> int:
                     help='also score the M3 parity target (default tool/parity/m3-target.json): shown, not fatal')
     ap.add_argument('--core', type=Path, help="--target: also check every `allowed` entry's `evidenced_by` against this core checkout")
     ap.add_argument('--assert-target', action='store_true', help='--target: fail on any row that is not PRESENT or allowed')
+    ap.add_argument('--target-engines', type=Path,
+                    help="--target: the worker and session engines' outcomes, counted toward each target row too")
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
@@ -950,6 +992,8 @@ def main() -> int:
         sys.exit('--assert-target needs --target')
     if a.core and not a.target:
         sys.exit('--core needs --target')
+    if a.target_engines and not a.target:
+        sys.exit('--target-engines needs --target')
     if a.target and (a.assert_e0 or a.assert_gate or a.assert_worker):
         sys.exit('--target scores the core engine\'s rows; it cannot join --assert-e0, --assert-gate or --assert-worker')
     if a.engine and not a.assert_e0:
@@ -1086,6 +1130,8 @@ def main() -> int:
         statuses = {cid: {b: ((result['rows'][cid][b]['status'], 'measured') if cid in result['rows']
                               else (in_scope[cid][col.get(b, 'baseline_web')], 'recorded')) for b in backends}
                     for cid in target['rows']}
+        if a.target_engines:
+            statuses = with_engines(target, statuses, result['rows'], all_rules, backends, a.target_engines, a.expected)
         tlines, tfails = score_target(target, statuses, backends)
         print('\n'.join(tlines))
         if a.markdown:
