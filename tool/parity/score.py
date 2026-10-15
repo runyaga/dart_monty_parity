@@ -272,10 +272,12 @@ def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
     return ('MATCH' if not bad else 'DIVERGE'), bad, applied
 
 
-@functools.cache
-def local_refusal_cases() -> frozenset[str]:
+def _marked_local_refusal() -> frozenset[str]:
     """The cases marked `local_refusal`."""
     return frozenset(cid for cid, c in case_index().items() if c.get('local_refusal'))
+
+
+local_refusal_cases = functools.cache(_marked_local_refusal)
 
 
 def with_host_refusals(ref: dict, got: dict) -> dict:
