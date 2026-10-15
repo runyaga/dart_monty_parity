@@ -20,6 +20,7 @@
 
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:monty_parity/src/case_runner.dart';
 import 'package:monty_parity/src/host_world.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
@@ -37,10 +38,13 @@ Future<Map<String, Object?>> runSessionCase(
   String backend,
   Monty pool, {
   String engine = 'session',
-}) {
+}) async {
   if (!sessionEngines.contains(engine)) {
     throw ArgumentError.value(engine, 'engine', 'not a session engine');
   }
+  final proxies = engine == 'core'
+      ? await _sandboxProxies(pool, sandboxProxyNames(c))
+      : const <String, MontyValue>{};
 
   return runEngineCase(
     c,
@@ -50,17 +54,48 @@ Future<Map<String, Object?>> runSessionCase(
     open: (config, host) async => _PoolCaseSession(
       pool,
       config,
+      host,
       await _checkout(pool, config),
+      // By hand only where the suspension point shows in the outcome: a
+      // host world's call and lookup transcript, and a host refusal of an OS
+      // answer. Under feedStart core hands system.sleep to the OS callback,
+      // which feedRun services itself, so every other case runs as before.
+      byHand:
+          (host is SessionHost && host.active) || c['local_refusal'] == true,
     ),
     configure: sessionConfig,
     // Both build the case's host world through the public HostClass,
-    // ClassInstance and ClassType (public since C5-s); the core engine still
-    // makes no value only an internal factory makes (a type proxy).
+    // ClassInstance and ClassType (public since C5-s); the core engine makes
+    // no value only an internal factory makes, so it takes the builtin types
+    // and functions a case hands the sandbox from a feed that returns them.
     hostFor: engine == 'core'
-        ? (c) => SessionHost(c, publicOnly: true)
+        ? (c) => SessionHost(c, publicOnly: true)..sandboxProxies = proxies
         : SessionHost.new,
     applies: _applies,
   );
+}
+
+/// The builtin types and functions [names], as a feed on a session of its own
+/// returns them: core's public API has no constructor for a type proxy, and
+/// a host that needs `int` gets it from the sandbox. A name the feed cannot
+/// give (not a builtin) is left out, and the case's value stays inexpressible.
+Future<Map<String, MontyValue>> _sandboxProxies(
+  Monty pool,
+  Set<String> names,
+) async {
+  if (names.isEmpty) return const {};
+  final sorted = names.toList()..sort();
+  final session = await pool.checkout();
+  try {
+    final MontyTuple(:items) =
+        await session.feedRun('(${sorted.join(', ')},)') as MontyTuple;
+
+    return {for (var i = 0; i < sorted.length; i++) sorted[i]: items[i]};
+  } on MontyError {
+    return const {};
+  } finally {
+    await session.close();
+  }
 }
 
 /// [config] through the public [Monty.checkout].
@@ -125,12 +160,32 @@ SessionConfig sessionConfig(
 }
 
 final class _PoolCaseSession implements CaseSession {
-  _PoolCaseSession(this._pool, this._config, this._session);
+  _PoolCaseSession(
+    this._pool,
+    this._config,
+    this._host,
+    this._session, {
+    required this.byHand,
+  });
+
+  /// Whether [feed] resumes each suspension by hand; else it runs `feedRun`.
+  final bool byHand;
 
   final Monty _pool;
   final SessionConfig _config;
+  final CoreHost _host;
   MontySession _session;
 
+  /// Runs [code]; with [byHand], by hand, as the oracle drives upstream
+  /// (feed_start, then one resume per suspension;
+  /// tool/parity/oracle/run_cases.py): a method
+  /// call or a lazy attribute of a host object is logged where it suspends,
+  /// before the policy check, as the oracle's wrapper logs it. An OS call's
+  /// answer is built from [onOsCall] before the suspension resumes: one core
+  /// refuses to build ([HostAnswerRefused]) is the host's refusal, as
+  /// upstream's host raises it, so the suspension is abandoned unresumed, the
+  /// session replaced and the refusal thrown. Every suspension then resumes
+  /// as `feedRun` would (`resumeAuto`).
   @override
   Future<MontyValue> feed(
     String code, {
@@ -138,13 +193,68 @@ final class _PoolCaseSession implements CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
-  }) => _session.feedRun(
-    code,
-    inputs: inputs,
-    externalLookup: hostFunctions(externals),
-    os: onOsCall,
-    printCallback: onPrint,
-  );
+  }) async {
+    if (!byHand) {
+      return _session.feedRun(
+        code,
+        inputs: inputs,
+        externalLookup: hostFunctions(externals),
+        os: onOsCall,
+        printCallback: onPrint,
+      );
+    }
+    // An OS answer built before its suspension resumes, replayed to core.
+    MontyValue Function()? built;
+    var snap = await _session.feedStart(
+      code,
+      inputs: inputs,
+      externalLookup: hostFunctions(externals),
+      os: (name, args, kwargs) {
+        final answer = built;
+        built = null;
+
+        return answer == null ? onOsCall(name, args, kwargs) : answer();
+      },
+      printCallback: onPrint,
+    );
+    while (true) {
+      switch (snap) {
+        case MontyComplete(:final output):
+          return output;
+        case NameLookupSnapshot(:final String objectId, :final variableName):
+          _host.logObjectLookup(objectId, variableName);
+          snap = await _host.resuming<MontySnapshot>(objectId, snap.resumeAuto);
+        case FunctionSnapshot(:final String objectId, :final functionName):
+          _host.logObjectCall(objectId, functionName);
+          snap = await _host.resuming<MontySnapshot>(objectId, snap.resumeAuto);
+        case final FunctionSnapshot f when f.isOsFunction:
+          // The answer first: a value core refuses to build is the host's
+          // refusal, and the suspension is abandoned unresumed.
+          try {
+            final value = await onOsCall(f.functionName, f.args, f.kwargs);
+            built = () => value;
+          } on HostAnswerRefused {
+            await _replace();
+            rethrow;
+          } on Object catch (e, st) {
+            built = () => Error.throwWithStackTrace(e, st);
+          }
+          snap = await f.resumeAuto();
+        case final FunctionSnapshot f:
+          snap = await f.resumeAuto();
+        case final NameLookupSnapshot n:
+          snap = await n.resumeAuto();
+        case final FutureSnapshot f:
+          snap = await f.resumeAuto();
+      }
+    }
+  }
+
+  /// A fresh session in place of one left suspended.
+  Future<void> _replace() async {
+    await _session.close();
+    _session = await _checkout(_pool, _config);
+  }
 
   @override
   Future<void> restore() async {

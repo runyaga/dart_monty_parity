@@ -1,29 +1,29 @@
 {
  "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine and host classes), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 74,
-  "dart2js": 74,
-  "dart2wasm": 74
+  "vm": 81,
+  "dart2js": 80,
+  "dart2wasm": 80
  },
  "totals": {
   "vm": {
-   "ABSENT": 43,
-   "PRESENT": 74,
-   "PARTIAL": 41,
+   "ABSENT": 42,
+   "PRESENT": 81,
+   "PARTIAL": 35,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 39,
-   "PRESENT": 74,
-   "PARTIAL": 43,
+   "ABSENT": 38,
+   "PRESENT": 80,
+   "PARTIAL": 38,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 39,
-   "PRESENT": 74,
-   "PARTIAL": 43,
+   "ABSENT": 38,
+   "PRESENT": 80,
+   "PARTIAL": 38,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 74,
-    "dart2js": 74,
-    "dart2wasm": 74
+    "vm": 81,
+    "dart2js": 80,
+    "dart2wasm": 80
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 74,
-    "dart2js": 74,
-    "dart2wasm": 74
+    "vm": 81,
+    "dart2js": 80,
+    "dart2wasm": 80
    }
   }
  },
@@ -798,6 +798,95 @@
    "commit": "2b7d431",
    "pr": null,
    "why": "the runner passes the case's gc_interval to core's public ResourceLimits.gcInterval (the worker and the session driver both) instead of recording it unsupported; g01_gc_interval_small now MATCHes"
+  },
+  {
+   "row": "host_eager_attributes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver resumes a host-world case by hand, as the oracle drives upstream, and logs the oracle's `call` and `lookup` entries where a method call or a lazy attribute of a host object suspends with its object id, before the policy check; h_x02_eager_list and h_x03_eager_none now MATCH"
+  },
+  {
+   "row": "host_lazy_attributes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver resumes a host-world case by hand, as the oracle drives upstream, and logs the oracle's `call` and `lookup` entries where a method call or a lazy attribute of a host object suspends with its object id, before the policy check; h_x07_lazy now MATCHes"
+  },
+  {
+   "row": "host_constructor_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver resumes a host-world case by hand, as the oracle drives upstream, and logs the oracle's `call` and `lookup` entries where a method call or a lazy attribute of a host object suspends with its object id, before the policy check; h_x11_class_methods now MATCHes"
+  },
+  {
+   "row": "host_value_conversion_hook",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver resumes a host-world case by hand, as the oracle drives upstream, and logs the oracle's `call` and `lookup` entries where a method call or a lazy attribute of a host object suspends with its object id, before the policy check; h_x14_convert_redact now MATCHes"
+  },
+  {
+   "row": "builtin_type_function_handles",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the core engine takes the builtin types a case returns from a feed that returns them (core has no public constructor for a type proxy); i_type now MATCHes"
+  },
+  {
+   "row": "file_mode_inspection",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver builds an OS call's answer on the host, and a value core refuses to build (ArgumentError) is the host's refusal, outside the sandbox, as upstream's host raises ValueError or OverflowError; the case is marked `local_refusal` (EXCEPTIONS.md); x8hostmode_zz and x8hostmode_rplus now MATCH"
+  },
+  {
+   "row": "file_handle_value_conversion",
+   "backends": [
+    "vm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the session driver builds an OS call's answer on the host, and a value core refuses to build (ArgumentError) is the host's refusal, outside the sandbox, as upstream's host raises ValueError or OverflowError; the case is marked `local_refusal` (EXCEPTIONS.md); x8hostmode_neg now MATCHes (dart2js and dart2wasm stay PARTIAL: x8handle_pos2p53 and x8handle_pos2p63m1 on the wasm32 worker)"
   }
  ],
  "rows": {
@@ -872,9 +961,9 @@
    "dart2wasm": "PRESENT"
   },
   "builtin_type_function_handles": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "lossy_output_placeholders": {
    "vm": "PRESENT",
@@ -887,9 +976,9 @@
    "dart2wasm": "PRESENT"
   },
   "host_eager_attributes": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_instance_value": {
    "vm": "PRESENT",
@@ -902,9 +991,9 @@
    "dart2wasm": "PRESENT"
   },
   "host_lazy_attributes": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_class_value": {
    "vm": "PRESENT",
@@ -912,14 +1001,14 @@
    "dart2wasm": "PRESENT"
   },
   "host_constructor_policy": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_value_conversion_hook": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "os_path_predicates": {
    "vm": "PRESENT",
@@ -1057,12 +1146,12 @@
    "dart2wasm": "PRESENT"
   },
   "file_mode_inspection": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "file_handle_value_conversion": {
-   "vm": "PARTIAL",
+   "vm": "PRESENT",
    "dart2js": "PARTIAL",
    "dart2wasm": "PARTIAL"
   },
@@ -1538,9 +1627,9 @@
     "dart2wasm": "MATCH"
    },
    "i_type": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_type": {
     "vm": "MATCH",
@@ -1619,14 +1708,14 @@
     "dart2wasm": "MATCH"
    },
    "h_x02_eager_list": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x03_eager_none": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_instance_value": {
@@ -1665,9 +1754,9 @@
   },
   "host_lazy_attributes": {
    "h_x07_lazy": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_class_value": {
@@ -1684,9 +1773,9 @@
     "dart2wasm": "MATCH"
    },
    "h_x11_class_methods": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_value_conversion_hook": {
@@ -1696,9 +1785,9 @@
     "dart2wasm": "MATCH"
    },
    "h_x14_convert_redact": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x15_convert_wrap": {
     "vm": "MATCH",
@@ -2852,9 +2941,9 @@
     "dart2wasm": "MATCH"
    },
    "x8hostmode_zz": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x8hostmode_rt": {
     "vm": "MATCH",
@@ -2862,9 +2951,9 @@
     "dart2wasm": "MATCH"
    },
    "x8hostmode_rplus": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "file_handle_value_conversion": {
@@ -2889,9 +2978,9 @@
     "dart2wasm": "DIVERGE"
    },
    "x8hostmode_neg": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "raised_exception": {
