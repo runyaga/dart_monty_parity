@@ -1,5 +1,5 @@
 {
- "subject": "dart_monty_core with the value family (core branch c5-v/value-family, head f12bf8e: Monty / MontySession on the worker, the 0.110 surface less C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core with the value family (core branch c5-v/value-family, head 24cb475: Monty / MontySession on the worker, the 0.110 surface less C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
   "vm": 66,
   "dart2js": 66,
@@ -652,7 +652,7 @@
    ],
    "from": "ABSENT",
    "to": "PRESENT",
-   "commit": "f12bf8e",
+   "commit": "24cb475",
    "pr": null,
    "why": "core's value family (core branch c5-v/value-family): MontyComplex decodes and encodes, so v_complex, i_complex and r_complex MATCH (C5-v)"
   }
