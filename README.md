@@ -112,6 +112,12 @@ oracle; rules 1, 2, 4 and 5 are `session` cases, 3, 6 and 7 probes). `C3-4` is l
 `encoding`, `object`, `start`, `end`, `reason`, a JSON error's `msg`, `doc`, `pos`, `lineno`, `colno`); `C3-5`,
 `C3-6` and `d1_calls` are run and shown, not landed.
 
+`C1-5` is landed: dump and load through the session (`sp_dump_*`, `sp_load_*`, `api_fork_session`, rows `dump_session`,
+`load_session`, `snapshot_state_kinds`, `snapshot_errors`, `fork_session`). Idle and suspended dumps (a function, name,
+OS-call or future suspension, from the snapshot or from the session while it waits), the freshness rule, the wrong kind
+of dump, bytes the worker cannot load, the dump's own type-check setting and the suspension ceiling on a load, all
+against upstream's outcomes. The host-object rows (`host_*`, C1-6) stay under `cutover`.
+
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate
 ```

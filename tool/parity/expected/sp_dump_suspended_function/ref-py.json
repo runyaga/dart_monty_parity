@@ -1,0 +1,162 @@
+{
+ "probe": "sp_dump_suspended_function",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {
+    "k": {
+     "t": "str",
+     "v": "é"
+    }
+   },
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 10,
+    "end": 22
+   }
+  },
+  {
+   "ev": "dumped",
+   "bytes": true
+  },
+  {
+   "ev": "dumped",
+   "bytes": true
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {
+    "k": {
+     "t": "str",
+     "v": "é"
+    }
+   },
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 10,
+    "end": 22
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "37"
+     },
+     {
+      "t": "int",
+      "v": "5"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "37"
+     },
+     {
+      "t": "int",
+      "v": "5"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {
+    "k": {
+     "t": "str",
+     "v": "é"
+    }
+   },
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 10,
+    "end": 22
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "38"
+     },
+     {
+      "t": "int",
+      "v": "5"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "1"
+     },
+     {
+      "t": "int",
+      "v": "5"
+     }
+    ]
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "list",
+    "items": [
+     {
+      "t": "int",
+      "v": "1"
+     },
+     {
+      "t": "int",
+      "v": "5"
+     }
+    ]
+   }
+  }
+ ],
+ "runner_error": null
+}

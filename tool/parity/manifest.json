@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "fa73aac552f604780d7b8573033f3837097948beb95520e57d11a4a844694a89",
+  "sha256": "964b61c15fae9e5b35761feba0a6ab8c8d964887000687aa0f59ecc3ccd39ab3",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "bb2b8100330bc43fa6e200789e7b2b5f71211e80feaa9e35e75bd82db7320062",
+   "tool/parity/oracle/run_probes.py": "069a880b32da66bca9ae5624b56e5c748d023785680d763054045ac56a103bb7",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -4964,6 +4964,26 @@
     "ref-py": "c940741b852dc455b19761d69229c67f8eaa27f0fd13f44f887a99b3eb6c819c"
    }
   },
+  "sp_dump_idle": {
+   "outcomes": {
+    "ref-py": "e2b3ed0627b22b6d3f13fe9bded3207a66fc3f0c623d2b7a05be02aed968639b"
+   }
+  },
+  "sp_dump_spent_snapshot": {
+   "outcomes": {
+    "ref-py": "00f8085fed8e8704978f9366039635a0ec49414dfb86a9ac7965e03e745f3599"
+   }
+  },
+  "sp_dump_suspended_function": {
+   "outcomes": {
+    "ref-py": "e4326b8c2ee37b734cecd6250c81ba930c05dd398fc6187c557afb53f37c1e23"
+   }
+  },
+  "sp_dump_suspended_kinds": {
+   "outcomes": {
+    "ref-py": "304d36666d7669812bc10c5888d96eeaa9b890469ec4e42d4c2e50cb8618150d"
+   }
+  },
   "sp_eager_coroutine_auto": {
    "outcomes": {
     "ref-py": "26e594be4b69b32f9dd8631256033d07948ae014408a4f3d9dfe17c99c7985fb"
@@ -4977,6 +4997,26 @@
   "sp_futures_partial": {
    "outcomes": {
     "ref-py": "95de80a10bb05ebbcea55c19e228e4ded0d49dfe2fe469124db8265a7206977f"
+   }
+  },
+  "sp_load_adopts_dump": {
+   "outcomes": {
+    "ref-py": "c1c3ae10ce159e4cfc82bc867a59faa8c17ace8e9403ecd4337a4bb818b77885"
+   }
+  },
+  "sp_load_garbage": {
+   "outcomes": {
+    "ref-py": "2888f82fbb000a901297b8eb9bbeeac870f78a5df9d4fde1ac808ab08b71fe1b"
+   }
+  },
+  "sp_load_not_fresh": {
+   "outcomes": {
+    "ref-py": "cd26eae120e2ae6c193bff5294b593d90ecdf73ebd05ebfe83610da9f3bffb85"
+   }
+  },
+  "sp_load_wrong_kind": {
+   "outcomes": {
+    "ref-py": "ca508ded8158db946016f5c2c4dbe83a7dcd81fef833fef5b8bfb69dbf697794"
    }
   },
   "sp_oversized_answer": {

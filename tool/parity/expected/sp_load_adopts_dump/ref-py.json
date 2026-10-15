@@ -1,0 +1,215 @@
+{
+ "probe": "sp_load_adopts_dump",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "1"
+   }
+  },
+  {
+   "ev": "typing_error"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "a"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "2"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 5,
+    "end": 9
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "3"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 10,
+    "end": 14
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "done"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "7"
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 0 exceeded",
+   "tb_last": {
+    "line": 1,
+    "function": "<module>"
+   }
+  },
+  {
+   "ev": "none"
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 0 exceeded",
+   "tb_last": {
+    "line": 2,
+    "function": "<module>"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 1 exceeded",
+   "tb_last": {
+    "line": 2,
+    "function": "<module>"
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 1 exceeded",
+   "tb_last": {
+    "line": 2,
+    "function": "<module>"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 0,
+    "end": 4
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "2"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 5,
+    "end": 9
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 2 exceeded",
+   "tb_last": {
+    "line": 3,
+    "function": "<module>"
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "suspension limit 2 exceeded",
+   "tb_last": {
+    "line": 2,
+    "function": "<module>"
+   }
+  }
+ ],
+ "runner_error": null
+}

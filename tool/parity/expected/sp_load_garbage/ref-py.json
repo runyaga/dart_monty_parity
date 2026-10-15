@@ -1,0 +1,34 @@
+{
+ "probe": "sp_load_garbage",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: not a monty dump",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "6"
+   }
+  },
+  {
+   "ev": "error",
+   "type": "RuntimeError",
+   "message": "protocol violation: failed to load session: not a monty dump",
+   "tb_last": null
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "7"
+   }
+  }
+ ],
+ "runner_error": null
+}

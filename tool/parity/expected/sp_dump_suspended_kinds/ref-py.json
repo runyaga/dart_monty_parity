@@ -1,0 +1,124 @@
+{
+ "probe": "sp_dump_suspended_kinds",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "suspend",
+   "kind": "name",
+   "name": "missing",
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 12,
+    "end": 19
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "name",
+   "name": "missing",
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 12,
+    "end": 19
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "42"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "os",
+   "name": "Path.read_text",
+   "args": [
+    {
+     "t": "path",
+     "v": "/x"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 25,
+    "end": 47
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "os",
+   "name": "Path.read_text",
+   "args": [
+    {
+     "t": "path",
+     "v": "/x"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 25,
+    "end": 47
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "str",
+    "v": "hi"
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "function",
+   "name": "f",
+   "args": [
+    {
+     "t": "int",
+     "v": "1"
+    }
+   ],
+   "kwargs": {},
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 29,
+    "end": 33
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "future",
+   "pending": [
+    0
+   ],
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 23,
+    "end": 33
+   }
+  },
+  {
+   "ev": "suspend",
+   "kind": "future",
+   "pending": [
+    0
+   ],
+   "position": {
+    "filename": "<python-input-0>",
+    "start": 23,
+    "end": 33
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "10"
+   }
+  }
+ ],
+ "runner_error": null
+}

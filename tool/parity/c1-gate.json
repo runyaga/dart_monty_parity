@@ -1,5 +1,5 @@
 {
- "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares. The stages C3-4, C3-5 and C3-6 hold the C3 parity rows (their cases come from the worker and core suites, run here through the session), and `d1_calls` holds one case or probe per D1-calls rule, named in `d1_rules` (taken from expMGb's cells, pydantic_monty as the oracle); C3-4 is landed (the session engine records an exception's structured data, C3-P1); C3-5, C3-6 and d1_calls are not landed until P-cut.",
+ "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares. The stages C3-4, C3-5 and C3-6 hold the C3 parity rows (their cases come from the worker and core suites, run here through the session), and `d1_calls` holds one case or probe per D1-calls rule, named in `d1_rules` (taken from expMGb's cells, pydantic_monty as the oracle); C3-4 is landed (the session engine records an exception's structured data, C3-P1); C1-5 is landed (dump and load through the session, C1-P2a); C3-5, C3-6 and d1_calls are not landed until P-cut.",
  "engine": "session",
  "stages": [
   "C1-3a",
@@ -15,7 +15,8 @@
  "landed": [
   "C1-3a",
   "C1-4",
-  "C3-4"
+  "C3-4",
+  "C1-5"
  ],
  "rows": {
   "checkout_worker": "C1-3a",
@@ -60,7 +61,11 @@
   "text_and_bytes": "C3-6",
   "boundary_value_graph": "C3-6",
   "external_function_value": "d1_calls",
-  "print_stream_routing": "d1_calls"
+  "print_stream_routing": "d1_calls",
+  "dump_session": "C1-5",
+  "load_session": "C1-5",
+  "snapshot_state_kinds": "C1-5",
+  "snapshot_errors": "C1-5"
  },
  "core_gated": {
   "C1-3b": "print stall and backpressure (pool_async_print_delivery) and close while busy (pool_cancellation_disposal) have no upstream behaviour to compare: upstream's sinks and cancellation are its binding's own, and a Dart close of a busy session is a recorded divergence. dart_monty_core's own tests gate them."
