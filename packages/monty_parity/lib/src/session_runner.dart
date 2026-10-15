@@ -56,6 +56,12 @@ Future<Map<String, Object?>> runSessionCase(
       config,
       host,
       await _checkout(pool, config),
+      // By hand only where the suspension point shows in the outcome: a
+      // host world's call and lookup transcript, and a host refusal of an OS
+      // answer. Under feedStart core hands system.sleep to the OS callback,
+      // which feedRun services itself, so every other case runs as before.
+      byHand:
+          (host is SessionHost && host.active) || c['local_refusal'] == true,
     ),
     configure: sessionConfig,
     // Both build the case's host world through the public HostClass,
@@ -154,21 +160,32 @@ SessionConfig sessionConfig(
 }
 
 final class _PoolCaseSession implements CaseSession {
-  _PoolCaseSession(this._pool, this._config, this._host, this._session);
+  _PoolCaseSession(
+    this._pool,
+    this._config,
+    this._host,
+    this._session, {
+    required this.byHand,
+  });
+
+  /// Whether [feed] resumes each suspension by hand; else it runs `feedRun`.
+  final bool byHand;
 
   final Monty _pool;
   final SessionConfig _config;
   final CoreHost _host;
   MontySession _session;
 
-  /// Runs [code] by hand, as the oracle drives upstream (feed_start, then
-  /// one resume per suspension; tool/parity/oracle/run_cases.py): a method
+  /// Runs [code]; with [byHand], by hand, as the oracle drives upstream
+  /// (feed_start, then one resume per suspension;
+  /// tool/parity/oracle/run_cases.py): a method
   /// call or a lazy attribute of a host object is logged where it suspends,
-  /// before the policy check, as the oracle's wrapper logs it; an OS call's
-  /// answer is built before the feed resumes, so a value core refuses to
-  /// build is the host's refusal ([HostAnswerRefused]), outside the sandbox,
-  /// as upstream's host raises it. Everything else resumes as `feedRun`
-  /// would (`resumeAuto`).
+  /// before the policy check, as the oracle's wrapper logs it. Every
+  /// suspension then resumes as `feedRun` would (`resumeAuto`, which consults
+  /// [onOsCall] for an OS call core does not service itself). An OS answer
+  /// core refuses to build ([HostAnswerRefused]) is the host's refusal, as
+  /// upstream's host raises it before resuming: the feed's result is
+  /// discarded, the session replaced, and the refusal thrown.
   @override
   Future<MontyValue> feed(
     String code, {
@@ -177,19 +194,50 @@ final class _PoolCaseSession implements CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
   }) async {
-    // The OS answer built before the resume, replayed to core's resumeAuto.
-    MontyValue Function()? built;
-    var snap = await _session.feedStart(
-      code,
-      inputs: inputs,
-      externalLookup: hostFunctions(externals),
-      os: (name, args, kwargs) {
-        final answer = built ?? (() => throw StateError('no OS answer built'));
-        built = null;
+    if (!byHand) {
+      return _session.feedRun(
+        code,
+        inputs: inputs,
+        externalLookup: hostFunctions(externals),
+        os: onOsCall,
+        printCallback: onPrint,
+      );
+    }
+    HostAnswerRefused? refused;
+    Future<MontySnapshot> guarded(
+      Future<MontySnapshot> Function() resume,
+    ) async {
+      try {
+        final next = await resume();
+        if (refused case final r?) throw r;
 
-        return answer();
-      },
-      printCallback: onPrint,
+        return next;
+      } on Object {
+        if (refused case final r?) {
+          await _replace();
+          throw r;
+        }
+        rethrow;
+      }
+    }
+
+    var snap = await guarded(
+      () => _session.feedStart(
+        code,
+        inputs: inputs,
+        externalLookup: hostFunctions(externals),
+        // Synchronous, as the handler is: core reads a not-handled throw
+        // from the call itself.
+        os: (name, args, kwargs) {
+          try {
+            return onOsCall(name, args, kwargs);
+          } on HostAnswerRefused catch (e) {
+            refused = e;
+            rethrow;
+          }
+        },
+        printCallback: onPrint,
+      ),
     );
     while (true) {
       switch (snap) {
@@ -197,32 +245,16 @@ final class _PoolCaseSession implements CaseSession {
           return output;
         case NameLookupSnapshot(:final String objectId, :final variableName):
           _host.logObjectLookup(objectId, variableName);
-          snap = await snap.resumeAuto();
+          snap = await guarded(snap.resumeAuto);
         case FunctionSnapshot(:final String objectId, :final functionName):
           _host.logObjectCall(objectId, functionName);
-          snap = await snap.resumeAuto();
-        case FunctionSnapshot(isOsFunction: true):
-          try {
-            final value = await onOsCall(
-              snap.functionName,
-              snap.args,
-              snap.kwargs,
-            );
-            built = () => value;
-          } on HostAnswerRefused {
-            // Nothing is resumed: the suspended session is replaced.
-            await _replace();
-            rethrow;
-          } on Object catch (e, st) {
-            built = () => Error.throwWithStackTrace(e, st);
-          }
-          snap = await snap.resumeAuto();
+          snap = await guarded(snap.resumeAuto);
         case final FunctionSnapshot f:
-          snap = await f.resumeAuto();
+          snap = await guarded(f.resumeAuto);
         case final NameLookupSnapshot n:
-          snap = await n.resumeAuto();
+          snap = await guarded(n.resumeAuto);
         case final FutureSnapshot f:
-          snap = await f.resumeAuto();
+          snap = await guarded(f.resumeAuto);
       }
     }
   }
