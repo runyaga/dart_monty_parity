@@ -71,6 +71,21 @@ abstract interface class CaseSession {
   Future<void> close();
 }
 
+/// The host could not build an OS call's answer: [error] is core's refusal of
+/// the value. A driver that resumes by hand (session_runner.dart) stops the
+/// feed here, as the oracle's host does; a driver that answers from inside the
+/// callback lets core raise it in the sandbox, with [error]'s text.
+final class HostAnswerRefused implements Exception {
+  /// Core refused the answer with [error].
+  const HostAnswerRefused(this.error);
+
+  /// Core's refusal.
+  final ArgumentError error;
+
+  @override
+  String toString() => '$error';
+}
+
 /// Opens a session configured as [config] says.
 typedef OpenCaseSession =
     Future<CaseSession> Function(SessionConfig config, CoreHost host);
@@ -174,8 +189,14 @@ Future<Map<String, Object?>> runEngineCase(
     curOs.add(_callRecord(name, args, kwargs));
     final a = script.next(name, isOs: true);
     if (a == null) throw const OsCallNotHandledException();
-
-    return _answer(a, name, host);
+    try {
+      return _answer(a, name, host);
+      // A value core's constructor refuses (a file mode upstream refuses, a
+      // position outside 0..2^64-1): the host could not build its answer.
+      // ignore: avoid_catching_errors
+    } on ArgumentError catch (e) {
+      throw HostAnswerRefused(e);
+    }
   }
 
   OsHandler? fsHandler;
@@ -265,6 +286,17 @@ Future<Map<String, Object?>> runEngineCase(
         );
         step['value'] = identityCanon(value, hostLabel: host.labelOf);
         host.rawOutputs.add(value);
+      } on HostAnswerRefused catch (e) {
+        // Refused on the host while building an OS call's answer, before
+        // anything was resumed: the oracle's host raises there too
+        // (`thrown: host`, no traceback).
+        step['exception'] = {
+          'type': 'ArgumentError',
+          'message': '${e.error.message}',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'host';
+        host.rawOutputs.add(null);
       } on MontyRuntimeError catch (e) {
         step['exception'] = raisedDisplayed(
           e.display,

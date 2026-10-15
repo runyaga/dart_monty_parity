@@ -127,6 +127,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+import functools
 import json
 import re
 import sys
@@ -265,8 +266,30 @@ def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
         if ignore & set(before):  # only when the tolerated difference is actually there
             codes = [c for c in codes if c not in ignore]
             applied.append(ex['name'])
+    if cid in local_refusal_cases():
+        got = with_host_refusals(ref, got)
     bad = compare_steps(ref, got, codes)
     return ('MATCH' if not bad else 'DIVERGE'), bad, applied
+
+
+@functools.cache
+def local_refusal_cases() -> frozenset[str]:
+    """The cases marked `local_refusal`."""
+    return frozenset(cid for cid, c in case_index().items() if c.get('local_refusal'))
+
+
+def with_host_refusals(ref: dict, got: dict) -> dict:
+    """[got] with each step the Dart host refused where the oracle's host refused too given the oracle's
+    exception: both hosts raised before anything resumed (`thrown: host`, or a `HOST:` type; no traceback, no
+    value), each in its own host language's words, as the worker engine's `local_refusal` rule matches them."""
+    steps = []
+    for n, g in enumerate(got.get('steps') or []):
+        r = (ref.get('steps') or [])[n] if n < len(ref.get('steps') or []) else {}
+        r_exc, g_exc = r.get('exception') or {}, g.get('exception') or {}
+        upstream_host = r.get('thrown') == 'host' or str(r_exc.get('type', '')).startswith('HOST:')
+        dart_host = g.get('thrown') == 'host' and g_exc.get('traceback') == [] and g.get('value') is None
+        steps.append({**g, 'exception': r_exc} if upstream_host and dart_host and r.get('value') is None else g)
+    return {**got, 'steps': steps}
 
 
 def row_status(classes: list[str]) -> str:

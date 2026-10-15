@@ -3421,14 +3421,14 @@
   },
   "x8hostmode_neg": {
    "suite": "os_fs",
-   "case": "d49f66c0e563ffa4f3f1a0d8e0ca41e975e279995fb9dfae861341f373b6d9a9",
+   "case": "dafc2e205914e7aefb749842575cde4d389204b8dca797db1f4775fa500b3548",
    "outcomes": {
     "ref-py": "2451a7d40e4349898e6189c3cb87fb5c6238b0c347ff63a604007d06b780e2d1"
    }
   },
   "x8hostmode_rplus": {
    "suite": "os_fs",
-   "case": "f4df7ca731547cbbb16ba373dd11e41ecd661ba8ca4988102a348922bcbe17ca",
+   "case": "cb9399312588965a95f6a6a7a4181be85daf98cdc433e2bbdc547432b24363ad",
    "outcomes": {
     "ref-py": "14d1fff21b75c7131d478e71971273a47552806907113ff960b6a21a18e56d26"
    }
@@ -3442,7 +3442,7 @@
   },
   "x8hostmode_zz": {
    "suite": "os_fs",
-   "case": "612a089e1c1a9eba3a4edda591a122f4318db9339ee28ec73f356eed7d661eef",
+   "case": "6fa72462ae878b1713063f4b5820a9aab6e20057d896e4500c9aef821e05cfd4",
    "outcomes": {
     "ref-py": "a49d0f3ad2ba3e867f6d310941a2968b2093be118e15667a9ec0879d12a7dd56"
    }

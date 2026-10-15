@@ -168,6 +168,9 @@ final _hostLabels = <String, String>{};
 /// Labels the host object whose sandbox id is [id] as [label].
 void labelHostObject(String id, String label) => _hostLabels[id] = label;
 
+/// The label of the host object whose sandbox id is [id], if it has one.
+String? hostLabel(String id) => _hostLabels[id];
+
 /// Callback args arrive as plain Dart values (or MontyValues).
 Object? dartToCanon(Object? v) {
   _argTypes.add(v.runtimeType.toString());
@@ -337,10 +340,12 @@ MontyValue canonToMonty(
       c['arg'] as String?,
     ),
     'type' =>
-      host.internal('a type proxy') ??
+      host.sandboxProxies[c['name']! as String] ??
+          host.internal('a type proxy') ??
           montyStdTypeProxy('type', c['name']! as String),
     'builtin' =>
-      host.internal('a builtin proxy') ??
+      host.sandboxProxies[c['name']! as String] ??
+          host.internal('a builtin proxy') ??
           montyStdTypeProxy('function', c['name']! as String),
     'echo' => host.rawOutputs[c['step']! as int]!,
     // A host world builds its wrappers through the public HostClass,
@@ -380,6 +385,20 @@ class CoreHost {
   /// `core` engine): a value only an internal factory makes is then
   /// inexpressible.
   final bool publicOnly;
+
+  /// Builtin types and functions by name, as a feed returned them: the one
+  /// way core's public API gives a host a type proxy (sandboxProxyNames).
+  Map<String, MontyValue> sandboxProxies = const {};
+
+  /// Logs that the sandbox called method [name] on the host object or class
+  /// core knows as [objectId], before any policy check, as the oracle's
+  /// wrapper `call_method` does; no host world logs nothing.
+  void logObjectCall(String objectId, String name) {}
+
+  /// Logs that the sandbox looked up the non-eager attribute [name] of the
+  /// host object or class [objectId], as the oracle's `lookup_lazy_attrs`
+  /// does.
+  void logObjectLookup(String objectId, String name) {}
 
   /// Throws [Inexpressible] for [what] when [publicOnly]; else null.
   Never? internal(String what) => publicOnly
@@ -515,3 +534,15 @@ OsHandler buildFsHandler(
     fallthrough: fallthrough,
   );
 }
+
+/// The names of the builtin types and functions case [c] returns or passes
+/// (`{"t": "type"}` and `{"t": "builtin"}` values), which a host on core's
+/// public API can only obtain from a feed.
+Set<String> sandboxProxyNames(Object? c) => switch (c) {
+  {'t': 'type' || 'builtin', 'name': final String n} => {n},
+  final Map<Object?, Object?> m => {
+    for (final v in m.values) ...sandboxProxyNames(v),
+  },
+  final List<Object?> l => {for (final v in l) ...sandboxProxyNames(v)},
+  _ => const {},
+};

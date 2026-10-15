@@ -6,10 +6,12 @@
 //
 // The oracle also logs what its Python subclasses see: every `convert_value`,
 // and every `call_method` and `lookup_lazy_attrs` the sandbox reaches the
-// wrapper with. Core's wrappers are `final` classes with no hook for the
-// last two before the policy check, so a call or lookup the policy refuses
-// reaches no host code here and leaves no `call` or `lookup` entry: the cases
-// that need one cannot match (see `not_run` in rows.json).
+// wrapper with, before the policy check. Core's wrappers are `final` classes
+// with no hook there, but the session surfaces the same point: a method call
+// or a lazy attribute of a host object suspends the feed with the object's
+// id (FunctionSnapshot / NameLookupSnapshot `objectId`). The session driver
+// (session_runner.dart) logs `call` and `lookup` there, through
+// [SessionHost.logObjectCall] and [SessionHost.logObjectLookup].
 import 'dart:async';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
@@ -51,6 +53,9 @@ final class SessionHost extends CoreHost {
   }
 
   final _classes = <String, HostClass<HostObj>>{};
+
+  /// The oracle's canonical receiver of each wrapper core knows by id.
+  final _receivers = <String, Map<String, Object?>>{};
   final _objects = <String, HostObj>{};
   final _wrappers = <String, MontyValue>{};
   final _newCount = <String, int>{};
@@ -65,6 +70,43 @@ final class SessionHost extends CoreHost {
 
   @override
   MontyValue wrapperValue(String name) => _wrapper(name);
+
+  @override
+  void logObjectCall(String objectId, String name) =>
+      _logReceiver('call', objectId, name);
+
+  @override
+  void logObjectLookup(String objectId, String name) =>
+      _logReceiver('lookup', objectId, name);
+
+  /// The entry whose receiver is an id this host has not seen yet: an object
+  /// the sandbox built, whose wrapper core made. The first host access that
+  /// sees the receiver itself (its method body, its field) fills it in.
+  ({Map<String, Object?> entry, String id})? _unresolved;
+
+  void _logReceiver(String op, String objectId, String name) {
+    final known =
+        _receivers[objectId] ??
+        switch (hostLabel(objectId)) {
+          final String label => {'t': 'hostobj', 'obj': label},
+          null => null,
+        };
+    final entry = <String, Object?>{
+      'op': op,
+      'obj': known ?? {'t': 'unresolved', 'id': objectId},
+      'name': name,
+    };
+    log.add(entry);
+    _unresolved = known == null ? (entry: entry, id: objectId) : null;
+  }
+
+  /// [o] is the receiver of the entry still unresolved, if there is one.
+  void _resolve(HostObj o) {
+    final pending = _unresolved;
+    if (pending == null) return;
+    _unresolved = null;
+    pending.entry['obj'] = _receivers[pending.id] = _canon(o);
+  }
 
   /// The label of the host object [v] decodes to, if it is one.
   @override
@@ -140,7 +182,14 @@ final class SessionHost extends CoreHost {
       cname,
       isDataclass: spec['dataclass'] == true,
       instance: (
-        fields: {for (final f in fields) f: (o) => o.values[f]!},
+        fields: {
+          for (final f in fields)
+            f: (o) {
+              _resolve(o);
+
+              return o.values[f]!;
+            },
+        },
         properties: const {},
         methods: instance,
       ),
@@ -150,11 +199,6 @@ final class SessionHost extends CoreHost {
       },
       methods: classLevel,
       construct: (args, kwargs) {
-        log.add({
-          'op': 'call',
-          'obj': {'t': 'hostclass', 'obj': cname},
-          'name': '__call__',
-        });
         final values = <String, MontyValue>{};
         for (var i = 0; i < args.length && i < fields.length; i++) {
           values[fields[i]] = args[i];
@@ -178,30 +222,23 @@ final class SessionHost extends CoreHost {
     List<String> fields,
   ) {
     final self = receiver is HostObj ? receiver : null;
+    if (self != null) _resolve(self);
     final receiverCanon = switch (receiver) {
       final HostObj o => _canon(o),
       final String c => {'t': 'hostclass', 'obj': c},
       _ => {'t': 'none'},
     };
-    log
-      ..add({
-        'op': 'call',
-        'obj': switch (receiver) {
-          final HostObj o => _canon(o),
-          _ => {'t': 'hostclass', 'obj': cname},
-        },
-        'name': mname,
-      })
-      ..add({
-        'op': 'method',
-        'obj': receiverCanon,
-        'name': mname,
-        'args': [for (final a in args) _canon(a)],
-        'kwargs': {
-          for (final MapEntry(:key, :value) in kwargs.entries)
-            key: _canon(value),
-        },
-      });
+    // The `call` entry is logged where the call suspends the feed, before
+    // the policy check (session_runner.dart); the body logs `method`.
+    log.add({
+      'op': 'method',
+      'obj': receiverCanon,
+      'name': mname,
+      'args': [for (final a in args) _canon(a)],
+      'kwargs': {
+        for (final MapEntry(:key, :value) in kwargs.entries) key: _canon(value),
+      },
+    });
     if (beh['returns'] case final Map<Object?, Object?> r) {
       return canonToMonty(r.cast(), this);
     }
@@ -291,6 +328,8 @@ final class SessionHost extends CoreHost {
       convertValue: _hook(ws),
     );
     labelHostObject(instance.id, o.label);
+    _receivers[instance.id] = _canon(o);
+    _receivers[instance.classType.id] = {'t': 'hostclass', 'obj': o.cls};
 
     return instance;
   }
@@ -303,12 +342,16 @@ final class SessionHost extends CoreHost {
       return _instanceWrapper(_objects[ws['obj']! as String]!, ws);
     }
 
-    return ClassType(
-      _classes[ws['class']! as String]!,
+    final cname = ws['class']! as String;
+    final type = ClassType(
+      _classes[cname]!,
       policies: _policy(ws),
       init: ws['init'] == true,
       instancePolicies: _policy(ws, 'instance_'),
       convertValue: _hook(ws),
     );
+    _receivers[type.id] = {'t': 'hostclass', 'obj': cname};
+
+    return type;
   }
 }

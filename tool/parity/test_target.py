@@ -19,6 +19,7 @@ import csv
 import json
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script's directory off sys.path
@@ -349,6 +350,36 @@ class TargetTest(unittest.TestCase):
                 probes = run.core_probes()
         self.assertIn('sp_only_core_also', probes)
         self.assertTrue({p for r in self.rules.values() for p in r.get('probes') or []} <= set(probes))
+
+    def test_a_core_local_refusal_matches_only_a_host_refusal(self) -> None:
+        """In a case marked `local_refusal`, a step the oracle's host refused (`thrown: host`, no traceback) matches a
+        core step the Dart host refused (`thrown: host`), whatever the type and message; nothing else does."""
+        import tempfile  # noqa: PLC0415
+
+        cid = 'x8hostmode_neg'
+        self.assertTrue(self.cases[cid].get('local_refusal'))
+        ref = json.loads((score.ROOT / 'tool/parity/expected' / cid / 'ref-py.json').read_text())
+        self.assertEqual(ref['steps'][0].get('thrown'), 'host')
+        rule = {'compare': ['V', 'E']}
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)
+            (out / cid).mkdir()
+
+            def got(step: dict) -> tuple:
+                (out / cid / 'core-vm.json').write_text(json.dumps({'steps': [step], 'unsupported': {}}))
+                return score.classify_case(cid, 'vm', rule, out, score.ROOT / 'tool/parity/expected')[:2]
+
+            host = {'value': None, 'thrown': 'host',
+                    'exception': {'type': 'ArgumentError', 'message': 'other words', 'traceback': []}}
+            self.assertEqual(got(host), ('MATCH', []))
+            # Raised in the sandbox (a frame), or not thrown on the host: not a host refusal.
+            frame = {'filename': '<python-input-0>', 'line': 1}
+            self.assertEqual(got({**host, 'exception': {**host['exception'], 'traceback': [frame]}})[0], 'DIVERGE')
+            self.assertEqual(got({**host, 'thrown': 'MontyRuntimeError'})[0], 'DIVERGE')
+            self.assertEqual(got({**host, 'value': {'t': 'int', 'v': '1'}})[0], 'DIVERGE')
+            # Unmarked, the same step diverges on type and message.
+            with mock.patch.object(score, 'local_refusal_cases', frozenset):
+                self.assertEqual(got(host)[0], 'DIVERGE')
 
     def test_the_target_flags_are_not_silently_skipped(self) -> None:
         import contextlib  # noqa: PLC0415

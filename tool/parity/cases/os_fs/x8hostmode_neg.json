@@ -1,6 +1,7 @@
 {
  "id": "x8hostmode_neg",
  "code": "f = open('/d/a.txt', 'r')\nf.read()",
+ "local_refusal": true,
  "os": {
   "open": [
    {
