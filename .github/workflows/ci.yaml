@@ -94,9 +94,9 @@ jobs:
   # ---------------------------------------------------------------------------
   # The current baseline, on the core commit it was recorded for
   # ---------------------------------------------------------------------------
-  # Expectations are per architecture (baseline-current.json `platforms`); on
-  # this x86_64 runner float_values is PARTIAL on vm and dart2wasm (core's NaN
-  # sign bit), and nothing else may differ.
+  # Expectations are per architecture (baseline-current.json `platforms`);
+  # through the worker, x86_64 and arm64 measure the same (the old in-process
+  # engine's NaN sign bit on x86_64 is gone).
   current:
     name: Current baseline (core CORE_REF on vm, dart2js, dart2wasm)
     needs: [core-ref]
