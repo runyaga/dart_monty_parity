@@ -1,7 +1,9 @@
-// Runs the parity cases baked into cases.g.dart through core's pool session
-// in the browser (dart2js or dart2wasm): one pool for the run, its one Web
-// Worker running core's committed
-// lib/assets/dart_monty_core_proto_worker.{js,wasm}, Reset and reused from
+// Runs the parity cases baked into cases.g.dart through core's public
+// `Monty` / `MontySession`, as the engine cases.g.dart names
+// (`parityEngine`: `core` or `session`, which differ only in the scorer's
+// rules), in the browser (dart2js or dart2wasm): one pool for the run, its
+// one Web Worker running core's committed
+// lib/assets/dart_monty_core_worker.{js,wasm}, Reset and reused from
 // case to case. The pool uses core's own channel factory with no asset
 // location, so the factory finds the assets itself; each channel it opens is
 // recorded, so the leak checks see the Workers, not the pool's slot count.
@@ -21,8 +23,8 @@ library;
 import 'dart:convert';
 
 import 'package:dart_monty_core/src/worker/channel_factory.dart';
+import 'package:dart_monty_core/src/worker/monty.dart';
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
-import 'package:dart_monty_core/src/worker/monty_pool.dart';
 import 'package:dart_monty_core/src/worker/spawn_handle.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/monty_parity.dart';
@@ -37,7 +39,7 @@ void main() {
     const backend = identical(1, 1.0) ? 'dart2js' : 'dart2wasm';
     final opened = <MontyChannel>[];
     int alive() => opened.where((ch) => ch.isAlive).length;
-    Future<MontyPool> start(PoolOptions options) => MontyPool.startWith(
+    Future<Monty> start(PoolOptions options) => startMonty(
       options,
       open: () => _Recording(openChannel(), opened),
     );
@@ -49,9 +51,9 @@ void main() {
         final id = c['id']! as String;
         Map<String, Object?> res;
         try {
-          res = await runSessionCase(c, backend, pool);
+          res = await runSessionCase(c, backend, pool, engine: parityEngine);
         } on Object catch (e, st) {
-          res = newOutcome(id, 'session', backend)
+          res = newOutcome(id, parityEngine, backend)
             ..['runner_error'] = '$e\n$st';
         }
         // The pool keeps at most its one Worker between cases.
@@ -69,11 +71,12 @@ void main() {
             pool,
             start,
             () => opened.length,
+            engine: parityEngine,
           );
         } on Object catch (e, st) {
           res = {
             'probe': id,
-            'engine': 'session',
+            'engine': parityEngine,
             'backend': backend,
             'events': const <Object?>[],
             'runner_error': '$e\n$st',

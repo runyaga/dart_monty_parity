@@ -17,6 +17,6 @@
   "s12_repl_two_feeds"
  ],
  "deferred": {
-  "s07_complex": "deferred to M3: the worker driver's value subset carries no complex value yet"
+  "s07_complex": "deferred to C5-v: the flip (core #253) has no MontyComplex, so the worker carries no complex value yet"
  }
 }

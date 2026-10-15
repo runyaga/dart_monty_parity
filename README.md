@@ -2,7 +2,8 @@
 
 Measures how far [dart_monty_core](https://github.com/runyaga/dart_monty_core) matches upstream
 [pydantic/monty](https://github.com/pydantic/monty) 1.1.0, per capability row of
-`tool/upstream/capability-manifest.tsv`, on the Dart VM (FFI), dart2js and dart2wasm.
+`tool/upstream/capability-manifest.tsv`, on the Dart VM (a worker process), dart2js and dart2wasm (a Web
+Worker).
 
 The suite is self-contained: the cases, upstream's expected outcomes, the oracle that generates them,
 the Dart runner, the scorer and the recorded baselines all live here. It runs against a dart_monty_core
@@ -32,7 +33,7 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
-| `packages/monty_parity` | the Dart runner: the `core` engine (core's public API), the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`) and the `session` engine (core's internal pool session, `lib/src/session_runner.dart` and its probes, `lib/src/session_probes.dart`), VM and browser, plus the worker crash tests |
+| `packages/monty_parity` | the Dart runner: the `core` and `session` engines (one driver on core's public `Monty` / `MontySession`, `lib/src/session_runner.dart`, and its probes, `lib/src/session_probes.dart`; they differ in the scorer's rules) and the `worker` engine (core's internal monty-proto worker, `lib/src/worker_runner.dart`), VM and browser, plus the worker crash tests |
 | `tool/upstream/` | copies of dart_monty_core's `tool/upstream`: the hash-pinned pydantic-monty lock, the upstream pin and the frozen capability manifest |
 | `tool/check_parity_manifest.py` | offline check that `manifest.json` binds every case to its expected outcomes |
 | `tool/check_core_upstream.py` | checks that a core checkout's `tool/upstream` equals the copies here |
@@ -40,12 +41,14 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 ## Running against a core checkout
 
 Needs the Dart SDK 3.13.5 (the version every workflow pins; `dart format` output differs between
-releases), Python 3.10+, Rust (core's build hook compiles its native library for the VM backend), and
-Chrome for dart2js and dart2wasm.
+releases), Python 3.10+, Rust (core's `tool/build_worker.sh` builds the worker executable the VM backend
+runs), and Chrome for dart2js and dart2wasm (they run core's committed worker assets,
+`lib/assets/dart_monty_core_worker.{js,wasm}`).
 
 ```sh
 git clone https://github.com/runyaga/dart_monty_core core
 git -C core checkout "$(cat CORE_REF)"
+bash core/tool/build_worker.sh
 
 python3 -I tool/check_core_upstream.py --core core
 python3 -I tool/parity/run.py vm        --core core --out /tmp/parity
@@ -78,9 +81,12 @@ python3 -I tool/parity/score.py /tmp/e0 --assert-e0
 
 `--assert-e0` fails unless every counted case of `tool/parity/e0.json` MATCHES on every backend.
 
-The `session` engine runs the same E0 cases through core's internal pool session (`MontyPool.checkout`,
-`PoolSession.feedRun`), the path that becomes core's public `Monty` / `MontySession` at the cutover. One pool
-serves the whole run, so its worker is Reset and reused from case to case:
+The `session` engine runs the same E0 cases through core's public `Monty` / `MontySession`
+(`Monty.checkout`, `MontySession.feedRun`). One pool serves the whole run, so its worker is Reset and
+reused from case to case. The default `core` engine is the same driver
+(`packages/monty_parity/lib/src/session_runner.dart`); the two differ only in the scorer's rules: `core`
+outcomes are scored against `baseline-current.json`, whose rows may name an exception, `session` outcomes
+against E0 and the C1 gate with none:
 
 ```sh
 for b in vm dart2js dart2wasm; do
@@ -142,7 +148,9 @@ backpressure) is listed under `core_gated` and gated by core's own tests. A core
 pass moves it to `landed` here, with `CORE_REF`.
 
 To reproduce the measured baseline instead, check out core `5873ec5` (where the capability manifest's
-baseline was measured) and assert `--assert-rows --assert-baseline`. Expected under this suite's
+baseline was measured), run it with the runner of its API (this repository at the tag `runner-0.23`, the
+last commit before the cut: `python3 -I <runner-0.23 checkout>/tool/parity/run.py ...`) and assert
+`--assert-rows --assert-baseline` with this checkout's scorer. Expected under this suite's
 rules: on arm64 FFI PRESENT 36/185, dart2js 35, dart2wasm 35; on x86_64 35/35/34 (see per-architecture
 expectations in `EXCEPTIONS.md`). The manifest's frozen FFI number, 37, was scored more leniently;
 `rows.json` `rescored` lists the rows that account for the difference. That core needs `npm ci` in its `js/` for the browser WASI worker, and on a toolchain
@@ -157,7 +165,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
   `tool/parity/test_gate.py`, the C1 gate's.
 - **`current`** (`ci.yaml`): core at `CORE_REF`, all three backends, `--assert-current`; also analyses
   the runner and checks the upstream copies against that core.
-- **`baseline`** (`ci.yaml`): core `5873ec5`, all three backends, `--assert-rows --assert-baseline`.
+- **`baseline`** (`ci.yaml`): core `5873ec5` through the `runner-0.23` runner, all three backends,
+  `--assert-rows --assert-baseline`.
 - **`e0`** (`ci.yaml`): core at `CORE_REF`, the `e0` suite and the worker value rows' cases through the
   worker engine on all three backends with the crash tests, `--assert-e0` and `--assert-worker`; then the
   `e0` suite and the C1 gate's cases and probes through the session engine on all three,
