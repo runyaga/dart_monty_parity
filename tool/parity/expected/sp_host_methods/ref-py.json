@@ -1,0 +1,38 @@
+{
+ "probe": "sp_host_methods",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.sum()\",[\"p\"]]",
+   "outcome": "value: 7"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.shifted(1, dy=2)\",[]]",
+   "outcome": "value: [4, 6]"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.fails()\",[]]",
+   "outcome": "MontyRuntimeError: ValueError: no sum today"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.later()\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'later'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.nope()\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'nope'"
+  }
+ ],
+ "runner_error": null
+}

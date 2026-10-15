@@ -1,0 +1,23 @@
+{
+ "probe": "sp_host_eager_all",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(p.x, p.y)\",[\"p\"]]",
+   "outcome": "value: (1, 2)"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.norm1\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'norm1'"
+  }
+ ],
+ "runner_error": null
+}

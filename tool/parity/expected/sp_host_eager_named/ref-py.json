@@ -1,0 +1,23 @@
+{
+ "probe": "sp_host_eager_named",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(p.y, p.norm1)\",[\"p\"]]",
+   "outcome": "value: (2, 3)"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.x\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'x'"
+  }
+ ],
+ "runner_error": null
+}

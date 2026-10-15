@@ -1,0 +1,43 @@
+{
+ "probe": "sp_host_lazy_raises",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.boom\",[\"p\"]]",
+   "outcome": "MontyRuntimeError: KeyError: boom"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"getattr(p, 'boom', 5)\",[]]",
+   "outcome": "MontyRuntimeError: KeyError: boom"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"try:\\n    p.boom\\nexcept KeyError as e:\\n    r = repr(e)\\nr\",[]]",
+   "outcome": "value: \"KeyError('boom')\""
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"hasattr(p, 'missing')\",[]]",
+   "outcome": "value: False"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.missing\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'missing'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"getattr(p, '_hidden', 'dflt')\",[]]",
+   "outcome": "value: 'dflt'"
+  }
+ ],
+ "runner_error": null
+}

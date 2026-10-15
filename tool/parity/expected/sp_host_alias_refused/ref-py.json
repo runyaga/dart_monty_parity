@@ -1,0 +1,29 @@
+{
+ "probe": "sp_host_alias_refused",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.x\",[\"p\"]]",
+   "outcome": "value: 1"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"q.x\",[\"q\"]]",
+   "outcome": "MontyRuntimeError: ValueError: wrapper id <uuid> already identifies a different object in this session"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.x\",[]]",
+   "outcome": "value: 1"
+  }
+ ],
+ "runner_error": null,
+ "strings_rewritten": true
+}

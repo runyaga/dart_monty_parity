@@ -380,10 +380,17 @@
    },
    "session": {
     "cases": [
-     "h_x01_eager_all",
-     "h_x02_eager_list",
-     "h_x03_eager_none"
-    ]
+     "h_x01_eager_all"
+    ],
+    "probes": [
+     "sp_host_eager_all",
+     "sp_host_eager_named",
+     "sp_host_eager_unknown_name"
+    ],
+    "not_run": {
+     "h_x02_eager_list": "upstream's wrapper logs a `lookup` or `call` before the policy check, and for a name or method the policy refuses; core's wrapper raises that refusal itself and runs no host code, so the `host_calls` transcript lacks the entry. The probes `sp_host_*` compare the same refusals by outcome (hasattr(u, \"age\"))",
+     "h_x03_eager_none": "upstream's wrapper logs a `lookup` or `call` before the policy check, and for a name or method the policy refuses; core's wrapper raises that refusal itself and runs no host code, so the `host_calls` transcript lacks the entry. The probes `sp_host_*` compare the same refusals by outcome (hasattr(u, \"name\"))"
+    }
    }
   },
   "host_instance_value": {
@@ -403,6 +410,9 @@
      "h_b02_proxy_nested",
      "h_b03_dataclass_proxy",
      "h_x17_return_original"
+    ],
+    "probes": [
+     "sp_host_identity"
     ]
    }
   },
@@ -436,9 +446,14 @@
     "web": "ABSENT"
    },
    "session": {
-    "cases": [
-     "h_x07_lazy"
-    ]
+    "probes": [
+     "sp_host_lazy_named",
+     "sp_host_lazy_denied",
+     "sp_host_lazy_raises"
+    ],
+    "not_run": {
+     "h_x07_lazy": "upstream's wrapper logs a `lookup` or `call` before the policy check, and for a name or method the policy refuses; core's wrapper raises that refusal itself and runs no host code, so the `host_calls` transcript lacks the entry. The probes `sp_host_*` compare the same refusals by outcome (c.api_key, getattr(c, \"api_key\", ...)), and each allowed lazy read logs its `lookup` before its `convert`, which core logs only the second of"
+    }
    }
   },
   "host_class_value": {
@@ -452,6 +467,11 @@
    "session": {
     "cases": [
      "h_x09_class_init"
+    ],
+    "probes": [
+     "sp_host_class_methods",
+     "sp_host_type_identity",
+     "sp_host_class_grant_kept"
     ]
    }
   },
@@ -466,9 +486,14 @@
    },
    "session": {
     "cases": [
-     "h_x09_class_init",
-     "h_x11_class_methods"
-    ]
+     "h_x09_class_init"
+    ],
+    "probes": [
+     "sp_host_class_construct"
+    ],
+    "not_run": {
+     "h_x11_class_methods": "upstream's wrapper logs a `lookup` or `call` before the policy check, and for a name or method the policy refuses; core's wrapper raises that refusal itself and runs no host code, so the `host_calls` transcript lacks the entry. The probes `sp_host_*` compare the same refusals by outcome (the second feed calls an instance method through the class)"
+    }
    }
   },
   "host_value_conversion_hook": {
@@ -484,9 +509,15 @@
    "session": {
     "cases": [
      "h_x13_convert_upper",
-     "h_x14_convert_redact",
      "h_x15_convert_wrap"
-    ]
+    ],
+    "probes": [
+     "sp_host_convert_hook",
+     "sp_host_convert_lazy"
+    ],
+    "not_run": {
+     "h_x14_convert_redact": "a lazy read logs its `lookup` before its `convert` upstream; core logs only the `convert` (a lazy read reaches no host code before the policy check); `sp_host_convert_lazy` measures the conversion of a lazy read by outcome"
+    }
    }
   },
   "os_path_predicates": {
@@ -2232,6 +2263,30 @@
    "session": {
     "probes": [
      "sp_pool_close"
+    ]
+   }
+  },
+  "host_method_dispatch": {
+   "session": {
+    "probes": [
+     "sp_host_methods",
+     "sp_host_methods_all",
+     "sp_host_methods_denied"
+    ]
+   }
+  },
+  "host_object_identity_lifecycle": {
+   "session": {
+    "probes": [
+     "sp_host_rewrap_replaces_policy",
+     "sp_host_alias_refused"
+    ]
+   }
+  },
+  "snapshot_host_state_reconstruction": {
+   "session": {
+    "probes": [
+     "sp_host_restore_store_empty"
     ]
    }
   },

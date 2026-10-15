@@ -1,0 +1,24 @@
+{
+ "probe": "host_wrapper_eq",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "wrapper_eq",
+   "twins_equal": true,
+   "other_id_equal": false,
+   "self_equal": true
+  },
+  {
+   "ev": "wrapper_hash",
+   "wrapper": "a",
+   "hashable": false
+  },
+  {
+   "ev": "wrapper_hash",
+   "wrapper": "T",
+   "hashable": false
+  }
+ ],
+ "runner_error": null
+}

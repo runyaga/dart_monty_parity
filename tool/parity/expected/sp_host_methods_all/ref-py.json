@@ -1,0 +1,28 @@
+{
+ "probe": "sp_host_methods_all",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.sum()\",[\"p\"]]",
+   "outcome": "value: 7"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p()\",[]]",
+   "outcome": "MontyRuntimeError: TypeError: 'Point' object is not callable"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.describe()\",[]]",
+   "outcome": "value: 'Point class'"
+  }
+ ],
+ "runner_error": null
+}

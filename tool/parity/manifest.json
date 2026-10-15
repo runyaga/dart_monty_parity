@@ -1,9 +1,10 @@
 {
  "generator": {
-  "sha256": "964b61c15fae9e5b35761feba0a6ab8c8d964887000687aa0f59ecc3ccd39ab3",
+  "sha256": "a6a5f24547683e1575d85a2ce038ae395afdf73a4747da59531980ae186a49e9",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "069a880b32da66bca9ae5624b56e5c748d023785680d763054045ac56a103bb7",
+   "tool/parity/oracle/run_probes.py": "7ebf770b6542febf2fc26dd85c8ba8ad585d9d19f11c35ae973a533f9c9789b6",
+   "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
    "tool/parity/oracle/rust/src/main.rs": "38a41e960e77840c3a0e70f9ec2ece985ab05ac94b3bbeae6a24d3d3c6e2e901"
@@ -4879,6 +4880,11 @@
     "ref-py": "8716d178e033af7bdb547f599c6d163d2cc3269936fd6c8803c9ce4594503685"
    }
   },
+  "host_wrapper_eq": {
+   "outcomes": {
+    "ref-py": "2813dbe6bf16075e53744869d95a5af01762fa82546757ad0026ed3c62ed4dcf"
+   }
+  },
   "inputs_typed": {
    "outcomes": {
     "ref-py": "9aee7c5e14d0e45bef816f22ed234c085a9d08bd3fc177f03ab516b85691930c"
@@ -4997,6 +5003,101 @@
   "sp_futures_partial": {
    "outcomes": {
     "ref-py": "95de80a10bb05ebbcea55c19e228e4ded0d49dfe2fe469124db8265a7206977f"
+   }
+  },
+  "sp_host_alias_refused": {
+   "outcomes": {
+    "ref-py": "f0df2316aa1a741800a7c589e48e34221ff4c78c4c54021f10278ae63e04e87f"
+   }
+  },
+  "sp_host_class_construct": {
+   "outcomes": {
+    "ref-py": "33642b0ee9571f89cfb0e4427ce4413fea1a9c17341d77f674de78194f5f3d5c"
+   }
+  },
+  "sp_host_class_grant_kept": {
+   "outcomes": {
+    "ref-py": "3aa6a292bfadd58976bc88adb43b1c4a270232239f2b278c885610d21533c2c5"
+   }
+  },
+  "sp_host_class_methods": {
+   "outcomes": {
+    "ref-py": "e768c2093b7a83b31ec0bc59cedf7631b07a965378571281268737f72d513e9d"
+   }
+  },
+  "sp_host_convert_hook": {
+   "outcomes": {
+    "ref-py": "4a28058652b93f33571dc44c74aa2efb4a55de7bd2b972a2d9a9acc21d401190"
+   }
+  },
+  "sp_host_convert_lazy": {
+   "outcomes": {
+    "ref-py": "160a197cec362c4794eeb7c9aae48623ef17b03e80462c80568c439ee742046d"
+   }
+  },
+  "sp_host_eager_all": {
+   "outcomes": {
+    "ref-py": "ee7457fd773f41ad74f46582dd944a7781d4fb39f37a5ddf624db42272389caf"
+   }
+  },
+  "sp_host_eager_named": {
+   "outcomes": {
+    "ref-py": "d310bf7d575eae49713049df6a6be71bd2b7048fc80de8478c9cca7dba7621f7"
+   }
+  },
+  "sp_host_eager_unknown_name": {
+   "outcomes": {
+    "ref-py": "95d16d4898c155160d7296eeba31e0a3330a3d116cc5f70f3d81166dc9dea115"
+   }
+  },
+  "sp_host_identity": {
+   "outcomes": {
+    "ref-py": "19966ebf2c4b3f4714742780111c70d95091b88d4054115dca329b11a222b408"
+   }
+  },
+  "sp_host_lazy_denied": {
+   "outcomes": {
+    "ref-py": "527dc5e5c40c763ac7559670e66194f8b892785bbacc41ca44acd33a92c2e19c"
+   }
+  },
+  "sp_host_lazy_named": {
+   "outcomes": {
+    "ref-py": "32ae92764510ee9465809ab18478ec3c5a06da9b11aa0bbeb6a6150eed3ece48"
+   }
+  },
+  "sp_host_lazy_raises": {
+   "outcomes": {
+    "ref-py": "05c9756132fd3999de39f135ecf7c9b690ed7b7e10ae146c70e63175eea384d4"
+   }
+  },
+  "sp_host_methods": {
+   "outcomes": {
+    "ref-py": "9f3800cdcf94730b1a71a029a92ef5e348ee21df67ef0f1bef7aac135b5ea29b"
+   }
+  },
+  "sp_host_methods_all": {
+   "outcomes": {
+    "ref-py": "78ee1e38b9d6c11cd0609d4cbdcd00d1651f2910ba3fc1eedae14256ed8698e5"
+   }
+  },
+  "sp_host_methods_denied": {
+   "outcomes": {
+    "ref-py": "e06bf570f60e37d9339c3b1ba8c625a07ce924075ba042cee2f9d3e7e2487188"
+   }
+  },
+  "sp_host_restore_store_empty": {
+   "outcomes": {
+    "ref-py": "e1ba365df3f68db22362afb5b5fc46a5285990863452ed77ceb00b6aee9f431b"
+   }
+  },
+  "sp_host_rewrap_replaces_policy": {
+   "outcomes": {
+    "ref-py": "8184a726616b9d1b3a63cc812ea03aa874cbf645f8021a51f325783c72c8821a"
+   }
+  },
+  "sp_host_type_identity": {
+   "outcomes": {
+    "ref-py": "c8ae5c669cb8e6e21680b8c82f499b40745105cff3d13ee041682cd2a4862fc6"
    }
   },
   "sp_load_adopts_dump": {

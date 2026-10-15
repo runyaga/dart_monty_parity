@@ -1,0 +1,18 @@
+{
+ "probe": "sp_host_type_identity",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(type(p) is T, type(p).__name__)\",[\"p\",\"T\"]]",
+   "outcome": "value: (True, 'Point')"
+  }
+ ],
+ "runner_error": null
+}

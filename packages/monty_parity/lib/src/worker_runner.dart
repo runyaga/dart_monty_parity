@@ -60,7 +60,8 @@ abstract interface class CaseSession {
 }
 
 /// Opens a session configured as [config] says.
-typedef OpenCaseSession = Future<CaseSession> Function(SessionConfig config);
+typedef OpenCaseSession =
+    Future<CaseSession> Function(SessionConfig config, CoreHost host);
 
 /// A case's settings as an engine's session takes them; a setting the engine
 /// cannot apply is recorded in the second argument, `unsupported`.
@@ -80,7 +81,7 @@ Future<Map<String, Object?>> runWorkerCase(
   backend,
   engine: 'worker',
   engineVersion: 'dart_monty_core (internal: ProtoSession)',
-  open: (config) async {
+  open: (config, host) async {
     final channel = await spawn();
     try {
       return _ProtoCaseSession(await ProtoSession.open(channel, config));
@@ -105,15 +106,20 @@ Future<Map<String, Object?>> runEngineCase(
   required String engineVersion,
   required OpenCaseSession open,
   CaseConfig configure = workerConfig,
+  CoreHost Function(Map<String, Object?> c) hostFor = CoreHost.new,
 }) async {
   final out = newOutcome(c['id']! as String, engine, backend);
   out['engine_version'] = engineVersion;
   final unsupported = out['unsupported']! as Map<String, Object?>;
+  final host = hostFor(c);
   for (final MapEntry(:key, :value) in _inexpressible.entries) {
-    if (c[key] != null) unsupported[key] = value;
+    // An empty block (`host: {}`) asks for nothing, and a host world applies
+    // its `host` block.
+    if (key == 'host' && host.appliesHost) continue;
+    if (c[key] == null || (c[key] is Map && (c[key]! as Map).isEmpty)) continue;
+    unsupported[key] = value;
   }
   final config = configure(c, unsupported);
-  final host = CoreHost(c);
   // One memo: inputs may share objects with each other, as the oracle's do.
   final memo = <int, MontyValue>{};
   var inputs = const <String, MontyValue>{};
@@ -135,7 +141,7 @@ Future<Map<String, Object?>> runEngineCase(
   final steps = out['steps']! as List<Object?>;
   final CaseSession session;
   try {
-    session = await open(config);
+    session = await open(config, host);
     // The session's settings are refused before any worker runs a feed (an
     // unknown timezone name): the refusal is the case's one step, as the
     // oracle records a refused checkout.
@@ -158,6 +164,7 @@ Future<Map<String, Object?>> runEngineCase(
     for (var n = 0; n < feeds.length; n++) {
       final step = newStep();
       steps.add(step);
+      host.log = step['host_calls']! as List<Object?>;
       final prints = <(String, String)>[];
       final ext = step['ext_calls']! as List<Object?>;
       final os = step['os_calls']! as List<Object?>;
@@ -192,7 +199,7 @@ Future<Map<String, Object?>> runEngineCase(
           },
           onPrint: (stream, text) => prints.add((stream, text)),
         );
-        step['value'] = identityCanon(value);
+        step['value'] = identityCanon(value, hostLabel: host.labelOf);
         host.rawOutputs.add(value);
       } on MontyRuntimeError catch (e) {
         step['exception'] = raisedDisplayed(
@@ -477,7 +484,10 @@ List<MontyValue> _children(MontyValue v) => switch (v) {
 };
 
 /// [MontyValue] -> canonical form, identity-aware as the oracle's `canon` is.
-Object? identityCanon(MontyValue root) => identityCanonBatch([root]).single;
+Object? identityCanon(
+  MontyValue root, {
+  String? Function(MontyValue)? hostLabel,
+}) => identityCanonBatch([root], hostLabel: hostLabel).single;
 
 /// [MontyValue]s -> canonical forms with one identity memo over the whole
 /// batch, as the oracle's `canon_batch` does: a container, named tuple or
@@ -489,11 +499,14 @@ Object? identityCanon(MontyValue root) => identityCanonBatch([root]).single;
 /// Identity is Dart object identity: the worker driver decodes a node it
 /// meets twice into one object. Never `==`, which walks a shared graph as a
 /// tree.
-List<Object?> identityCanonBatch(List<MontyValue> roots) {
+List<Object?> identityCanonBatch(
+  List<MontyValue> roots, {
+  String? Function(MontyValue)? hostLabel,
+}) {
   final counts = HashMap<MontyValue, int>.identity();
   final onPath = HashSet<MontyValue>.identity();
   void count(MontyValue v) {
-    if (!_isShared(v)) return;
+    if (!_isShared(v) || hostLabel?.call(v) != null) return;
     final n = counts[v] = (counts[v] ?? 0) + 1;
     if (n > 1 || !onPath.add(v)) return;
     _children(v).forEach(count);
@@ -503,6 +516,9 @@ List<Object?> identityCanonBatch(List<MontyValue> roots) {
   roots.forEach(count);
   final ids = HashMap<MontyValue, int>.identity();
   Object? enc(MontyValue v) {
+    if (hostLabel?.call(v) case final String label) {
+      return {'t': 'hostobj', 'obj': label};
+    }
     if (!_isShared(v)) return montyToCanon(v);
     if (ids[v] case final int id) return {'t': 'ref', 'id': id};
     final out = <String, Object?>{};

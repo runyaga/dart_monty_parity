@@ -34,6 +34,7 @@ import pydantic_monty as pm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_cases import canon, stable  # noqa: E402
+from host_cases import CASES as HOST_CASES, build as host_build, show as host_show  # noqa: E402
 
 
 def pos(s: Any) -> Any:
@@ -857,6 +858,75 @@ def sp_load_adopts_dump(pool: pm.Monty, t: T) -> None:
                     break
                 r = t.step(lambda: r.resume({'return_value': n}))
             run(t, lambda: g.feed_run('import time\ntime.sleep(0)\n7'))
+
+
+# ------------------------------------------------------- host objects (C1-6)
+def host_error_text(e: BaseException) -> str:
+    if isinstance(e, pm.MontyError):
+        return f'{type(e).__name__}: {e.display("type-msg")}'
+    return f'{type(e).__name__}: {e}'
+
+
+def host_probe(case_id: str, objects: Any, wrappers: Any, steps: list[Any]) -> Any:
+    """One probe for a host_cases.py case: each step's outcome, as `host` events in order."""
+    def body(pool: pm.Monty, t: T) -> None:
+        objs, built = host_build(objects, wrappers)
+        contexts: dict[str, Any] = {}
+        sessions: dict[str, Any] = {}
+        dumps: dict[str, bytes] = {}
+        try:
+            for step in steps:
+                op, name, rest = step[0], step[1], step[2:]
+                try:
+                    if op == 'open':
+                        contexts[name] = pool.checkout()
+                        sessions[name] = contexts[name].__enter__()
+                        outcome = 'ok'
+                    elif op == 'feed':
+                        value = sessions[name].feed_run(rest[0], inputs={n: built[n] for n in rest[1]} or None)
+                        outcome = f'value: {host_show(value, objs)}'
+                    elif op == 'dump':
+                        dumps[name] = sessions[name].dump()
+                        outcome = 'dumped'
+                    elif op == 'load_session':
+                        sessions[name].load_session(dumps[rest[0]])
+                        outcome = 'ok'
+                    else:
+                        raise SystemExit(f'unknown host step {op}')
+                except Exception as e:  # noqa: BLE001 - the outcome is the data
+                    outcome = host_error_text(e)
+                t.add({'ev': 'host', 'step': json.dumps(step, separators=(',', ':')), 'outcome': outcome})
+        finally:
+            for context in contexts.values():
+                context.__exit__(None, None, None)
+
+    body.__name__ = f'sp_host_{case_id}'
+    return body
+
+
+for _id, _objects, _wrappers, _steps in HOST_CASES:
+    PROBES[f'sp_host_{_id}'] = host_probe(_id, _objects, _wrappers, _steps)
+
+
+@probe
+def host_wrapper_eq(pool: pm.Monty, t: T) -> None:
+    """What upstream's wrappers do under `==` and `hash` (core's are identity, named divergence
+    `host-wrapper-identity-eq` in EXCEPTIONS.md; no sandbox code can observe the difference, so this probe is in no
+    gate): twins that carry one id are equal, a wrapper with another id is not, and neither wrapper is hashable."""
+    objs, built = host_build({'o': [1, 2]}, [
+        ['a', ['I', 'o', {'eager': None, 'lazy': None, 'methods': None}, {'id': 1}]],
+        ['b', ['I', 'o', {'eager': None, 'lazy': None, 'methods': None}, {'id': 1}]],
+        ['c', ['I', 'o', {'eager': None, 'lazy': None, 'methods': None}, {'id': 2}]],
+        ['T', ['T', {'eager': None, 'lazy': None, 'methods': None}, {'id': 3}]],
+    ])
+    t.add({'ev': 'wrapper_eq', 'twins_equal': built['a'] == built['b'], 'other_id_equal': built['a'] == built['c'],
+           'self_equal': built['a'] == built['a']})
+    for name in ('a', 'T'):
+        try:
+            hash(built[name])
+            t.add({'ev': 'wrapper_hash', 'wrapper': name, 'hashable': True})
+        except TypeError:
+            t.add({'ev': 'wrapper_hash', 'wrapper': name, 'hashable': False})
 
 
 # ------------------------------------------------------- API surface

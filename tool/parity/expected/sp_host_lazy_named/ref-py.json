@@ -1,0 +1,28 @@
+{
+ "probe": "sp_host_lazy_named",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "host",
+   "step": "[\"open\",\"s\"]",
+   "outcome": "ok"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"(p.norm1, p.x)\",[\"p\"]]",
+   "outcome": "value: (3, 1)"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"p.y\",[]]",
+   "outcome": "MontyRuntimeError: AttributeError: 'Point' object has no attribute 'y'"
+  },
+  {
+   "ev": "host",
+   "step": "[\"feed\",\"s\",\"getattr(p, 'y', 'dflt')\",[]]",
+   "outcome": "value: 'dflt'"
+  }
+ ],
+ "runner_error": null
+}
