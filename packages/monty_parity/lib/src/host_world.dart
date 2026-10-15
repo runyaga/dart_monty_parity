@@ -35,7 +35,7 @@ final class HostObj {
 /// The host world of a session-engine case.
 final class SessionHost extends CoreHost {
   /// Builds the world [c]'s `host` block describes.
-  SessionHost(super.c) {
+  SessionHost(super.c, {super.publicOnly}) {
     for (final MapEntry(:key, :value) in classes.entries) {
       _classes[key] = _makeClass(key, (value! as Map).cast());
     }

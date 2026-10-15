@@ -343,6 +343,9 @@ MontyValue canonToMonty(
       host.internal('a builtin proxy') ??
           montyStdTypeProxy('function', c['name']! as String),
     'echo' => host.rawOutputs[c['step']! as int]!,
+    // A host world builds its wrappers through the public HostClass,
+    // ClassInstance and ClassType; the bare host makes them internally.
+    'wrap' when host.appliesHost => host.wrapperValue(c['w']! as String),
     'wrap' =>
       host.internal('a host-object proxy') ??
           host.wrapperValue(c['w']! as String),
