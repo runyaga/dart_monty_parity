@@ -366,7 +366,11 @@ SessionConfig workerConfig(
 ) {
   int? memory;
   int? recursion;
+  int? gcInterval;
   Duration? feed;
+  Duration? turn;
+  Duration seconds(Object? value) =>
+      Duration(microseconds: ((value! as num) * 1e6).round());
   final limits = ((c['limits'] as Map?) ?? const {}).cast<String, Object?>();
   for (final MapEntry(:key, :value) in limits.entries) {
     switch (key) {
@@ -374,8 +378,12 @@ SessionConfig workerConfig(
         memory = value! as int;
       case 'max_recursion_depth':
         recursion = value! as int;
+      case 'gc_interval':
+        gcInterval = value! as int;
       case 'max_duration_secs' || 'max_feed_duration_secs':
-        feed = Duration(microseconds: ((value! as num) * 1e6).round());
+        feed = seconds(value);
+      case 'max_turn_duration_secs':
+        turn = seconds(value);
       default:
         unsupported['limits.$key'] = 'the worker driver has no $key';
     }
@@ -384,7 +392,11 @@ SessionConfig workerConfig(
   final osPolicy = _osPolicy(c, unsupported);
 
   // No limit set sends no limits, as upstream's checkout without `limits`.
-  if (memory == null && recursion == null && feed == null) {
+  if (memory == null &&
+      recursion == null &&
+      gcInterval == null &&
+      feed == null &&
+      turn == null) {
     return SessionConfig(osPolicy: osPolicy);
   }
 
@@ -392,16 +404,20 @@ SessionConfig workerConfig(
     limits: ResourceLimits(
       maxMemory: memory,
       maxRecursionDepth: recursion,
+      gcInterval: gcInterval,
       maxFeedDuration: feed,
+      maxTurnDuration: turn,
     ),
     osPolicy: osPolicy,
   );
 }
 
 /// A case's `os_policy` as core's [OsPolicy], or null when it has none. A
-/// form the case file spells but this reader does not build (a fixed
-/// datetime, whose microseconds a web `DateTime` cannot hold) is recorded
-/// under `unsupported`, and the policy is left out.
+/// fixed datetime without an offset is a UTC instant, as upstream reads a
+/// naive one. A form the case file spells but this reader does not build (a
+/// fixed datetime whose microseconds the platform's `DateTime` cannot hold:
+/// a web `DateTime` holds whole milliseconds) is recorded under
+/// `unsupported`, and the policy is left out.
 OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
   final p = (c['os_policy'] as Map?)?.cast<String, Object?>();
   if (p == null) return null;
@@ -422,21 +438,39 @@ OsPolicy? _osPolicy(Map<String, Object?> c, Map<String, Object?> unsupported) {
       return null;
     }
   }
-  if (p['datetime'] is Map) {
-    unsupported['os_policy'] =
-        'a fixed datetime: a web DateTime holds whole milliseconds';
+  DateTime? fixed;
+  if (p['datetime'] case {'fixed': final String iso}) {
+    fixed = _fixedInstant(iso);
+    if (fixed == null) {
+      unsupported['os_policy'] =
+          'a fixed datetime: a web DateTime holds whole milliseconds';
 
-    return null;
+      return null;
+    }
   }
 
   return OsPolicy(
     datetime: mode('datetime'),
+    fixedDatetime: fixed,
     timezone: mode('timezone'),
     sleep: mode('sleep'),
     processTime: mode('process_time'),
     randomStart: mode('random_start'),
     randomSeed: seed,
   );
+}
+
+/// [iso] (an ISO 8601 instant; without an offset, UTC) as a [DateTime], or
+/// null when this platform's [DateTime] cannot hold its microseconds.
+DateTime? _fixedInstant(String iso) {
+  final zoned = RegExp(r'(Z|[+-]\d\d:?\d\d)$').hasMatch(iso);
+  final instant = DateTime.parse(zoned ? iso : '${iso}Z');
+  final fraction = RegExp(r'\.(\d+)').firstMatch(iso)?.group(1) ?? '';
+  final micros = int.parse(fraction.padRight(6, '0').substring(0, 6));
+
+  return instant.millisecond * 1000 + instant.microsecond == micros
+      ? instant
+      : null;
 }
 
 Uint8List _hex(String hex) => Uint8List.fromList([

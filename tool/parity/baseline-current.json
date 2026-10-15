@@ -1,29 +1,29 @@
 {
  "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine and host classes), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 70,
-  "dart2js": 70,
-  "dart2wasm": 70
+  "vm": 73,
+  "dart2js": 73,
+  "dart2wasm": 73
  },
  "totals": {
   "vm": {
-   "ABSENT": 45,
-   "PRESENT": 70,
-   "PARTIAL": 43,
+   "ABSENT": 44,
+   "PRESENT": 73,
+   "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 41,
-   "PRESENT": 70,
-   "PARTIAL": 45,
+   "ABSENT": 40,
+   "PRESENT": 73,
+   "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 41,
-   "PRESENT": 70,
-   "PARTIAL": 45,
+   "ABSENT": 40,
+   "PRESENT": 73,
+   "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 70,
-    "dart2js": 70,
-    "dart2wasm": 70
+    "vm": 73,
+    "dart2js": 73,
+    "dart2wasm": 73
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 70,
-    "dart2js": 70,
-    "dart2wasm": 70
+    "vm": 73,
+    "dart2js": 73,
+    "dart2wasm": 73
    }
   }
  },
@@ -746,6 +746,45 @@
    "commit": "32a3c19",
    "pr": 255,
    "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "configure_os_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the runner passes the case's fixed datetime to core's public OsPolicy.fixedDatetime (a naive ISO instant as UTC, as upstream reads it) instead of recording it unsupported; b14_date_fixed now MATCHes"
+  },
+  {
+   "row": "clock_source",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the runner passes the case's fixed datetime to core's public OsPolicy.fixedDatetime (a naive ISO instant as UTC, as upstream reads it) instead of recording it unsupported; b14_date_fixed now MATCHes"
+  },
+  {
+   "row": "turn_execution_limit",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "2b7d431",
+   "pr": null,
+   "why": "the runner passes the case's max_turn_duration_secs to core's public ResourceLimits.maxTurnDuration instead of recording it unsupported; l11_turn_reset_on_resume now MATCHes"
   }
  ],
  "rows": {
@@ -985,9 +1024,9 @@
    "dart2wasm": "PARTIAL"
   },
   "clock_source": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "sleep_policy": {
    "vm": "PRESENT",
@@ -1000,9 +1039,9 @@
    "dart2wasm": "PRESENT"
   },
   "configure_os_policy": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "file_mode_inspection": {
    "vm": "PARTIAL",
@@ -1040,9 +1079,9 @@
    "dart2wasm": "PRESENT"
   },
   "turn_execution_limit": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_suspension_budget": {
    "vm": "PRESENT",
@@ -2477,9 +2516,9 @@
     "dart2wasm": "MATCH"
    },
    "b14_date_fixed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_date_callhost": {
     "vm": "MATCH",
@@ -2623,9 +2662,9 @@
     "dart2wasm": "MATCH"
    },
    "b14_date_fixed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "b14_sleep_callhost": {
     "vm": "MATCH",
@@ -5624,9 +5663,9 @@
   },
   "turn_execution_limit": {
    "l11_turn_reset_on_resume": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_suspension_budget": {
