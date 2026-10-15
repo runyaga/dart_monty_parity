@@ -333,7 +333,7 @@ final class _ProtoCaseSession implements CaseSession {
     final result = await _session.feed(
       code,
       inputs: inputs,
-      externals: externals,
+      externalLookup: externals,
       onOsCall: onOsCall,
       onPrint: onPrint,
     );

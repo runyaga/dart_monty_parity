@@ -15,7 +15,6 @@ import 'dart:async';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
-import 'package:dart_monty_core/src/worker/host_objects.dart';
 import 'package:monty_parity/src/case_runner.dart';
 
 /// One host object: an instance of a case's class, labelled as the oracle

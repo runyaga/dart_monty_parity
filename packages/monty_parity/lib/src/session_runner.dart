@@ -140,7 +140,7 @@ final class _PoolCaseSession implements CaseSession {
   }) => _session.feedRun(
     code,
     inputs: inputs,
-    externals: externals,
+    externalLookup: externals,
     os: onOsCall,
     printCallback: onPrint,
   );
