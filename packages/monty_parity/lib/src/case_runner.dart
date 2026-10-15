@@ -37,6 +37,11 @@ Object? montyToCanon(MontyValue v) => switch (v) {
   MontyInt(:final value) => {'t': 'int', 'v': '$value'},
   MontyBigInt(:final value) => {'t': 'int', 'v': '$value'},
   MontyFloat(:final value) => canonFloat(value),
+  MontyComplex(:final real, :final imag) => {
+    't': 'complex',
+    're': canonFloat(real),
+    'im': canonFloat(imag),
+  },
   MontyString(:final value) => {'t': 'str', 'v': value},
   MontyBytes(:final value) => {'t': 'bytes', 'hex': hexOf(value)},
   MontyList(:final items) => {
@@ -123,6 +128,26 @@ Object? montyToCanon(MontyValue v) => switch (v) {
             ],
             '_host_defined': ci.classType.hostDefined,
           },
+  final MontyClassTypeProxy ct => {
+    't': 'typeproxy',
+    'name': ct.name,
+    'dataclass': ct.isDataclass,
+    'class_id': ct.id,
+    'attrs': [
+      for (final e in ct.attrs.entries) [e.key, montyToCanon(e.value)],
+    ],
+    '_host_defined': ct.hostDefined,
+  },
+  // A registered host object or class decodes to its wrapper; the oracle
+  // writes it by its label (an instance) or its class name.
+  ClassInstance(:final id) =>
+    _hostLabels[id] != null
+        ? {'t': 'hostobj', 'obj': _hostLabels[id]}
+        : {'t': 'other', 'kind': 'ClassInstance', 'repr': '$v'},
+  ClassType(:final value) => {'t': 'hostclass', 'obj': value.name},
+  MontyHostFunction() => throw StateError(
+    'unreachable: MontyHostFunction is input-only',
+  ),
   // Upstream's binding returns builtin functions as MontyStdTypeProxy and
   // type objects as types; core's proxy names a builtin function's kind
   // `function`.
@@ -139,6 +164,9 @@ String _hms(int h, int m, int s, int us) =>
 
 /// Host-object labels: instanceId -> the case's label for it.
 final _hostLabels = <String, String>{};
+
+/// Labels the host object whose sandbox id is [id] as [label].
+void labelHostObject(String id, String label) => _hostLabels[id] = label;
 
 /// Callback args arrive as plain Dart values (or MontyValues).
 Object? dartToCanon(Object? v) {
@@ -219,6 +247,10 @@ MontyValue canonToMonty(
       return b.isValidInt ? MontyInt(b.toInt()) : MontyBigInt(b);
     }(),
     'float' => MontyFloat(decodeFloat(c)),
+    'complex' => MontyComplex(
+      decodeFloat((c['re']! as Map).cast()),
+      decodeFloat((c['im']! as Map).cast()),
+    ),
     'str' => MontyString(c['v']! as String),
     'bytes' => MontyBytes(Uint8List.fromList(bytesOfHex(c['hex']! as String))),
     'list' => () {
@@ -389,7 +421,7 @@ class CoreHost {
     final ws = (wspecs[name]! as Map).cast<String, Object?>();
     if (ws['kind'] != 'instance') {
       throw const Inexpressible(
-        'core: no host class value (MontyClassType is not a MontyValue)',
+        'core: this engine builds no host class value',
       );
     }
     final label = ws['obj']! as String;

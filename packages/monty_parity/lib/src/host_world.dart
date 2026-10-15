@@ -15,7 +15,6 @@ import 'dart:async';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
-import 'package:dart_monty_core/src/worker/arena_reader.dart';
 import 'package:dart_monty_core/src/worker/host_objects.dart';
 import 'package:monty_parity/src/case_runner.dart';
 
@@ -55,10 +54,9 @@ final class SessionHost extends CoreHost {
 
   final _classes = <String, HostClass<HostObj>>{};
   final _objects = <String, HostObj>{};
-  final _wrappers = <String, Object>{};
+  final _wrappers = <String, MontyValue>{};
   final _newCount = <String, int>{};
   var _logging = false;
-  Object? _pending;
 
   @override
   bool get appliesHost => true;
@@ -68,24 +66,11 @@ final class SessionHost extends CoreHost {
       classes.isNotEmpty || objects.isNotEmpty || wspecs.isNotEmpty;
 
   @override
-  MontyValue wrapperValue(String name) {
-    _pending = _wrapper(name);
-
-    return const MontyNone();
-  }
-
-  /// The wrapper the last [wrapperValue] stands for, once: the value the
-  /// session resumes with.
-  Object? takeWrapper() {
-    final w = _pending;
-    _pending = null;
-
-    return w;
-  }
+  MontyValue wrapperValue(String name) => _wrapper(name);
 
   /// The label of the host object [v] decodes to, if it is one.
   @override
-  String? labelOf(MontyValue v) => switch (hostObjectOf(v)) {
+  String? labelOf(MontyValue v) => switch (v) {
     ClassInstance(value: final HostObj o) => o.label,
     _ => null,
   };
@@ -299,20 +284,22 @@ final class SessionHost extends CoreHost {
   ClassInstance<HostObj> _instanceWrapper(HostObj o, Map<String, Object?> ws) {
     final cls = _classes[o.cls]!;
     final classWrapper = ws['class_wrapper'] as String?;
-
-    return ClassInstance(
+    final instance = ClassInstance(
       o,
       classType: classWrapper == null
           ? ClassType(cls)
-          : _wrapper(classWrapper)! as ClassType<HostObj>,
+          : _wrapper(classWrapper) as ClassType<HostObj>,
       policies: _policy(ws),
       convertValue: _hook(ws),
     );
+    labelHostObject(instance.id, o.label);
+
+    return instance;
   }
 
-  Object? _wrapper(String name) => _wrappers[name] ??= _buildWrapper(name);
+  MontyValue _wrapper(String name) => _wrappers[name] ??= _buildWrapper(name);
 
-  Object _buildWrapper(String name) {
+  MontyValue _buildWrapper(String name) {
     final ws = (wspecs[name]! as Map).cast<String, Object?>();
     if (ws['kind'] == 'instance') {
       return _instanceWrapper(_objects[ws['obj']! as String]!, ws);

@@ -1,5 +1,5 @@
 {
- "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares. The stages C3-4, C3-5 and C3-6 hold the C3 parity rows (their cases come from the worker and core suites, run here through the session), and `d1_calls` holds one case or probe per D1-calls rule, named in `d1_rules` (taken from expMGb's cells, pydantic_monty as the oracle); C3-4 is landed (the session engine records an exception's structured data, C3-P1); C1-5 is landed (dump and load through the session, C1-P2a); C1-6 is landed (host objects through the session, C1-P2b); C1-3b, C3-5, C3-6, d1_calls and cutover are landed at the cut (P-cut: the session engine on the public Monty / MontySession, the collectors among them). C5-v holds host_class_type_proxy: a sandbox class as a host value (MontyClassTypeProxy as a MontyValue) is not in the flip, so the row is run and shown, not asserted, until C5-v lands.",
+ "about": "The C1 gate: the capability rows dart_monty_core's pool session must match upstream on, through the session engine (run.py --engine session), on every backend, with no named exception. Each row's cases and probes are its `session` rule in rows.json; this file names the PR whose landing makes the row gated. score.py --assert-gate fails unless every case and probe of a landed row MATCHES on each backend; a row of a later stage is run and shown, not asserted, but every case and probe must have an outcome on every backend and an oracle. E0 through the session is asserted separately (score.py --assert-e0 --engine session). `core_gated` names, per stage, what its core pull request gates in its own tests because no upstream behaviour compares. The stages C3-4, C3-5 and C3-6 hold the C3 parity rows (their cases come from the worker and core suites, run here through the session), and `d1_calls` holds one case or probe per D1-calls rule, named in `d1_rules` (taken from expMGb's cells, pydantic_monty as the oracle); C3-4 is landed (the session engine records an exception's structured data, C3-P1); C1-5 is landed (dump and load through the session, C1-P2a); C1-6 is landed (host objects through the session, C1-P2b); C1-3b, C3-5, C3-6, d1_calls and cutover are landed at the cut (P-cut: the session engine on the public Monty / MontySession, the collectors among them). C5-v holds host_class_type_proxy and is landed (core's value family: a sandbox class reached as a value, after a restore, decodes to a MontyClassTypeProxy and is sent back as one).",
  "engine": "session",
  "stages": [
   "C1-3a",
@@ -24,7 +24,8 @@
   "C1-5",
   "C1-6",
   "d1_calls",
-  "cutover"
+  "cutover",
+  "C5-v"
  ],
  "rows": {
   "checkout_worker": "C1-3a",

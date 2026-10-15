@@ -115,16 +115,12 @@ does not, each with its reason:
 |---|---|---|
 | `host_sleep_budget` | `l14_total_sleep`, `l15_total_sleep_catch` | their expected messages have the amounts rewritten (`strings_rewritten`), which the comparison refuses; `ss_sleep_budget` measures the same with exact strings |
 | `host_eager_attributes`, `host_lazy_attributes`, `host_constructor_policy`, `host_value_conversion_hook` | `h_x02_eager_list`, `h_x03_eager_none`, `h_x07_lazy`, `h_x11_class_methods`, `h_x14_convert_redact` | upstream's wrapper subclass logs a `lookup` or `call` before the policy check, also for a name or method the policy refuses, and a lazy read's `lookup` before its `convert`; core's wrappers are `final` and refuse before any host code runs, so the `host_calls` transcript lacks those entries. The `sp_host_*` probes measure the same refusals by outcome, and `sp_host_convert_lazy` the conversion of a lazy read |
-| `host_class_type_proxy` | `h_b07_restore_type_proxy`, `h_b08_restore_class_eager` | they need a restore step the session engine does not run for cases and a class value coming out of the sandbox (`type(x)`), which core stages for the cutover; the row stays under `cutover` |
 
 Not reachable through the session engine (listed, not faked):
 
 - An async host method (`async def`) driven from the sandbox: upstream's synchronous binding cannot drive one
   (the call never completes), so `sp_host_methods` and `sp_host_methods_all` leave it out. Core's own host oracle
   (`tool/generate_host_oracle.py`, on upstream's async binding) covers it.
-- A `ClassType` or a `ClassInstance` as a member of a container, or a host function that answers with one:
-  the session takes a wrapper only as a feed input, a manual resume's value or what a wrapper's member returns,
-  so the cases answer with a wrapper through a hand-driven feed (`host_world.dart`), not through `externals`.
 - `h_b04_freed_proxy`: its expected message carries a sandbox instance id (`<uuid>` in the outcome) and the
   session comparison matches strings exactly. It is in no gated rule.
 

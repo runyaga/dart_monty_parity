@@ -129,6 +129,7 @@ Future<Map<String, Object?>> runEngineCase(
   final memo = <int, MontyValue>{};
   var inputs = const <String, MontyValue>{};
   Inexpressible? inexpressible;
+  ArgumentError? refused;
   try {
     inputs = {
       for (final MapEntry(:key, :value)
@@ -138,9 +139,15 @@ Future<Map<String, Object?>> runEngineCase(
         key: _input((value! as Map).cast(), host, memo),
     };
   } on Inexpressible catch (e) {
-    // An input this runner cannot build yet (a file position an int cannot
-    // hold): the first feed records it, so the case still has an outcome.
+    // An input this runner cannot build: the first feed records it, so the
+    // case still has an outcome.
     inexpressible = e;
+    // A value core's constructor refuses (a file position outside
+    // 0..2^64-1, a mode upstream refuses): refused locally, as the driver
+    // refuses a value it cannot send; the first feed records it.
+    // ignore: avoid_catching_errors
+  } on ArgumentError catch (e) {
+    refused = e;
   }
   final script = Script(c);
   final steps = out['steps']! as List<Object?>;
@@ -209,6 +216,16 @@ Future<Map<String, Object?>> runEngineCase(
           'traceback': <Object?>[],
         };
         step['thrown'] = 'host';
+        host.rawOutputs.add(null);
+        continue;
+      }
+      if (n == 0 && refused != null) {
+        step['exception'] = {
+          'type': 'ArgumentError',
+          'message': '${refused.message}',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'ArgumentError';
         host.rawOutputs.add(null);
         continue;
       }
@@ -437,16 +454,16 @@ Map<String, Object?> _callRecord(
   };
 }
 
-/// The canonical kinds the worker can carry that core's public API cannot:
-/// a file handle, and a sandbox class instance the host names by id
+/// The canonical kinds the worker engine builds itself: a file handle, and
+/// a sandbox class instance (no public constructor) the host names by id
 /// (`instance_id`, `class_id`), which the worker resolves, or the driver
 /// refuses when the id is not a canonical uuid.
 CanonExtra _workerExtra(CoreHost host) =>
     (c) => switch (c['t']) {
       'filehandle' => MontyFileHandle(
-        path: c['path']! as String,
-        mode: c['mode']! as String,
-        position: _position(c['position']! as String),
+        c['path']! as String,
+        c['mode']! as String,
+        position: BigInt.parse(c['position']! as String),
       ),
       'proxy' =>
         host.internal('a sandbox class proxy') ??
@@ -463,17 +480,6 @@ CanonExtra _workerExtra(CoreHost host) =>
             ),
       _ => null,
     };
-
-/// A file position as an `int`; one an `int` cannot hold exactly on this
-/// compiler is inexpressible until the position is a `BigInt` (the cutover).
-int _position(String text) {
-  final b = BigInt.parse(text);
-  if (!b.isValidInt) {
-    throw Inexpressible('file position $text does not fit an int here');
-  }
-
-  return b.toInt();
-}
 
 /// Canonical input [c] -> [MontyValue], sharing [memo] across the inputs.
 MontyValue _input(
@@ -515,7 +521,8 @@ bool _isShared(MontyValue v) =>
     v is MontySet ||
     v is MontyFrozenSet ||
     v is MontyNamedTuple ||
-    v is MontyClassProxy;
+    v is MontyClassProxy ||
+    v is MontyClassTypeProxy;
 
 List<MontyValue> _children(MontyValue v) => switch (v) {
   MontyList(:final items) || MontyTuple(:final items) => items,
@@ -524,7 +531,8 @@ List<MontyValue> _children(MontyValue v) => switch (v) {
     for (final (k, x) in pairs) ...[k, x],
   ],
   MontyNamedTuple(:final values) => values,
-  MontyClassProxy(:final attrs) => [...attrs.values],
+  MontyClassProxy(:final attrs) ||
+  MontyClassTypeProxy(:final attrs) => [...attrs.values],
   _ => const [],
 };
 
@@ -604,6 +612,21 @@ List<Object?> identityCanonBatch(
           for (final MapEntry(:key, :value) in attrs.entries) [key, enc(value)],
         ];
         out['_host_defined'] = classType.hostDefined;
+      case MontyClassTypeProxy(
+        :final name,
+        :final isDataclass,
+        :final id,
+        :final attrs,
+        :final hostDefined,
+      ):
+        out['t'] = 'typeproxy';
+        out['name'] = name;
+        out['dataclass'] = isDataclass;
+        out['class_id'] = id;
+        out['attrs'] = [
+          for (final MapEntry(:key, :value) in attrs.entries) [key, enc(value)],
+        ];
+        out['_host_defined'] = hostDefined;
       default:
         throw StateError('not an identity-carrying value: ${v.runtimeType}');
     }
