@@ -130,8 +130,9 @@ id alias refusal and the empty registry after a load; and the `h_*` cases whose 
 builds from core's wrappers: `host_world.dart`). Rows `host_eager_attributes`, `host_instance_value`,
 `host_lazy_attributes`, `host_class_value`, `host_method_dispatch`, `host_constructor_policy`,
 `host_value_conversion_hook`, `host_object_identity_lifecycle` and `snapshot_host_state_reconstruction`. The cases and
-steps that cannot match, and why, are listed in `tool/parity/EXCEPTIONS.md`; `host_class_type_proxy` stays under
-`cutover`. Identity `==` of core's wrappers is the named divergence `host-wrapper-identity-eq` there.
+steps that cannot match, and why, are listed in `tool/parity/EXCEPTIONS.md`. `C5-v` is landed: `host_class_type_proxy`
+(`h_b07`, `h_b08`, a sandbox class reached as a value after a restore, decoded as a `MontyClassTypeProxy` and sent
+back), with core's value family. Identity `==` of core's wrappers is the named divergence `host-wrapper-identity-eq` there.
 
 ```sh
 python3 -I tool/parity/score.py /tmp/e0 --assert-gate

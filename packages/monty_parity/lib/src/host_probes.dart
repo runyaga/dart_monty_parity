@@ -13,7 +13,6 @@ import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
-import 'package:dart_monty_core/src/worker/arena_reader.dart';
 import 'package:dart_monty_core/src/worker/host_objects.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/src/host_cases.g.dart';
@@ -220,7 +219,7 @@ String _strRepr(String s) {
 /// [v] in the probes' form: a host object is `is:<name>`, a proxy
 /// `proxy:<class>`, else Python's repr.
 String _show(MontyValue v, Map<String, Point> objects) {
-  if (hostObjectOf(v) case ClassInstance(:final value)) {
+  if (v case ClassInstance(:final value)) {
     for (final MapEntry(:key, value: object) in objects.entries) {
       if (identical(object, value)) return 'is:$key';
     }

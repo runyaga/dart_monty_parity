@@ -100,7 +100,7 @@
     "web": "ABSENT"
    },
    "worker": {
-    "cutover": [
+    "pre_cutover": [
      "v_complex",
      "i_complex",
      "r_complex",
@@ -1071,9 +1071,7 @@
     "pre_cutover": [
      "w_fh_in",
      "w_fh_ret",
-     "w_refuse_fh_position"
-    ],
-    "cutover": [
+     "w_refuse_fh_position",
      "w_fh_large_in"
     ]
    }

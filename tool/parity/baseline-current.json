@@ -1,28 +1,28 @@
 {
- "subject": "dart_monty_core at the flip (core #253, head 0bf42d4: Monty / MontySession on the worker, the 0.110 surface less C5-v and C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core with the value family (core branch c5-v/value-family, head f12bf8e: Monty / MontySession on the worker, the 0.110 surface less C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 65,
-  "dart2js": 65,
-  "dart2wasm": 65
+  "vm": 66,
+  "dart2js": 66,
+  "dart2wasm": 66
  },
  "totals": {
   "vm": {
-   "ABSENT": 52,
-   "PRESENT": 65,
+   "ABSENT": 51,
+   "PRESENT": 66,
    "PARTIAL": 41,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 48,
-   "PRESENT": 65,
+   "ABSENT": 47,
+   "PRESENT": 66,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 48,
-   "PRESENT": 65,
+   "ABSENT": 47,
+   "PRESENT": 66,
    "PARTIAL": 43,
    "N/A": 27,
    "REFUSED": 2
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 65,
-    "dart2js": 65,
-    "dart2wasm": 65
+    "vm": 66,
+    "dart2js": 66,
+    "dart2wasm": 66
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 65,
-    "dart2js": 65,
-    "dart2wasm": 65
+    "vm": 66,
+    "dart2js": 66,
+    "dart2wasm": 66
    }
   }
  },
@@ -642,6 +642,19 @@
    "commit": "0bf42d4",
    "pr": 253,
    "why": "the core engine runs on the public Monty / MontySession (core #253) instead of MontyRepl: the worker applies the case's os_policy, mounts, limits and session budgets, and the core rows' probes run through the session engine's probe set (P-cut)"
+  },
+  {
+   "row": "complex_values",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "f12bf8e",
+   "pr": null,
+   "why": "core's value family (core branch c5-v/value-family): MontyComplex decodes and encodes, so v_complex, i_complex and r_complex MATCH (C5-v)"
   }
  ],
  "rows": {
@@ -666,9 +679,9 @@
    "dart2wasm": "PRESENT"
   },
   "complex_values": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "text_and_bytes": {
    "vm": "PRESENT",
@@ -1172,19 +1185,19 @@
   },
   "complex_values": {
    "v_complex": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "i_complex": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "r_complex": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "text_and_bytes": {

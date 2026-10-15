@@ -100,11 +100,18 @@ class GateTest(unittest.TestCase):
                 self.assertEqual(self.assert_gate(), 1)
                 f.write_text(saved)
 
+    def cases_pending(self) -> dict:
+        """The gate with `C5-v` pending: every stage is landed, so a pending case needs one put back."""
+        gate = copy.deepcopy(self.gate)
+        gate['landed'].remove('C5-v')
+        return gate
+
     def test_missing_pending_outcome_fails(self) -> None:
-        kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
-                         if x not in gated_ids(self.gate, self.rows, landed_only=True))
+        gate = self.cases_pending()
+        kind, cid = next(x for x in gated_ids(gate, self.rows, landed_only=False)
+                         if x not in gated_ids(gate, self.rows, landed_only=True))
         (self.out / cid / 'session-vm.json').unlink()
-        self.assertEqual(self.assert_gate(), 1)
+        self.assertEqual(self.assert_gate(gate), 1)
 
     def test_landed_divergence_fails(self) -> None:
         kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=True) if x[0] == 'cases')
@@ -121,8 +128,9 @@ class GateTest(unittest.TestCase):
         self.assertEqual(self.assert_gate(), 1)
 
     def test_unsupported_against_a_missing_oracle_fails(self) -> None:
-        kind, cid = next(x for x in gated_ids(self.gate, self.rows, landed_only=False)
-                         if x[0] == 'cases' and x not in gated_ids(self.gate, self.rows, landed_only=True))
+        gate = self.cases_pending()
+        kind, cid = next(x for x in gated_ids(gate, self.rows, landed_only=False)
+                         if x[0] == 'cases' and x not in gated_ids(gate, self.rows, landed_only=True))
         for b in BACKENDS:
             got = json.loads((self.out / cid / f'session-{b}.json').read_text())
             got['unsupported'] = {'limits.x': 'no field'}
@@ -131,7 +139,7 @@ class GateTest(unittest.TestCase):
         try:
             shutil.copytree(EXPECTED, expected, dirs_exist_ok=True)
             shutil.rmtree(expected / cid)
-            self.spec.write_text(json.dumps(self.gate))
+            self.spec.write_text(json.dumps(gate))
             with contextlib.redirect_stdout(io.StringIO()):
                 rc = score.assert_gate(self.spec, self.out, expected, BACKENDS, None, None)
             self.assertEqual(rc, 1)
@@ -201,11 +209,12 @@ class GateTest(unittest.TestCase):
                         'steps' if kind == 'cases' else 'events'))
 
     def test_truncated_pending_case_fails(self) -> None:
-        cid = self.pending('cases')
+        gate = self.cases_pending()
+        cid = self.pending('cases', gate)
         got = json.loads((self.out / cid / 'session-vm.json').read_text())
         got['steps'] = got['steps'][:-1] if len(got['steps']) > 1 else []
         self.write(cid, 'vm', got)
-        self.assertEqual(self.assert_gate(), 1)
+        self.assertEqual(self.assert_gate(gate), 1)
 
     def test_empty_pending_probe_fails(self) -> None:
         gate = self.probes_pending()
@@ -234,9 +243,9 @@ class GateTest(unittest.TestCase):
         self.assertIn("stage 'C1-9' gates no row", problems)
 
     def test_stages_landed_at_the_cut_fail_a_forced_mismatch(self) -> None:
-        """A control per stage P-cut lands: a forced mismatch in the stage's rows fails the gate, and the
-        same mismatch is only shown (the gate passes) with the stage pending."""
-        for stage in ('C1-3b', 'C3-5', 'C3-6', 'd1_calls', 'cutover'):
+        """A control per stage P-cut and C5-v land: a forced mismatch in the stage's rows fails the gate,
+        and the same mismatch is only shown (the gate passes) with the stage pending."""
+        for stage in ('C1-3b', 'C3-5', 'C3-6', 'd1_calls', 'cutover', 'C5-v'):
             with self.subTest(stage=stage):
                 pending = copy.deepcopy(self.gate)
                 pending['landed'].remove(stage)

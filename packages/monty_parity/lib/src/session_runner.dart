@@ -52,7 +52,6 @@ Future<Map<String, Object?>> runSessionCase(
       pool,
       config,
       await _checkout(pool, config),
-      host is SessionHost && host.active ? host : null,
     ),
     configure: sessionConfig,
     // The core engine builds values only through the public API; host
@@ -125,16 +124,11 @@ SessionConfig sessionConfig(
 }
 
 final class _PoolCaseSession implements CaseSession {
-  _PoolCaseSession(this._pool, this._config, this._session, this._host);
+  _PoolCaseSession(this._pool, this._config, this._session);
 
   final Monty _pool;
   final SessionConfig _config;
   MontySession _session;
-
-  /// The case's host world, when it has one: the feed is then driven by
-  /// hand, because a host function may answer with a host-object wrapper,
-  /// which `feedRun`'s `ProtoExternalFunction` (a `MontyValue`) cannot carry.
-  final SessionHost? _host;
 
   @override
   Future<MontyValue> feed(
@@ -143,63 +137,13 @@ final class _PoolCaseSession implements CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
-  }) async {
-    final host = _host;
-    if (host == null) {
-      return _session.feedRun(
-        code,
-        inputs: inputs,
-        externals: externals,
-        os: onOsCall,
-        printCallback: onPrint,
-      );
-    }
-    var snapshot = await _session.feedStart(
-      code,
-      inputs: inputs,
-      externals: externals,
-      os: onOsCall,
-      printCallback: onPrint,
-    );
-    while (snapshot is! MontyComplete) {
-      snapshot = switch (snapshot) {
-        FunctionSnapshot(objectId: null, isOsFunction: false)
-            when externals[snapshot.functionName] != null =>
-          await _answer(
-            snapshot,
-            externals[snapshot.functionName]!,
-            host,
-          ),
-        FunctionSnapshot() => await snapshot.resumeAuto(),
-        NameLookupSnapshot() => await snapshot.resumeAuto(),
-        FutureSnapshot() => await snapshot.resumeAuto(),
-        MontyComplete() => snapshot,
-      };
-    }
-
-    return snapshot.output;
-  }
-
-  /// Answers [call] with what [answer] gives: a value, or a host-object
-  /// wrapper the host world built for it.
-  Future<MontySnapshot> _answer(
-    FunctionSnapshot call,
-    ProtoExternalFunction answer,
-    SessionHost host,
-  ) async {
-    final MontyValue value;
-    try {
-      value = await answer(call.args, call.kwargs);
-      // Any throw but a chosen Python exception raises `Exception` with its
-      // text, as `feedRun` raises it ([raisedFrom]).
-    } on ExternalException catch (e) {
-      return call.resume(e);
-    } on Object catch (e) {
-      return call.resume(ExternalException('Exception', '$e'));
-    }
-
-    return call.resume(ExternalReturnValue(host.takeWrapper() ?? value));
-  }
+  }) => _session.feedRun(
+    code,
+    inputs: inputs,
+    externals: externals,
+    os: onOsCall,
+    printCallback: onPrint,
+  );
 
   @override
   Future<void> restore() async {
