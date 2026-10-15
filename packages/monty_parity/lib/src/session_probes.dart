@@ -295,10 +295,8 @@ _probes = {
         typeCheck: true,
         typeCheckFormat: 'bogus',
       );
-    } on ArgumentError catch (e) {
-      t.add({'ev': 'format_refused', 'message': '${e.message}'});
     } on Object catch (e) {
-      t.add({'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+      t.add(_argumentRefusal('format_refused', e));
     }
   },
   'sp_type_check_skip_feed': (t, shared, _) async {
@@ -1616,6 +1614,13 @@ Future<void> _checked(_T t, Future<MontyValue> Function() feed) async {
     t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
   }
 }
+
+/// A checkout's refusal: [ev] with its text when it is the argument check's
+/// own [ArgumentError], anything else as `unexpected`, with its class and
+/// text.
+_Ev _argumentRefusal(String ev, Object e) => e is ArgumentError
+    ? {'ev': ev, 'message': '${e.message}'}
+    : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'};
 
 /// run_probes.py's `TC_STUBS`.
 const _tcStubs = 'def f(x: int) -> int: ...\n';
