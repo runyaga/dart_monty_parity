@@ -214,6 +214,24 @@ class TargetTest(unittest.TestCase):
                 t['rows'][withallowed]['allowed']['backends'] = backends
             self.assertIn('non-empty list of backends', '\n'.join(score.target_problems(t, self.in_scope)))
 
+    def test_engine_cells_count_toward_a_row(self) -> None:
+        from unittest import mock  # noqa: PLC0415
+
+        only_engine, both, untouched = list(self.target['rows'])[:3]
+        statuses = {cid: {b: ('ABSENT', 'recorded') for b in BACKENDS} for cid in self.target['rows']}
+        statuses[both] = {b: ('PRESENT', 'measured') for b in BACKENDS}
+        core_rows = {both: {b: {'status': 'PRESENT', 'cells': [{'class': 'MATCH'}]} for b in BACKENDS}}
+        engine = {only_engine: [{'class': 'MATCH'}, {'class': 'NO-ORACLE'}],
+                  both: [{'class': 'MATCH'}, {'class': 'DIVERGE'}]}  # a recorded worker divergence still diverges
+        rules = {cid: {'row': cid} for cid in self.target['rows']}
+        with mock.patch.object(score, 'engine_cells', lambda rule, *_: engine.get(rule['row'], [])):
+            merged = score.with_engines(self.target, statuses, core_rows, rules, BACKENDS,
+                                        Path('/nonexistent'), Path('/nonexistent'))
+        self.assertEqual(merged[only_engine], {b: ('PRESENT', 'measured') for b in BACKENDS})
+        self.assertEqual(merged[both], {b: ('PARTIAL', 'measured') for b in BACKENDS})
+        self.assertEqual(merged[untouched], statuses[untouched])  # nothing measures it: its recorded status stands
+        self.assertEqual(statuses[both], {b: ('PRESENT', 'measured') for b in BACKENDS})  # the input is not changed
+
     def test_the_target_flags_are_not_silently_skipped(self) -> None:
         import contextlib  # noqa: PLC0415
         import io  # noqa: PLC0415
@@ -222,7 +240,8 @@ class TargetTest(unittest.TestCase):
         for argv in (['score.py', '/nonexistent', '--assert-target'],
                      ['score.py', '/nonexistent', '--assert-gate', '--target', '/nonexistent/m3-target.json'],
                      ['score.py', '/nonexistent', '--assert-e0', '--target', '--assert-target'],
-                     ['score.py', '/nonexistent', '--assert-worker', '--target']):
+                     ['score.py', '/nonexistent', '--assert-worker', '--target'],
+                     ['score.py', '/nonexistent', '--target-engines', '/nonexistent']):
             with self.subTest(argv=argv), mock.patch.object(sys, 'argv', argv), \
                     contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as cm:
                 score.main()
