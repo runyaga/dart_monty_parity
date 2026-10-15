@@ -559,7 +559,21 @@
    ],
    "judgement": [
     "J08"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "PARTIAL",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "Every cell of the row matches the oracle except the recorded worker divergence w_graph_cycle_ret (rows.json `worker` `diverge`). The oracle refuses a cyclic host answer on the host, through a manual resume; the worker engine drives core's internal ProtoSession, which answers host calls automatically and has no manual resume, so its refusal reaches the sandbox with an extra frame. Core's public manual path does what the oracle does: sp_resume_unconvertible (a session cell of this row, mapped by `session_also`) resumes with a cyclic value, is refused on the host with the snapshot unspent, and resumes again, matching on every backend. Scoped (`cells`) to that case: every other cell of the row, sp_resume_unconvertible included, must MATCH.",
+    "cite": "owner decision TGT2, 2026-10-15 (the M3 target at the tag)",
+    "cells": [
+     "w_graph_cycle_ret"
+    ]
+   }
   },
   "boundary_uuid": {
    "area": "values",

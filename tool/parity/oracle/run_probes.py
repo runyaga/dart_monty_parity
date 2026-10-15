@@ -1143,6 +1143,69 @@ def api_reset_type_checker(pool: pm.Monty, t: T) -> None:
             t.add({'ev': 'checked', 'fresh_unresolved': 'unresolved-reference' in str(e)})
 
 
+# ------------------------------------------------------- type checking (the M3 target)
+def checked(t: T, fn: Any) -> None:
+    """As `typed`, but a type-check rejection records its diagnostics, as the worker rendered them."""
+    try:
+        t.add({'ev': 'complete', 'value': canon(fn())})
+    except pm.MontyTypingError as e:
+        t.add({'ev': 'typing_error', 'display': e.display()})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add(err_ev(e))
+
+
+TC_STUBS = 'def f(x: int) -> int: ...\n'
+
+
+@probe
+def sp_type_check_stubs(pool: pm.Monty, t: T) -> None:
+    """Stubs declare a host function to the checker: a call against the declaration is rejected (its diagnostic
+    points into the stubs), a call that fits runs; without the stubs the name is unresolved."""
+    ext = {'f': lambda x: x + 1}
+    with pool.checkout(type_check=True, type_check_stubs=TC_STUBS) as s:
+        checked(t, lambda: s.feed_run('f("a")', external_lookup=ext))
+        checked(t, lambda: s.feed_run('f(2)', external_lookup=ext))
+    with pool.checkout(type_check=True) as s:
+        checked(t, lambda: s.feed_run('f(2)', external_lookup=ext))
+
+
+TC_FORMATS = (None, 'full', 'concise', 'azure', 'json', 'jsonlines', 'rdjson', 'pylint', 'gitlab', 'github')
+
+
+@probe
+def sp_type_check_diagnostics(pool: pm.Monty, t: T) -> None:
+    """One rejected snippet's diagnostics in every format, without and with colour (only `full` and `concise`
+    colour); an unknown format is refused at checkout."""
+    for fmt in TC_FORMATS:
+        for color in (False, True):
+            with pool.checkout(type_check=True, type_check_format=fmt, type_check_color=color) as s:
+                t.add({'ev': 'format', 'format': fmt, 'color': color})
+                checked(t, lambda: s.feed_run('x: int = "a"\nx'))
+    # Only the argument check's refusal, with its text, counts: any other failure is recorded as the error it is.
+    try:
+        with pool.checkout(type_check=True, type_check_format='bogus'):  # type: ignore[arg-type]
+            t.add({'ev': 'checkout'})
+    except ValueError as e:
+        t.add({'ev': 'format_refused', 'message': str(e)})
+    except Exception as e:  # noqa: BLE001 - recorded
+        t.add({'ev': 'unexpected', 'cls': type(e).__name__, 'msg': str(e)})
+
+
+@probe
+def sp_type_check_skip_feed(pool: pm.Monty, t: T) -> None:
+    """A feed may skip the session's check: it runs, and its definitions do not join the checker's context; the
+    next checked feed is checked again. Skipping on an unchecked session changes nothing; `feed_start` skips too."""
+    with pool.checkout(type_check=True) as s:
+        checked(t, lambda: s.feed_run('x: int = "a"\nx', skip_type_check=True))
+        checked(t, lambda: s.feed_run('y: int = "b"\ny'))
+        checked(t, lambda: s.feed_run('x + "!"'))
+        x = t.step(lambda: s.feed_start('w: int = "d"\nf(w)', skip_type_check=True))
+        if x is not None:
+            t.step(lambda: x.resume({'return_value': 1}))
+    with pool.checkout() as s:
+        checked(t, lambda: s.feed_run('z: int = "c"\nz', skip_type_check=True))
+
+
 @probe
 def api_eager_coroutine(pool: pm.Monty, t: T) -> None:
     with pool.checkout() as s:

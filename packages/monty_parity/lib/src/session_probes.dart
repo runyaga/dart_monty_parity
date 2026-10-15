@@ -251,6 +251,78 @@ _probes = {
       });
     }, typeCheck: true);
   },
+  // ------------------------------------------- type checking (M3 target)
+  // run_probes.py's sp_type_check_*: the diagnostics are compared as text.
+  'sp_type_check_stubs': (t, shared, _) async {
+    final ext = {
+      'f': MontyHostFunction(
+        'f',
+        (args, kwargs) async => MontyInt((args.first as MontyInt).value + 1),
+      ),
+    };
+    await shared.withSession(
+      (s) async {
+        await _checked(t, () => s.feedRun('f("a")', externalLookup: ext));
+        await _checked(t, () => s.feedRun('f(2)', externalLookup: ext));
+      },
+      typeCheck: true,
+      typeCheckStubs: _tcStubs,
+    );
+    await shared.withSession(
+      (s) => _checked(t, () => s.feedRun('f(2)', externalLookup: ext)),
+      typeCheck: true,
+    );
+  },
+  'sp_type_check_diagnostics': (t, shared, _) async {
+    for (final format in _tcFormats) {
+      for (final color in [false, true]) {
+        await shared.withSession(
+          (s) async {
+            t.add({'ev': 'format', 'format': format, 'color': color});
+            await _checked(t, () => s.feedRun('x: int = "a"\nx'));
+          },
+          typeCheck: true,
+          typeCheckFormat: format,
+          typeCheckColor: color,
+        );
+      }
+    }
+    // Only the argument check's refusal, with its text, counts: any other
+    // failure is recorded as the error it is.
+    try {
+      await shared.withSession(
+        (_) async => t.add({'ev': 'checkout'}),
+        typeCheck: true,
+        typeCheckFormat: 'bogus',
+      );
+    } on Object catch (e) {
+      t.add(_argumentRefusal('format_refused', e));
+    }
+  },
+  'sp_type_check_skip_feed': (t, shared, _) async {
+    await shared.withSession((s) async {
+      await _checked(
+        t,
+        () => s.feedRun('x: int = "a"\nx', skipTypeCheck: true),
+      );
+      await _checked(t, () => s.feedRun('y: int = "b"\ny'));
+      await _checked(t, () => s.feedRun('x + "!"'));
+      final x = await _step(
+        t,
+        () => s.feedStart('w: int = "d"\nf(w)', skipTypeCheck: true),
+      );
+      if (x != null) {
+        await _step(
+          t,
+          () => _fn(x).resume(const ExternalReturnValue(MontyInt(1))),
+        );
+      }
+    }, typeCheck: true);
+    await shared.withSession(
+      (s) =>
+          _checked(t, () => s.feedRun('z: int = "c"\nz', skipTypeCheck: true)),
+    );
+  },
   'api_compile_program': (t, shared, _) async =>
       t.add({'ev': 'absent', 'what': 'no compile API'}),
   'api_compiled_source': (t, shared, _) async =>
@@ -1576,6 +1648,46 @@ Future<void> _typed(_T t, Future<MontyValue> Function() feed) async {
     t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
   }
 }
+
+/// run_probes.py's `checked`: as [_typed], but a type-check rejection
+/// records its diagnostics as the worker rendered them.
+Future<void> _checked(_T t, Future<MontyValue> Function() feed) async {
+  try {
+    t.add({'ev': 'complete', 'value': identityCanon(await feed())});
+  } on MontyTypingError catch (e) {
+    t.add({'ev': 'typing_error', 'display': e.display()});
+  } on MontyRuntimeError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on MontySyntaxError catch (e) {
+    t.add(_errEv(e.exception, e.traceback));
+  } on Object catch (e) {
+    t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+  }
+}
+
+/// A checkout's refusal: [ev] with its text when it is the argument check's
+/// own [ArgumentError], anything else as `unexpected`, with its class and
+/// text.
+_Ev _argumentRefusal(String ev, Object e) => e is ArgumentError
+    ? {'ev': ev, 'message': '${e.message}'}
+    : {'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'};
+
+/// run_probes.py's `TC_STUBS`.
+const _tcStubs = 'def f(x: int) -> int: ...\n';
+
+/// run_probes.py's `TC_FORMATS`.
+const _tcFormats = <String?>[
+  null,
+  'full',
+  'concise',
+  'azure',
+  'json',
+  'jsonlines',
+  'rdjson',
+  'pylint',
+  'gitlab',
+  'github',
+];
 
 /// run_probes.py's `announced`: the suspension a load re-announced.
 void _announced(_T t, MontySnapshot? s) =>

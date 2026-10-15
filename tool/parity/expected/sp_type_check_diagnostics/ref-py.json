@@ -1,0 +1,192 @@
+{
+ "probe": "sp_type_check_diagnostics",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "format",
+   "format": null,
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "error[invalid-assignment]: Object of type `Literal[\"a\"]` is not assignable to `int`\n --> main.py:1:10\n  |\n1 | x: int = \"a\"\n  |    ---   ^^^ Incompatible value of type `Literal[\"a\"]`\n  |    |\n  |    Declared type\n2 | x\n  |\n\n"
+  },
+  {
+   "ev": "format",
+   "format": null,
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "\u001b[1m\u001b[91merror[invalid-assignment]\u001b[0m\u001b[1m: Object of type `Literal[\"a\"]` is not assignable to `int`\u001b[0m\n \u001b[1m\u001b[94m--> \u001b[0mmain.py:1:10\n  \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1\u001b[0m \u001b[1m\u001b[94m|\u001b[0m x: int = \"a\"\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94m---\u001b[0m   \u001b[1m\u001b[91m^^^\u001b[0m \u001b[1m\u001b[91mIncompatible value of type `Literal[\"a\"]`\u001b[0m\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94m|\u001b[0m\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94mDeclared type\u001b[0m\n\u001b[1m\u001b[94m2\u001b[0m \u001b[1m\u001b[94m|\u001b[0m x\n  \u001b[1m\u001b[94m|\u001b[0m\n\n"
+  },
+  {
+   "ev": "format",
+   "format": "full",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "error[invalid-assignment]: Object of type `Literal[\"a\"]` is not assignable to `int`\n --> main.py:1:10\n  |\n1 | x: int = \"a\"\n  |    ---   ^^^ Incompatible value of type `Literal[\"a\"]`\n  |    |\n  |    Declared type\n2 | x\n  |\n\n"
+  },
+  {
+   "ev": "format",
+   "format": "full",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "\u001b[1m\u001b[91merror[invalid-assignment]\u001b[0m\u001b[1m: Object of type `Literal[\"a\"]` is not assignable to `int`\u001b[0m\n \u001b[1m\u001b[94m--> \u001b[0mmain.py:1:10\n  \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1\u001b[0m \u001b[1m\u001b[94m|\u001b[0m x: int = \"a\"\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94m---\u001b[0m   \u001b[1m\u001b[91m^^^\u001b[0m \u001b[1m\u001b[91mIncompatible value of type `Literal[\"a\"]`\u001b[0m\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94m|\u001b[0m\n  \u001b[1m\u001b[94m|\u001b[0m    \u001b[1m\u001b[94mDeclared type\u001b[0m\n\u001b[1m\u001b[94m2\u001b[0m \u001b[1m\u001b[94m|\u001b[0m x\n  \u001b[1m\u001b[94m|\u001b[0m\n\n"
+  },
+  {
+   "ev": "format",
+   "format": "concise",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "main.py:1:10: error[invalid-assignment] Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "concise",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "\u001b[1mmain.py\u001b[0m\u001b[36m:\u001b[0m1\u001b[36m:\u001b[0m10\u001b[36m:\u001b[0m \u001b[1m\u001b[91merror\u001b[0m[\u001b[1minvalid-assignment\u001b[0m] Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "azure",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "##vso[task.logissue type=error;sourcepath=/main.py;linenumber=1;columnnumber=10;code=invalid-assignment;]Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "azure",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "##vso[task.logissue type=error;sourcepath=/main.py;linenumber=1;columnnumber=10;code=invalid-assignment;]Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "json",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "[\n  {\n    \"cell\": null,\n    \"code\": \"invalid-assignment\",\n    \"end_location\": {\n      \"column\": 13,\n      \"row\": 1\n    },\n    \"filename\": \"/main.py\",\n    \"fix\": null,\n    \"location\": {\n      \"column\": 10,\n      \"row\": 1\n    },\n    \"message\": \"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\n    \"name\": \"invalid-assignment\",\n    \"noqa_row\": null,\n    \"severity\": \"error\",\n    \"url\": \"https://ty.dev/rules#invalid-assignment\"\n  }\n]"
+  },
+  {
+   "ev": "format",
+   "format": "json",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "[\n  {\n    \"cell\": null,\n    \"code\": \"invalid-assignment\",\n    \"end_location\": {\n      \"column\": 13,\n      \"row\": 1\n    },\n    \"filename\": \"/main.py\",\n    \"fix\": null,\n    \"location\": {\n      \"column\": 10,\n      \"row\": 1\n    },\n    \"message\": \"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\n    \"name\": \"invalid-assignment\",\n    \"noqa_row\": null,\n    \"severity\": \"error\",\n    \"url\": \"https://ty.dev/rules#invalid-assignment\"\n  }\n]"
+  },
+  {
+   "ev": "format",
+   "format": "jsonlines",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "{\"cell\":null,\"code\":\"invalid-assignment\",\"end_location\":{\"column\":13,\"row\":1},\"filename\":\"/main.py\",\"fix\":null,\"location\":{\"column\":10,\"row\":1},\"message\":\"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\"name\":\"invalid-assignment\",\"noqa_row\":null,\"severity\":\"error\",\"url\":\"https://ty.dev/rules#invalid-assignment\"}\n"
+  },
+  {
+   "ev": "format",
+   "format": "jsonlines",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "{\"cell\":null,\"code\":\"invalid-assignment\",\"end_location\":{\"column\":13,\"row\":1},\"filename\":\"/main.py\",\"fix\":null,\"location\":{\"column\":10,\"row\":1},\"message\":\"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\"name\":\"invalid-assignment\",\"noqa_row\":null,\"severity\":\"error\",\"url\":\"https://ty.dev/rules#invalid-assignment\"}\n"
+  },
+  {
+   "ev": "format",
+   "format": "rdjson",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "{\n  \"diagnostics\": [\n    {\n      \"code\": {\n        \"url\": \"https://ty.dev/rules#invalid-assignment\",\n        \"value\": \"invalid-assignment\"\n      },\n      \"location\": {\n        \"path\": \"/main.py\",\n        \"range\": {\n          \"end\": {\n            \"column\": 13,\n            \"line\": 1\n          },\n          \"start\": {\n            \"column\": 10,\n            \"line\": 1\n          }\n        }\n      },\n      \"message\": \"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\"\n    }\n  ],\n  \"severity\": \"WARNING\",\n  \"source\": {\n    \"name\": \"ruff\",\n    \"url\": \"https://docs.astral.sh/ruff\"\n  }\n}"
+  },
+  {
+   "ev": "format",
+   "format": "rdjson",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "{\n  \"diagnostics\": [\n    {\n      \"code\": {\n        \"url\": \"https://ty.dev/rules#invalid-assignment\",\n        \"value\": \"invalid-assignment\"\n      },\n      \"location\": {\n        \"path\": \"/main.py\",\n        \"range\": {\n          \"end\": {\n            \"column\": 13,\n            \"line\": 1\n          },\n          \"start\": {\n            \"column\": 10,\n            \"line\": 1\n          }\n        }\n      },\n      \"message\": \"Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\"\n    }\n  ],\n  \"severity\": \"WARNING\",\n  \"source\": {\n    \"name\": \"ruff\",\n    \"url\": \"https://docs.astral.sh/ruff\"\n  }\n}"
+  },
+  {
+   "ev": "format",
+   "format": "pylint",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "main.py:1: [invalid-assignment] Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "pylint",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "main.py:1: [invalid-assignment] Object of type `Literal[\"a\"]` is not assignable to `int`\n"
+  },
+  {
+   "ev": "format",
+   "format": "gitlab",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "[\n  {\n    \"check_name\": \"invalid-assignment\",\n    \"description\": \"invalid-assignment: Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\n    \"severity\": \"major\",\n    \"fingerprint\": \"fe7d80f3a1583542\",\n    \"location\": {\n      \"path\": \"main.py\",\n      \"positions\": {\n        \"begin\": {\n          \"line\": 1,\n          \"column\": 10\n        },\n        \"end\": {\n          \"line\": 1,\n          \"column\": 13\n        }\n      }\n    }\n  }\n]"
+  },
+  {
+   "ev": "format",
+   "format": "gitlab",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "[\n  {\n    \"check_name\": \"invalid-assignment\",\n    \"description\": \"invalid-assignment: Object of type `Literal[\\\"a\\\"]` is not assignable to `int`\",\n    \"severity\": \"major\",\n    \"fingerprint\": \"fe7d80f3a1583542\",\n    \"location\": {\n      \"path\": \"main.py\",\n      \"positions\": {\n        \"begin\": {\n          \"line\": 1,\n          \"column\": 10\n        },\n        \"end\": {\n          \"line\": 1,\n          \"column\": 13\n        }\n      }\n    }\n  }\n]"
+  },
+  {
+   "ev": "format",
+   "format": "github",
+   "color": false
+  },
+  {
+   "ev": "typing_error",
+   "display": "::error title=monty (invalid-assignment),file=/main.py,line=1,col=10,endLine=1,endColumn=13::main.py:1:10: invalid-assignment: Object of type `Literal[\"a\"]` is not assignable to `int`%0A  main.py:1:4: Declared type\n"
+  },
+  {
+   "ev": "format",
+   "format": "github",
+   "color": true
+  },
+  {
+   "ev": "typing_error",
+   "display": "::error title=monty (invalid-assignment),file=/main.py,line=1,col=10,endLine=1,endColumn=13::main.py:1:10: invalid-assignment: Object of type `Literal[\"a\"]` is not assignable to `int`%0A  main.py:1:4: Declared type\n"
+  },
+  {
+   "ev": "format_refused",
+   "message": "unknown type check format 'bogus', expected one of: full, concise, azure, json, jsonlines, rdjson, pylint, gitlab, github"
+  }
+ ],
+ "runner_error": null
+}

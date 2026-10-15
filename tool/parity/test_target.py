@@ -37,6 +37,8 @@ TGT1 = {
     'file_handle_value_conversion': ('browser-divergence', 'PARTIAL', ['dart2js', 'dart2wasm']),
     'worker_diagnostics': ('browser-divergence', 'ABSENT', ['dart2js', 'dart2wasm']),
 }
+# The owner's TGT2 allowance (2026-10-15), scoped to the worker engine's one recorded divergence.
+TGT2 = {'unstable_graph_access': ('owner-exception', 'PARTIAL', BACKENDS, ['w_graph_cycle_ret'])}
 
 
 class TargetTest(unittest.TestCase):
@@ -104,9 +106,9 @@ class TargetTest(unittest.TestCase):
         for cid in j10:
             paths = [e['path'] for e in self.target['rows'][cid]['allowed']['evidenced_by']]
             self.assertTrue(any(p.startswith('test/') for p in paths), cid)
-        # No row but PT1's and TGT1's has an allowance, and none is still open.
+        # No row but PT1's, TGT1's and TGT2's has an allowance, and none is still open.
         self.assertEqual(sorted(c for c, r in self.target['rows'].items() if r.get('allowed')),
-                         sorted(j08 + j10 + list(TGT1)))
+                         sorted(j08 + j10 + list(TGT1) + list(TGT2)))
         self.assertFalse([c for c, r in self.target['rows'].items() if r.get('open')])
 
     def test_tgt1_allowed_entries(self) -> None:
@@ -116,6 +118,18 @@ class TargetTest(unittest.TestCase):
             self.assertEqual((allowed['kind'], allowed['status'], allowed['backends']), (kind, status, backends), cid)
             self.assertIn('TGT1', allowed['cite'], cid)
             self.assertEqual(self.target['rows'][cid]['backends'], BACKENDS, cid)  # still a target everywhere
+
+    def test_tgt2_allowed_entry(self) -> None:
+        """TGT2: unstable_graph_access is PARTIAL on every backend, scoped to w_graph_cycle_ret, and the public manual
+        path that the oracle's refusal takes (sp_resume_unconvertible) is a cell of the row, so it must MATCH."""
+        rules = json.loads(score.RULES.read_text())['rows']
+        for cid, (kind, status, backends, cells) in TGT2.items():
+            allowed = self.target['rows'][cid]['allowed']
+            self.assertEqual((allowed['kind'], allowed['status'], allowed['backends'], allowed['cells']),
+                             (kind, status, backends, cells), cid)
+            self.assertIn('TGT2', allowed['cite'], cid)
+            self.assertIn('w_graph_cycle_ret', rules[cid]['worker']['diverge'])
+            self.assertIn('sp_resume_unconvertible', rules[cid]['session_also']['probes'])
 
     def test_evidenced_by_is_validated(self) -> None:
         t = copy.deepcopy(self.target)

@@ -1,0 +1,23 @@
+{
+ "probe": "sp_type_check_stubs",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "typing_error",
+   "display": "error[invalid-argument-type]: Argument to function `f` is incorrect\n --> main.py:1:3\n  |\n1 | f(\"a\")\n  |   ^^^ Expected `int`, found `Literal[\"a\"]`\ninfo: Function defined here\n --> repl_type_stubs.pyi:1:5\n  |\n1 | def f(x: int) -> int: ...\n  |     ^ ------ Parameter declared here\n\n"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "3"
+   }
+  },
+  {
+   "ev": "typing_error",
+   "display": "error[unresolved-reference]: Name `f` used when not defined\n --> main.py:1:1\n  |\n1 | f(2)\n  | ^\n\n"
+  }
+ ],
+ "runner_error": null
+}
