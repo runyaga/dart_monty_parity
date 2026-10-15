@@ -231,12 +231,16 @@ class TargetTest(unittest.TestCase):
         # The negative control: one more diverging cell outside the scope (x8hostmode_neg) fails the entry.
         for b in BACKENDS:
             core[cid][b]['cells'].append({'case': 'x8hostmode_neg', 'class': 'DIVERGE'})
-        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: [{'case': 'w_fh_in', 'class': 'NO-ORACLE'}]):
+        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: [{'case': 'w_fh_in', 'class': 'MATCH'}]):
             misses = mine(score.scope_misses(t, core, rules, BACKENDS, Path('/nonexistent'), Path('/nonexistent'), {}))
         self.assertEqual(misses, {(cid, 'dart2js'): ['x8hostmode_neg'], (cid, 'dart2wasm'): ['x8hostmode_neg']})
         lines, fails = score.score_target(t, st, BACKENDS, misses)
         self.assertEqual(fails, 3)
         self.assertIn('PARTIAL FAIL (outside the allowed cells: x8hostmode_neg)', '\n'.join(lines))
+        # A cell outside the scope with no oracle outcome is no MATCH either: it fails the entry too.
+        with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: [{'case': 'w_fh_in', 'class': 'NO-ORACLE'}]):
+            misses = mine(score.scope_misses(t, core, rules, BACKENDS, Path('/nonexistent'), Path('/nonexistent'), {}))
+        self.assertEqual(misses, {(cid, b): ['w_fh_in', 'x8hostmode_neg'] for b in ('dart2js', 'dart2wasm')})
         # A scoped cell the row does not have is a miss too (a renamed case cannot widen the scope silently).
         core[cid]['dart2js']['cells'] = [c for c in core[cid]['dart2js']['cells'] if c['case'] != 'x8handle_pos2p63m1']
         with mock.patch.object(score, 'engine_cells', lambda *_a, **_k: []):

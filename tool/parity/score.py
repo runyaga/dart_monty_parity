@@ -921,8 +921,8 @@ def with_engines(target: dict, statuses: dict, core_rows: dict, rules: dict, bac
 def scope_misses(target: dict, core_rows: dict, rules: dict, backends: list[str], out: Path | None, expected: Path,
                  cases: dict[str, dict], out_core: Path | None = None) -> dict[tuple[str, str], list[str]]:
     """(row, backend) -> what breaks the scope of a row's `allowed` `cells` there: each of the row's other cells
-    (core-engine, and with [out] its session and worker cells) that is not a MATCH, and each scoped name that is no
-    cell of the row. An entry without `cells` accepts the row's whole status and has no scope to break."""
+    (core-engine, and with [out] its session and worker cells) that is not a MATCH (no oracle outcome included), and
+    each scoped name that is no cell of the row. An entry without `cells` accepts the row's whole status and has no scope to break."""
     misses = {}
     for cid, row in target['rows'].items():
         allowed = row.get('allowed') or {}
@@ -936,7 +936,7 @@ def scope_misses(target: dict, core_rows: dict, rules: dict, backends: list[str]
             if out is not None:
                 cells += engine_cells(rules.get(cid, {}), b, out, expected, cases, out_core)
             names = {c['case'] for c in cells}
-            bad = sorted({c['case'] for c in cells if c['class'] not in ('MATCH', 'NO-ORACLE') and c['case'] not in scope})
+            bad = sorted({c['case'] for c in cells if c['class'] != 'MATCH' and c['case'] not in scope})
             bad += [f'{c} (no such cell)' for c in scope if c not in names]
             if bad:
                 misses[(cid, b)] = bad
