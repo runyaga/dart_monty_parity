@@ -86,8 +86,14 @@ final class SessionHost extends CoreHost {
   /// entries wait for a later one.
   final _unresolved = <String, List<Map<String, Object?>>>{};
 
-  /// The unresolved id whose suspension is resuming, if any.
+  /// The unresolved id whose suspension is resuming, if any, and whether
+  /// that suspension is a lookup (resolved by the receiver's own field
+  /// getter) or a call (resolved by the method body's receiver only: a
+  /// static or class method has none, and a getter it reaches belongs to a
+  /// value it returns).
   String? _resumingId;
+  var _resumingLookup = false;
+  var _lastOpIsLookup = false;
 
   void _logReceiver(String op, String objectId, String name) {
     final known =
@@ -102,12 +108,14 @@ final class SessionHost extends CoreHost {
       'name': name,
     };
     log.add(entry);
+    _lastOpIsLookup = op == 'lookup';
     if (known == null) (_unresolved[objectId] ??= []).add(entry);
   }
 
   @override
   Future<T> resuming<T>(String objectId, Future<T> Function() resume) async {
     _resumingId = _unresolved.containsKey(objectId) ? objectId : null;
+    _resumingLookup = _lastOpIsLookup;
     try {
       return await resume();
     } finally {
@@ -115,10 +123,12 @@ final class SessionHost extends CoreHost {
     }
   }
 
-  /// [o] is the receiver of the suspension resuming, if its id is unresolved.
-  void _resolve(HostObj o) {
+  /// [o] is the receiver of the suspension resuming, if its id is
+  /// unresolved: seen by a field getter ([fromGetter]) in a lookup, or as a
+  /// method body's receiver in a call.
+  void _resolve(HostObj o, {required bool fromGetter}) {
     final id = _resumingId;
-    if (id == null) return;
+    if (id == null || fromGetter != _resumingLookup) return;
     _resumingId = null;
     final canon = _receivers[id] = _canon(o);
     for (final entry
@@ -204,7 +214,7 @@ final class SessionHost extends CoreHost {
         fields: {
           for (final f in fields)
             f: (o) {
-              _resolve(o);
+              _resolve(o, fromGetter: true);
 
               return o.values[f]!;
             },
@@ -241,7 +251,7 @@ final class SessionHost extends CoreHost {
     List<String> fields,
   ) {
     final self = receiver is HostObj ? receiver : null;
-    if (self != null) _resolve(self);
+    if (self != null) _resolve(self, fromGetter: false);
     final receiverCanon = switch (receiver) {
       final HostObj o => _canon(o),
       final String c => {'t': 'hostclass', 'obj': c},
