@@ -1181,11 +1181,14 @@ def sp_type_check_diagnostics(pool: pm.Monty, t: T) -> None:
             with pool.checkout(type_check=True, type_check_format=fmt, type_check_color=color) as s:
                 t.add({'ev': 'format', 'format': fmt, 'color': color})
                 checked(t, lambda: s.feed_run('x: int = "a"\nx'))
+    # Only the argument check's refusal, with its text, counts: any other failure is recorded as the error it is.
     try:
         with pool.checkout(type_check=True, type_check_format='bogus'):  # type: ignore[arg-type]
             t.add({'ev': 'checkout'})
+    except ValueError as e:
+        t.add({'ev': 'format_refused', 'message': str(e)})
     except Exception as e:  # noqa: BLE001 - recorded
-        t.add(err_ev(e))
+        t.add({'ev': 'unexpected', 'cls': type(e).__name__, 'msg': str(e)})
 
 
 @probe

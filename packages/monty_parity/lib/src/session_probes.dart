@@ -287,14 +287,19 @@ _probes = {
         );
       }
     }
-    await _tried(
-      t,
-      () => shared.withSession(
+    // Only the argument check's refusal, with its text, counts: any other
+    // failure is recorded as the error it is.
+    try {
+      await shared.withSession(
         (_) async => t.add({'ev': 'checkout'}),
         typeCheck: true,
         typeCheckFormat: 'bogus',
-      ),
-    );
+      );
+    } on ArgumentError catch (e) {
+      t.add({'ev': 'format_refused', 'message': '${e.message}'});
+    } on Object catch (e) {
+      t.add({'ev': 'unexpected', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+    }
   },
   'sp_type_check_skip_feed': (t, shared, _) async {
     await shared.withSession((s) async {

@@ -184,9 +184,8 @@
    "display": "::error title=monty (invalid-assignment),file=/main.py,line=1,col=10,endLine=1,endColumn=13::main.py:1:10: invalid-assignment: Object of type `Literal[\"a\"]` is not assignable to `int`%0A  main.py:1:4: Declared type\n"
   },
   {
-   "ev": "refused",
-   "cls": "ValueError",
-   "msg": "unknown type check format 'bogus', expected one of: full, concise, azure, json, jsonlines, rdjson, pylint, gitlab, github"
+   "ev": "format_refused",
+   "message": "unknown type check format 'bogus', expected one of: full, concise, azure, json, jsonlines, rdjson, pylint, gitlab, github"
   }
  ],
  "runner_error": null
