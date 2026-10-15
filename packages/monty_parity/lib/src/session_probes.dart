@@ -31,10 +31,6 @@ typedef StartPool = Future<Monty> Function(PoolOptions options);
 /// How many workers the runner's pools have started so far.
 typedef SpawnCount = int Function();
 
-/// Whether the running probe measures core's public API only (the `core`
-/// engine): a probe that needs an internal helper then records `absent`.
-var _publicOnly = false;
-
 /// The running probe's [SpawnCount].
 SpawnCount _spawned = () => 0;
 
@@ -71,7 +67,6 @@ Future<Map<String, Object?>> runSessionProbe(
   String engine = 'session',
 }) async {
   _spawned = spawned;
-  _publicOnly = engine == 'core';
   final out = <String, Object?>{
     'probe': id,
     'engine': engine,
@@ -384,11 +379,17 @@ _probes = {
         const code = 'r = [h(1), h(2)]\nr';
         final a = await _step(
           t,
-          () => s1.feedStart(code, externals: {'h': handler('A', 10)}),
+          () => s1.feedStart(
+            code,
+            externalLookup: {'h': MontyHostFunction('h', handler('A', 10))},
+          ),
         );
         final b = await _step(
           t,
-          () => s2.feedStart(code, externals: {'h': handler('B', 100)}),
+          () => s2.feedStart(
+            code,
+            externalLookup: {'h': MontyHostFunction('h', handler('B', 100))},
+          ),
         );
         final a2 = await _step(t, () => _fn(a).resumeAuto());
         // Spent: refused before the handler runs.
@@ -408,37 +409,35 @@ _probes = {
       }
     },
   ),
-  // The `coroutine` marker that makes a callback a sandbox coroutine is
-  // internal at the flip (C5-s).
-  'async_gather': (t, shared, _) async => _publicOnly
-      ? t.add({
-          'ev': 'absent',
-          'what': 'no public coroutine marker for an async host function',
-        })
-      : await shared.withSession(
-          (s) => _run(
-            t,
-            () => s.feedRun(
-              'import asyncio\nawait asyncio.gather(af(1), af(2))',
-              printCallback: _quiet,
-              externals: {
-                'af': coroutine((args, kwargs) async {
-                  final n = (args.first as MontyInt).value;
-                  t.add({
-                    'ev': 'handler',
-                    'who': 'af',
-                    'args': [identityCanon(args.first)],
-                  });
-                  await Future<void>.delayed(
-                    Duration(milliseconds: 10 * (3 - n)),
-                  );
+  // The public `coroutine` marker makes a callback a sandbox coroutine
+  // (C5-s).
+  'async_gather': (t, shared, _) => shared.withSession(
+    (s) => _run(
+      t,
+      () => s.feedRun(
+        'import asyncio\nawait asyncio.gather(af(1), af(2))',
+        printCallback: _quiet,
+        externalLookup: {
+          'af': MontyHostFunction(
+            'af',
+            coroutine((args, kwargs) async {
+              final n = (args.first as MontyInt).value;
+              t.add({
+                'ev': 'handler',
+                'who': 'af',
+                'args': [identityCanon(args.first)],
+              });
+              await Future<void>.delayed(
+                Duration(milliseconds: 10 * (3 - n)),
+              );
 
-                  return MontyInt(n * 10);
-                }),
-              },
-            ),
+              return MontyInt(n * 10);
+            }),
           ),
-        ),
+        },
+      ),
+    ),
+  ),
   // Gathered async host functions run concurrently: each waits until both
   // have started (a barrier with a 10 s watchdog), which a driver that
   // awaited one call before starting the next could never pass.
@@ -451,20 +450,23 @@ _probes = {
       () => s.feedRun(
         'import asyncio\nawait asyncio.gather(af(1), af(2))',
         printCallback: _quiet,
-        externals: {
-          'af': coroutine((args, kwargs) async {
-            final n = (args.first as MontyInt).value;
-            started.add(n);
-            t.add({
-              'ev': 'handler',
-              'who': 'af',
-              'args': [identityCanon(args.first)],
-            });
-            if (started.length == 2) both.complete();
-            await both.future.timeout(const Duration(seconds: 10));
+        externalLookup: {
+          'af': MontyHostFunction(
+            'af',
+            coroutine((args, kwargs) async {
+              final n = (args.first as MontyInt).value;
+              started.add(n);
+              t.add({
+                'ev': 'handler',
+                'who': 'af',
+                'args': [identityCanon(args.first)],
+              });
+              if (started.length == 2) both.complete();
+              await both.future.timeout(const Duration(seconds: 10));
 
-            return MontyInt(n * 10);
-          }),
+              return MontyInt(n * 10);
+            }),
+          ),
         },
       ),
     );
@@ -486,7 +488,10 @@ _probes = {
     };
     for (final (code, name) in _eagerAutoCodes) {
       try {
-        var x = await s.feedStart(code, externals: {name: fns[name]!});
+        var x = await s.feedStart(
+          code,
+          externalLookup: {name: MontyHostFunction(name, fns[name]!)},
+        );
         t.add({'ev': 'eager', 'value': _fn(x).allowEagerAwait});
         while (x is! MontyComplete) {
           x = await _resumeAuto(x);
@@ -580,8 +585,9 @@ _probes = {
       () => fut.resume({snap.callId: const ExternalReturnValue(MontyInt(7))}),
     );
     await complete(
-      () async =>
-          _fn(await s.feedStart(_extResultCode, externals: {})).resumeAuto(),
+      () async => _fn(
+        await s.feedStart(_extResultCode, externalLookup: {}),
+      ).resumeAuto(),
     );
   }),
   'api_ext_args_values': (t, shared, _) => shared.withSession((s) async {
@@ -832,12 +838,12 @@ _probes = {
           t,
           () => s.feedRun(
             'slow() + 1',
-            externals: {
-              'slow': (args, kwargs) async {
+            externalLookup: {
+              'slow': MontyHostFunction('slow', (args, kwargs) async {
                 await Future<void>.delayed(const Duration(milliseconds: 800));
 
                 return const MontyInt(1);
-              },
+              }),
             },
           ),
         );
@@ -873,9 +879,12 @@ _probes = {
       t,
       () => s.feedRun(
         _extResultCode,
-        externals: {
-          'f': (args, kwargs) =>
-              throw const ExternalException('ValueError', 'bad'),
+        externalLookup: {
+          'f': MontyHostFunction(
+            'f',
+            (args, kwargs) =>
+                throw const ExternalException('ValueError', 'bad'),
+          ),
         },
       ),
     ),
@@ -895,7 +904,12 @@ _probes = {
       t,
       () => s.feedRun(
         'f()',
-        externals: {'f': (args, kwargs) => MontyBytes(Uint8List(_oversized))},
+        externalLookup: {
+          'f': MontyHostFunction(
+            'f',
+            (args, kwargs) => MontyBytes(Uint8List(_oversized)),
+          ),
+        },
       ),
     );
     await _run(t, () => s.feedRun('2'));
@@ -927,12 +941,12 @@ _probes = {
         "print('a')\nprint('b')\nf()\nprint('c')\n4",
         printCallback: (stream, text) =>
             t.add({'ev': 'print', 'stream': stream, 'text': text}),
-        externals: {
-          'f': (args, kwargs) {
+        externalLookup: {
+          'f': MontyHostFunction('f', (args, kwargs) {
             t.add({'ev': 'handler', 'who': 'f', 'args': <Object?>[]});
 
             return const MontyInt(1);
-          },
+          }),
         },
       ),
     ),
@@ -1311,8 +1325,11 @@ _probes = {
         () => s.feedRun(
           "print('a')\nf(1)",
           printCallback: _raising(t),
-          externals: {
-            'f': (args, kwargs) {
+          externalLookup: {
+            'f': MontyHostFunction('f', (
+              args,
+              kwargs,
+            ) {
               t.add({
                 'ev': 'handler',
                 'who': 'f',
@@ -1320,7 +1337,7 @@ _probes = {
               });
 
               return args.first;
-            },
+            }),
           },
         ),
       );

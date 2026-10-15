@@ -10,12 +10,10 @@
 // last two before the policy check, so a call or lookup the policy refuses
 // reaches no host code here and leaves no `call` or `lookup` entry: the cases
 // that need one cannot match (see `not_run` in rows.json).
-// ignore_for_file: implementation_imports
 import 'dart:async';
 
 import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
-import 'package:dart_monty_core/src/worker/host_objects.dart';
 import 'package:monty_parity/src/case_runner.dart';
 
 /// One host object: an instance of a case's class, labelled as the oracle
@@ -37,7 +35,7 @@ final class HostObj {
 /// The host world of a session-engine case.
 final class SessionHost extends CoreHost {
   /// Builds the world [c]'s `host` block describes.
-  SessionHost(super.c) {
+  SessionHost(super.c, {super.publicOnly}) {
     for (final MapEntry(:key, :value) in classes.entries) {
       _classes[key] = _makeClass(key, (value! as Map).cast());
     }

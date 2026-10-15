@@ -1,29 +1,29 @@
 {
- "subject": "dart_monty_core with the value family (core branch c5-v/value-family, head 24cb475: Monty / MontySession on the worker, the 0.110 surface less C5-s), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine and host classes), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
  "present": {
-  "vm": 66,
-  "dart2js": 66,
-  "dart2wasm": 66
+  "vm": 70,
+  "dart2js": 70,
+  "dart2wasm": 70
  },
  "totals": {
   "vm": {
-   "ABSENT": 51,
-   "PRESENT": 66,
-   "PARTIAL": 41,
+   "ABSENT": 45,
+   "PRESENT": 70,
+   "PARTIAL": 43,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 47,
-   "PRESENT": 66,
-   "PARTIAL": 43,
+   "ABSENT": 41,
+   "PRESENT": 70,
+   "PARTIAL": 45,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 47,
-   "PRESENT": 66,
-   "PARTIAL": 43,
+   "ABSENT": 41,
+   "PRESENT": 70,
+   "PARTIAL": 45,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -33,18 +33,18 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 66,
-    "dart2js": 66,
-    "dart2wasm": 66
+    "vm": 70,
+    "dart2js": 70,
+    "dart2wasm": 70
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 66,
-    "dart2js": 66,
-    "dart2wasm": 66
+    "vm": 70,
+    "dart2js": 70,
+    "dart2wasm": 70
    }
   }
  },
@@ -655,6 +655,97 @@
    "commit": "24cb475",
    "pr": null,
    "why": "core's value family (core branch c5-v/value-family): MontyComplex decodes and encodes, so v_complex, i_complex and r_complex MATCH (C5-v)"
+  },
+  {
+   "row": "async_host_driver",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "core exports the coroutine marker (C5-s, core #255), so the core engine's async_gather probe runs through the public API again"
+  },
+  {
+   "row": "host_eager_attributes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "host_instance_value",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PRESENT",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "host_class_type_proxy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "host_class_value",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PRESENT",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "host_constructor_policy",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
+  },
+  {
+   "row": "host_value_conversion_hook",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "PARTIAL",
+   "commit": "32a3c19",
+   "pr": 255,
+   "why": "the core engine builds a case's host world through core's public HostClass, ClassInstance and ClassType (public since C5-s, core #255) instead of refusing host wrappers, so the host cases run through the public API; the remaining differences are those of tool/parity/EXCEPTIONS.md"
   }
  ],
  "rows": {
@@ -744,19 +835,19 @@
    "dart2wasm": "PRESENT"
   },
   "host_eager_attributes": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
-  },
-  "host_instance_value": {
    "vm": "PARTIAL",
    "dart2js": "PARTIAL",
    "dart2wasm": "PARTIAL"
   },
+  "host_instance_value": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
   "host_class_type_proxy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_lazy_attributes": {
    "vm": "ABSENT",
@@ -764,19 +855,19 @@
    "dart2wasm": "ABSENT"
   },
   "host_class_value": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "host_constructor_policy": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "host_value_conversion_hook": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "os_path_predicates": {
    "vm": "PRESENT",
@@ -1089,9 +1180,9 @@
    "dart2wasm": "PRESENT"
   },
   "async_host_driver": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "snapshot_auto_resume": {
    "vm": "PRESENT",
@@ -1471,9 +1562,9 @@
   },
   "host_eager_attributes": {
    "h_x01_eager_all": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x02_eager_list": {
     "vm": "DIVERGE",
@@ -1503,21 +1594,21 @@
     "dart2wasm": "MATCH"
    },
    "h_x17_return_original": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_class_type_proxy": {
    "h_b07_restore_type_proxy": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_b08_restore_class_eager": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_lazy_attributes": {
@@ -1529,16 +1620,16 @@
   },
   "host_class_value": {
    "h_x09_class_init": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "host_constructor_policy": {
    "h_x09_class_init": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x11_class_methods": {
     "vm": "DIVERGE",
@@ -1548,9 +1639,9 @@
   },
   "host_value_conversion_hook": {
    "h_x13_convert_upper": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "h_x14_convert_redact": {
     "vm": "DIVERGE",
@@ -1558,9 +1649,9 @@
     "dart2wasm": "DIVERGE"
    },
    "h_x15_convert_wrap": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "os_path_predicates": {
@@ -5829,9 +5920,9 @@
   },
   "async_host_driver": {
    "async_gather": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "snapshot_auto_resume": {
