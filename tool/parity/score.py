@@ -546,16 +546,18 @@ def gate_problems(gate: dict, rows: dict, cases: dict[str, dict], expected: Path
                     problems.append(f'{row}: `session_also` {kind} {cid} is in no gated row\'s session rule')
                 elif cid in (rule.get('session') or {}).get(kind, []):
                     problems.append(f'{row}: `session_also` {kind} {cid} is already in the row\'s own session rule')
-    # The session engine's own cases and probes exist only for the gate: each must be in a gated rule.
+    # The session engine's own cases and probes exist only for the gate: each must be in a gated rule. A session
+    # probe a row maps for the M3 target (`core_also`) is run by the core engine, so it may sit there instead.
     suite, prefix = 'session', 'sp_'
+    core_owned = {p for rule in rows.values() for p in (rule.get('core_also') or {}).get('probes', [])}
     gated = {kind: {cid for row in gate['rows'] for cid in (rows.get(row, {}).get('session') or {}).get(kind, [])}
              for kind in ('cases', 'probes')}
     for cid, c in cases.items():
         if c['_suite'] == suite and cid not in gated['cases']:
             problems.append(f'{cid}: in tool/parity/cases/{suite} but in no gated session rule')
     for d in sorted(expected.glob(f'{prefix}*')):
-        if d.name not in gated['probes']:
-            problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule')
+        if d.name not in gated['probes'] and d.name not in core_owned:
+            problems.append(f'{d.name}: a session probe of the oracle but in no gated session rule or `core_also`')
     for stage in set(gate.get('core_gated', {})) - set(stages):
         problems.append(f'`core_gated` names {stage!r}, which is not in `stages`')
     d1 = gate.get('d1_rules')
@@ -872,9 +874,9 @@ def engine_cells(rule: dict, backend: str, out: Path, expected: Path, cases: dic
 
 def core_also_problems(rows: dict, cases: dict[str, dict], expected: Path) -> list[str]:
     """What is wrong with the rows' `core_also` mappings: each names core-engine cases (a case file the core run
-    runs) and probes (a core probe some row's `probes` owns, so the core run runs it), never its own."""
+    runs) and probes (an oracle probe, which the core run runs because `core_also` names it: run.py
+    core_probes), never its own."""
     problems = []
-    owned = {p for rule in rows.values() for p in rule.get('probes') or []}
     for row, rule in rows.items():
         also = rule.get('core_also')
         if also is None:
@@ -888,8 +890,8 @@ def core_also_problems(rows: dict, cases: dict[str, dict], expected: Path) -> li
             elif cid in rule.get('cases', []):
                 problems.append(f'{row}: `core_also` case {cid} is already a case of the row')
         for pid in also.get('probes', []):
-            if pid not in owned or not (expected / pid / 'ref-py.json').exists():
-                problems.append(f'{row}: `core_also` probe {pid} is in no row\'s `probes` (the core run would not run it)')
+            if pid in cases or not (expected / pid / 'ref-py.json').exists():
+                problems.append(f'{row}: `core_also` probe {pid} has no oracle outcome (tool/parity/expected/{pid}/ref-py.json)')
             elif pid in rule.get('probes', []):
                 problems.append(f'{row}: `core_also` probe {pid} is already a probe of the row')
     return problems

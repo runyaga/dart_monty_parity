@@ -242,9 +242,31 @@ class TargetTest(unittest.TestCase):
         problems = '\n'.join(score.core_also_problems(rules, self.cases, score.ROOT / 'tool/parity/expected'))
         self.assertIn('case no_such_case is no case the core run runs', problems)
         self.assertIn('case s01_int_bigint_input is no case the core run runs', problems)  # an e0 case
-        self.assertIn('probe no_such_probe is in no row', problems)
+        self.assertIn('probe no_such_probe has no oracle outcome', problems)
         self.assertNotIn(owned_probe, problems)
         self.assertIn('run_blocking: `core_also` must map', problems)
+        # A probe with an oracle outcome that no row's `probes` names is fine: `core_also` owns it.
+        unowned = sorted(p.name for p in (score.ROOT / 'tool/parity/expected').glob('sp_*')
+                         if not any(p.name in (r.get('probes') or []) for r in self.rules.values()))[0]
+        rules['assert_annotations']['core_also'] = {'probes': [unowned]}
+        self.assertEqual([p for p in score.core_also_problems(rules, self.cases, score.ROOT / 'tool/parity/expected')
+                          if p.startswith('assert_annotations')], [])
+
+    def test_the_core_run_runs_the_probes_core_also_owns(self) -> None:
+        import tempfile  # noqa: PLC0415
+        from unittest import mock  # noqa: PLC0415
+
+        import run  # noqa: PLC0415
+
+        rules = json.loads(score.RULES.read_text())
+        rules['rows']['assert_annotations']['core_also'] = {'probes': ['sp_only_core_also']}
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / 'rows.json'
+            f.write_text(json.dumps(rules))
+            with mock.patch.object(run, 'RULES', f):
+                probes = run.core_probes()
+        self.assertIn('sp_only_core_also', probes)
+        self.assertTrue({p for r in self.rules.values() for p in r.get('probes') or []} <= set(probes))
 
     def test_the_target_flags_are_not_silently_skipped(self) -> None:
         import contextlib  # noqa: PLC0415
