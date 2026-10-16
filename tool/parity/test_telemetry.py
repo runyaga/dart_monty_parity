@@ -29,6 +29,44 @@ class TelemetryComparisonTest(unittest.TestCase):
             self.assertIsNone(ref['runner_error'])
             self.assertEqual(judge(ref['probe'], ref, ref, {})[0], 'MATCH')
 
+    def test_scalar_attribute_types_are_distinct(self):
+        for values in ((True, 1, 1.0, '1'), (False, 0, 0.0, '0')):
+            for original in values:
+                for replacement in values:
+                    if type(original) is type(replacement):
+                        continue
+                    with self.subTest(original=repr(original), replacement=repr(replacement)):
+                        ref = reference('plain')
+                        ref['events'][-1]['spans'][1]['attributes']['output'] = original
+                        got = copy.deepcopy(ref)
+                        got['events'][-1]['spans'][1]['attributes']['output'] = replacement
+                        self.assertEqual(judge(ref['probe'], ref, got, {})[0], 'DIVERGE')
+
+    def test_record_fields_preserve_scalar_types(self):
+        for field, value in [('empty_context', 1), ('empty_context', 1.0)]:
+            with self.subTest(field=field, value=value):
+                self.rejects('plain', lambda e: e['metrics'][0].__setitem__(field, value))
+        for value in (True, 1.0, '1'):
+            with self.subTest(counter=repr(value)):
+                self.rejects('plain', lambda e: next(
+                    m for m in e['metrics'] if m['name'] == 'monty.pool.worker.terminated'
+                ).__setitem__('value', value))
+        self.rejects('plain', lambda e: e['spans'][1].__setitem__('parent', False))
+        self.rejects('error', lambda e: e['logs'][0].__setitem__('severity_number', 17.0))
+
+    def test_extra_underscore_attributes_are_observed(self):
+        for records in ('spans', 'logs', 'metrics'):
+            with self.subTest(records=records):
+                self.rejects('error', lambda e: e[records][0]['attributes'].__setitem__('_extra', 1))
+
+    def test_accompanying_events_preserve_types_and_underscore_keys(self):
+        for field, value in [('value', 2.0), ('_extra', 1)]:
+            with self.subTest(field=field):
+                ref = reference('plain')
+                got = copy.deepcopy(ref)
+                got['events'][0][field] = value
+                self.assertEqual(judge(ref['probe'], ref, got, {})[0], 'DIVERGE')
+
     def test_raw_counter_increments_and_worker_decrements(self):
         for scenario, name, value in [('print', 'monty.print.bytes', 8),
                                       ('manual', 'monty.run.suspensions', 2),

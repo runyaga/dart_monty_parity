@@ -66,30 +66,30 @@
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 79,
-    "dart2js": 78,
-    "dart2wasm": 78
+    "vm": 83,
+    "dart2js": 82,
+    "dart2wasm": 82
    },
    "cells": {},
-   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured.",
+   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured. The four telemetry rows and their cases inherit the arm64 PRESENT/MATCH expectations on all three backends; this is an unverified assumption for Linux CI to confirm.",
    "totals": {
     "vm": {
-     "ABSENT": 48,
-     "PRESENT": 79,
+     "ABSENT": 44,
+     "PRESENT": 83,
      "PARTIAL": 31,
      "N/A": 26,
      "REFUSED": 1
     },
     "dart2js": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
     },
     "dart2wasm": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
