@@ -1,0 +1,223 @@
+{
+ "probe": "sp_memory_headroom",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "input",
+   "bytes": 700000,
+   "max_memory": 1000000
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "700000"
+   }
+  },
+  {
+   "ev": "input",
+   "bytes": 1500000,
+   "max_memory": 1000000
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "input",
+   "bytes": 2000000,
+   "max_memory": 1000000
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "memory limit exceeded: N bytes > N bytes",
+   "tb_last": null
+  },
+  {
+   "ev": "input",
+   "bytes": 6000000,
+   "max_memory": 1000000
+  },
+  {
+   "ev": "error",
+   "type": "MemoryError",
+   "message": "the worker exceeded its memory limit and was terminated",
+   "tb_last": null
+  },
+  {
+   "ev": "finished"
+  },
+  {
+   "ev": "no_limit"
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "50000000"
+   }
+  },
+  {
+   "ev": "baseline",
+   "checkouts": 20,
+   "max_memory": 300000
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  },
+  {
+   "ev": "complete",
+   "value": {
+    "t": "int",
+    "v": "499500"
+   }
+  }
+ ],
+ "runner_error": null
+}

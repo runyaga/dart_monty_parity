@@ -276,21 +276,58 @@ class TargetTest(unittest.TestCase):
         self.assertIn('PARTIAL FAIL', '\n'.join(lines))
 
     def test_a_backend_a_row_is_not_a_target_on_is_not_scored(self) -> None:
-        cid = next(c for c, r in self.target['rows'].items() if r['backends'] == ['vm'])
+        # Backend exclusions remain supported even though R-P1 retires G7.
+        t = copy.deepcopy(self.target)
+        cid = 'allocator_memory_limit'
+        t['rows'][cid]['backends'] = ['vm']
+        t['rows'][cid]['backends_excluded'] = {'dart2js': 'C1', 'dart2wasm': 'C1'}
         st = self.statuses()
         st[cid]['dart2js'] = st[cid]['dart2wasm'] = ('REFUSED', 'recorded')
-        _, fails = score.score_target(self.target, st, BACKENDS)
+        _, fails = score.score_target(t, st, BACKENDS)
         self.assertEqual(fails, 0)
 
     def test_a_dropped_backend_is_named_with_its_clause(self) -> None:
-        cid = next(c for c, r in self.target['rows'].items() if r['backends'] == ['vm'])
-        self.assertEqual(self.target['rows'][cid]['backends_excluded'], {'dart2js': 'G7', 'dart2wasm': 'G7'})
         t = copy.deepcopy(self.target)
+        cid = 'allocator_memory_limit'
+        t['rows'][cid]['backends'] = ['vm']
+        t['rows'][cid]['backends_excluded'] = {'dart2js': 'C1', 'dart2wasm': 'C1'}
+        self.assertEqual(score.target_problems(t, self.in_scope), [])
         del t['rows'][cid]['backends_excluded']['dart2wasm']
         t['rows'][cid]['backends_excluded']['dart2js'] = 'G9'
         problems = '\n'.join(score.target_problems(t, self.in_scope))
         self.assertIn('must split', problems)
         self.assertIn("'G9', which is not in `clauses`", problems)
+
+    def test_rp1_memory_rows_require_all_backends(self) -> None:
+        self.assertNotIn('G7', self.target['clauses'])
+        for cid in ('allocator_memory_limit', 'hard_memory_ceiling'):
+            row = self.target['rows'][cid]
+            self.assertEqual(row['backends'], BACKENDS)
+            self.assertNotIn('backends_excluded', row)
+            self.assertNotIn('allowed', row)
+            st = self.statuses()
+            for b in ('dart2js', 'dart2wasm'):
+                st[cid][b] = ('PARTIAL', 'measured')
+            _, fails = score.score_target(self.target, st, BACKENDS)
+            self.assertEqual(fails, 2)
+            self.assertEqual(self.rules[cid]['session_also']['probes'], ['sp_memory_headroom'])
+        for cid in ('global_allocator', 'memory_limit_headroom', 'memory_baseline_accounting'):
+            self.assertEqual(self.target['excluded'][cid]['clause'], 'C1')
+
+    def test_rp1_probes_run_through_the_session_engine(self) -> None:
+        import run  # noqa: PLC0415
+
+        probes = {'sp_print_kill_after_print', 'sp_print_volume_under_limit', 'sp_memory_headroom'}
+        self.assertTrue(probes <= run.gate_ids('probes'))
+        self.assertEqual(set(self.rules['print_callback']['session_also']['probes']), probes - {'sp_memory_headroom'})
+
+    def test_standalone_type_check_has_no_remaining_core_obligation(self) -> None:
+        self.assertEqual(self.target['clauses']['D1'], {
+            'text': "standalone type checking was removed at the core cutover (#253); upstream's binding has no check-only call",
+            'owner': 'upstream',
+        })
+        self.assertEqual(self.target['excluded']['type_check_source']['clause'], 'D1')
+        self.assertEqual(self.target['excluded']['type_check_source']['owner'], 'upstream')
 
     def test_a_malformed_file_is_reported(self) -> None:
         t = copy.deepcopy(self.target)

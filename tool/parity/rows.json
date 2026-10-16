@@ -2368,7 +2368,8 @@
   "request_deadline": {
    "session": {
     "probes": [
-     "sp_request_timeout"
+     "sp_request_timeout",
+     "sp_print_kill_after_print"
     ]
    }
   },
@@ -2388,6 +2389,12 @@
      "sp_print_raise_suspended",
      "sp_print_raise_then_error"
     ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_print_kill_after_print",
+     "sp_print_volume_under_limit"
+    ]
    }
   },
   "os_callback_adapter": {
@@ -2401,7 +2408,8 @@
    "session": {
     "probes": [
      "sp_oversized_input",
-     "sp_oversized_answer"
+     "sp_oversized_answer",
+     "sp_memory_headroom"
     ]
    },
    "session_also": {
@@ -2415,7 +2423,8 @@
    "session": {
     "probes": [
      "sp_collect_string",
-     "sp_collect_overflow"
+     "sp_collect_overflow",
+     "sp_print_volume_under_limit"
     ]
    }
   },
@@ -2529,6 +2538,11 @@
      "l04_mem_single",
      "l05_mem_catch"
     ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_memory_headroom"
+    ]
    }
   },
   "feed_repl_to_completion": {
@@ -2631,6 +2645,11 @@
    "core_also": {
     "probes": [
      "sp_hard_memory_ceiling"
+    ]
+   },
+   "session_also": {
+    "probes": [
+     "sp_memory_headroom"
     ]
    }
   },

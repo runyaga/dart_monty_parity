@@ -1,0 +1,17 @@
+{
+ "probe": "sp_print_kill_after_print",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "print",
+   "stream": "stdout",
+   "text": "early\n"
+  },
+  {
+   "ev": "crashed",
+   "timed_out": true
+  }
+ ],
+ "runner_error": null
+}

@@ -490,6 +490,32 @@ def sp_hard_memory_ceiling(pool: pm.Monty, t: T) -> None:
             run(t, lambda: s.feed_run('3'))
 
 
+@probe
+def sp_memory_headroom(pool: pm.Monty, t: T) -> None:
+    """R-P1/P7: decoded inputs, soft rejection versus hard death, unlimited allocation and reset accounting.
+
+    The 2 MB input also distinguishes decoding the owned request buffer from making a second frame copy
+    on the web. Both soft failures leave the input bound: the next feed raises MemoryError, not finished.
+    A fresh one-worker pool keeps previous type-checking allocations out of these tight limits.
+    """
+    with pm.Monty(max_processes=1, checkout_timeout=10) as p:
+        for size in (700_000, 1_500_000, 2_000_000, 6_000_000):
+            t.add({'ev': 'input', 'bytes': size, 'max_memory': 1_000_000})
+            with p.checkout(limits={'max_memory': 1_000_000}) as s:
+                limit_error(t, lambda: s.feed_run('len(x)', inputs={'x': b'\0' * size}))
+                if size == 6_000_000:
+                    finished_feed(t, lambda: s.feed_run('2'))
+                elif size > 1_000_000:
+                    limit_error(t, lambda: s.feed_run('2'))
+        t.add({'ev': 'no_limit'})
+        with p.checkout() as s:
+            run(t, lambda: s.feed_run("len('x' * 50_000_000)"))
+        t.add({'ev': 'baseline', 'checkouts': 20, 'max_memory': 300_000})
+        for _ in range(20):
+            with p.checkout(limits={'max_memory': 300_000}) as s:
+                run(t, lambda: s.feed_run('sum(range(1000))'))
+
+
 def install(t: T, fn: Any) -> None:
     """An `install_dependencies` call: `installed`, a MontyRuntimeError as its error, and each binding refusal by
     its kind (a requirement with no UTF-8 form; a call while a suspension is unanswered); anything else as
@@ -538,6 +564,35 @@ def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
             t.add(err_ev(e))
             return
         t.add({'ev': 'complete', 'value': canon(value), 'waited': 0.25 <= time.monotonic() - start < 5})
+
+
+@probe
+def sp_print_kill_after_print(pool: pm.Monty, t: T) -> None:
+    """R-P1/P2: a print reaches the callback before a non-yielding turn is killed by the request timeout."""
+    with pm.Monty(max_processes=1, checkout_timeout=10, request_timeout=1.5) as p:
+        with p.checkout() as s:
+            def cb(stream: str, text: str) -> None:
+                t.add({'ev': 'print', 'stream': stream, 'text': text})
+
+            try:
+                t.add({'ev': 'complete', 'value': canon(s.feed_run(
+                    "print('early')\nwhile True:\n    pass", print_callback=cb))})
+            except pm.MontyCrashedError as e:
+                t.add({'ev': 'crashed', 'timed_out': e.timed_out})
+            except Exception as e:  # noqa: BLE001 - recorded
+                t.add(err_ev(e))
+
+
+@probe
+def sp_print_volume_under_limit(pool: pm.Monty, t: T) -> None:
+    """R-P1/P5: 4,020,000 printed bytes do not consume the worker's 2 MB memory limit."""
+    with pm.Monty(max_processes=1, checkout_timeout=10) as p:
+        with p.checkout(limits={'max_memory': 2_000_000}) as s:
+            c = pm.CollectString(max_bytes=None)
+            limit_error(t, lambda: s.feed_run("for i in range(20000):\n    print('y' * 200)\n'done'",
+                                              print_callback=c))
+            t.add({'ev': 'collected', 'bytes': len(c.output),
+                   'content_matches': c.output == ('y' * 200 + '\n') * 20_000})
 
 
 @probe
