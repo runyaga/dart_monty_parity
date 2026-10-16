@@ -492,8 +492,9 @@ class CoreHost {
 OsHandler buildFsHandler(
   Map<String, Object?> fs,
   OsHandler fallthrough,
-  Map<String, Object?> unsupported,
-) {
+  Map<String, Object?> unsupported, {
+  bool scriptedEnvironment = true,
+}) {
   if (fs['mounts'] case final List<Object?> mounts when mounts.isNotEmpty) {
     unsupported['fs.mounts'] = 'host mounts are unavailable until P-F2';
   }
@@ -515,6 +516,12 @@ OsHandler buildFsHandler(
   final access = OSAccess(files: files);
 
   return (name, args, kwargs) async {
+    // Mount-backed oracle cases delegate environment calls to their script.
+    // OSAccess also handles these names, so it must not swallow that script.
+    // The refmem oracle uses OSAccess's own environment instead.
+    if (scriptedEnvironment && (name == 'os.getenv' || name == 'os.environ')) {
+      return fallthrough(name, args, kwargs);
+    }
     try {
       return await access(name, args, kwargs);
     } on OsCallNotHandledException {

@@ -43,6 +43,59 @@ void _memoryTests() {
 }
 
 void _mountTests() {
+  test(
+    'filesystem preserves scripted environment calls and arguments',
+    () async {
+      final calls = <String>[];
+      const environment = MontyDict([
+        (MontyString('A'), MontyString('1')),
+      ]);
+      final args = [const MontyString('HOME'), const MontyNone()];
+      final kwargs = <String, MontyValue>{};
+      final handler = buildFsHandler({}, (name, actualArgs, actualKwargs) {
+        calls.add(name);
+        expect(actualKwargs, same(kwargs));
+        if (name == 'os.getenv') {
+          expect(actualArgs, same(args));
+          return const MontyString('/home/u');
+        }
+        expect(actualArgs, isEmpty);
+        return environment;
+      }, {});
+      expect(
+        await handler('os.getenv', args, kwargs),
+        const MontyString('/home/u'),
+      );
+      expect(await handler('os.environ', [], kwargs), same(environment));
+      expect(calls, ['os.getenv', 'os.environ']);
+    },
+  );
+  test(
+    'refmem retains the OSAccess environment and missing-key default',
+    () async {
+      final handler = buildFsHandler(
+        {},
+        _fallback,
+        {},
+        scriptedEnvironment: false,
+      );
+      expect(
+        await handler('os.getenv', [
+          const MontyString('HOME'),
+          const MontyNone(),
+        ], {}),
+        const MontyNone(),
+      );
+      expect(
+        await handler('os.getenv', [
+          const MontyString('NOPE'),
+          const MontyString('dflt'),
+        ], {}),
+        const MontyString('dflt'),
+      );
+      expect(await handler('os.environ', [], {}), const MontyDict([]));
+    },
+  );
   test('mount requests stay unsupported until P-F2', () {
     final unsupported = <String, Object?>{};
     buildFsHandler(

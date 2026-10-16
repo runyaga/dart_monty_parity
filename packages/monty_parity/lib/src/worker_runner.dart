@@ -207,7 +207,12 @@ Future<Map<String, Object?>> runEngineCase(
   final fs = (c['fs'] as Map?)?.cast<String, Object?>();
   if (fs != null) {
     try {
-      fsHandler = buildFsHandler(fs, scriptedOs, unsupported);
+      fsHandler = buildFsHandler(
+        fs,
+        scriptedOs,
+        unsupported,
+        scriptedEnvironment: engine != 'refmem',
+      );
     } on Object catch (e) {
       fsError = e;
     }
