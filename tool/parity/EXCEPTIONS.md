@@ -24,6 +24,23 @@ requires the separate `refmem` column even when a matching core file exists.
 | `payload-host-type` | `callback_files` (probe `api_callback_files`) | the write event's `type` field | Python `str` (pydantic-monty `CallbackFile`) vs Dart `String`; path, text, values and order are equal | the host language's type name for the same payload, not sandbox behaviour | ABSENT (recorded **PRESENT**) | not expected (inherently per binding) |
 | `no-suspension-position` | `run_progress_variants`, `resume_os_call`, `resolve_pending_futures`, `feed_repl_suspendable` (their probes) | suspension `position` | core `null`; upstream filename + byte range | core exposes no suspension position, which `suspension_source_position` measures on its own (ABSENT); these rows compare kind, name, args, kwargs, resumed values and errors | ABSENT (recorded PARTIAL ×3, **PRESENT** for `resolve_pending_futures`) | core reports suspension positions |
 
+## P-F1 F-1-window owner exception
+
+Owner approval: P-F1, under FAST1(4)'s delegated F-1 work. This temporary
+`m3-target.json` allowance accepts `os_environment` as PARTIAL on `vm`,
+`dart2js` and `dart2wasm`, scoped solely to `x21_fallback_nonfs`. F-1 removes
+the memory-backed MountDir; that case requests a host mount and is unsupported
+until F-2 restores host-directory mounts. Every other cell of the row must
+MATCH, including `b14_env`.
+
+The row remains a target on all three backends. This is a target-status
+allowance, not a comparison exception: no outcome is normalized or ignored.
+The existing target gate rejects any nonmatching cell outside that scope and
+rejects the allowance as STALE as soon as the row becomes PRESENT on a covered
+backend. F-2 must remove the allowance for each restored backend, and remove
+the entry when none remain. `test_target.py` registers this approval and checks
+the exact scope and the failure on PRESENT.
+
 ## Rule choices
 
 Not exceptions, but they decide statuses:

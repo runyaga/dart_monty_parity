@@ -6,7 +6,7 @@ usage: python3 -I tool/parity/test_target.py
   - the committed file partitions the 185 in-scope manifest rows into target rows and excluded rows;
   - every exclusion names a clause, and the area clauses and the mount clause hold as the rule states them;
   - an `allowed` entry is one of the three kinds the design allows, with a reason and a cite, and an `evidenced_by`
-    (the core tests that evidence the row) is well formed; PT1's six entries are the only ones;
+    (the core tests that evidence the row) is well formed; only PT1, TGT1, TGT2 and P-F1 entries are approved;
   - the scorer passes a target row PRESENT on every backend it must be, shows (and counts) a row that is not,
     accepts a row an `allowed` entry covers, and fails an `allowed` entry whose row is now PRESENT;
   - a file that lists a row twice, or drops one, or carries an `allowed` entry of another kind, is reported.
@@ -39,6 +39,8 @@ TGT1 = {
 }
 # The owner's TGT2 allowance (2026-10-15), scoped to the worker engine's one recorded divergence.
 TGT2 = {'unstable_graph_access': ('owner-exception', 'PARTIAL', BACKENDS, ['w_graph_cycle_ret'])}
+# The owner's P-F1 F-1-window allowance (FAST1(4) delegated), until F-2 restores host mounts.
+PF1 = {'os_environment': ('owner-exception', 'PARTIAL', BACKENDS, ['x21_fallback_nonfs'])}
 
 
 class TargetTest(unittest.TestCase):
@@ -106,9 +108,9 @@ class TargetTest(unittest.TestCase):
         for cid in j10:
             paths = [e['path'] for e in self.target['rows'][cid]['allowed']['evidenced_by']]
             self.assertTrue(any(p.startswith('test/') for p in paths), cid)
-        # No row but PT1's, TGT1's and TGT2's has an allowance, and none is still open.
+        # No row but PT1's, TGT1's, TGT2's and P-F1's has an allowance, and none is still open.
         self.assertEqual(sorted(c for c, r in self.target['rows'].items() if r.get('allowed')),
-                         sorted(j08 + j10 + list(TGT1) + list(TGT2)))
+                         sorted(j08 + j10 + list(TGT1) + list(TGT2) + list(PF1)))
         self.assertFalse([c for c, r in self.target['rows'].items() if r.get('open')])
 
     def test_tgt1_allowed_entries(self) -> None:
@@ -130,6 +132,37 @@ class TargetTest(unittest.TestCase):
             self.assertIn('TGT2', allowed['cite'], cid)
             self.assertIn('w_graph_cycle_ret', rules[cid]['worker']['diverge'])
             self.assertIn('sp_resume_unconvertible', rules[cid]['session_also']['probes'])
+
+    def test_pf1_allowed_entry_is_scoped_and_expires(self) -> None:
+        """P-F1 accepts only the host-mount cell's gap; other failures and a PRESENT row fail the gate."""
+        for cid, (kind, status, backends, cells) in PF1.items():
+            row = self.target['rows'][cid]
+            allowed = row['allowed']
+            self.assertEqual((allowed['kind'], allowed['status'], allowed['backends'], allowed['cells']),
+                             (kind, status, backends, cells), cid)
+            self.assertEqual(row['backends'], BACKENDS)
+            self.assertIn('tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception', allowed['cite'])
+            self.assertIn('b14_env', self.rules[cid]['cases'])
+            self.assertIn(cells[0], self.rules[cid]['cases'])
+            target = {'rows': {cid: row}}
+            core = {cid: {b: {'cells': [{'case': 'b14_env', 'class': 'MATCH'},
+                                       {'case': cells[0], 'class': 'UNSUPPORTED'}]} for b in BACKENDS}}
+            st = {cid: {b: ('PARTIAL', 'measured') for b in BACKENDS}}
+            misses = score.scope_misses(target, core, self.rules, BACKENDS, None, Path('/nonexistent'), self.cases)
+            self.assertEqual(misses, {})
+            self.assertEqual(score.score_target(target, st, BACKENDS, misses)[1], 0)
+            for b in BACKENDS:
+                core[cid][b]['cells'][0]['class'] = 'DIVERGE'
+            misses = score.scope_misses(target, core, self.rules, BACKENDS, None, Path('/nonexistent'), self.cases)
+            self.assertEqual(misses, {(cid, b): ['b14_env'] for b in BACKENDS})
+            self.assertEqual(score.score_target(target, st, BACKENDS, misses)[1], 3)
+            for b in BACKENDS:
+                with self.subTest(backend=b):
+                    present = copy.deepcopy(st)
+                    present[cid][b] = ('PRESENT', 'measured')
+                    lines, fails = score.score_target(target, present, BACKENDS)
+                    self.assertEqual(fails, 1)
+                    self.assertIn('PRESENT STALE', '\n'.join(lines))
 
     def test_evidenced_by_is_validated(self) -> None:
         t = copy.deepcopy(self.target)
