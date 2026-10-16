@@ -56,7 +56,7 @@ void main() {
     _callbackProbe,
   );
   test(
-    'mount budget probes report unsupported without running a feed',
+    'mount budget probes measure host mount limits on the VM',
     _budgetProbes,
   );
 }
@@ -110,7 +110,8 @@ Future<void> _budgetProbes() async {
   ]) {
     final result = await runSessionProbe(id, 'vm', pool, startMonty, () => 0);
     expect(result['runner_error'], isNull);
-    expect(result['events'], isEmpty);
-    expect(result['unsupported'], contains('fs.mounts'));
+    expect(result['events'], isNotEmpty);
+    expect(result['unsupported'], isNull);
+    expect(result['refused'], isNull);
   }
 }

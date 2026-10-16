@@ -22,10 +22,11 @@
     "text": "c"
    },
    "/data/u.txt": {
-    "text": "héllo ✓"
+    "text": "h\u00e9llo \u2713"
    }
   }
  },
  "close_mount_before_feed": 1,
- "host_errors": "plain"
+ "host_errors": "plain",
+ "local_refusal": true
 }

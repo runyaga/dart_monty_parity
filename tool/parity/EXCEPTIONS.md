@@ -7,15 +7,16 @@ when the difference it names is actually present in that case. Evidence is in th
 `parity-baseline-5873ec5` CI artifact (`<case>/core-<backend>.json`) against
 `tool/parity/expected/<case>/`.
 
-The historical 5873ec5 totals were measured with three exceptions. P-F1 retires
-`rename-missing-message`: OSAccess must now match the refmem oracle's exact message,
+The historical 5873ec5 totals were measured with three exceptions. P-F1 retired
+`rename-missing-message`; P-F2 keeps it retired: OSAccess matches the refmem oracle's exact message,
 and a rule that still names that exception fails validation. Historical baselines
 are unchanged; their totals are not measurements of the F-1 runner.
 `--assert-rows` or `--assert-baseline` explicitly selects the historical
 `runner-0.23` instrument: B1 and `memory_filesystem` read `core-<backend>.json`
 against `ref-py.json`. Its missing-source rename message matches that host
 oracle exactly, so no retired message exception is restored. Current scoring
-requires the separate `refmem` column even when a matching core file exists.
+requires the separate `refmem` column on web and for `memory_filesystem`, even
+when a matching core file exists; B1 on VM uses the host-mount column.
 
 ## Named exceptions
 
@@ -39,7 +40,9 @@ The existing target gate rejects any nonmatching cell outside that scope and
 rejects the allowance as STALE as soon as the row becomes PRESENT on a covered
 backend. F-2 must remove the allowance for each restored backend, and remove
 the entry when none remain. `test_target.py` registers this approval and checks
-the exact scope and the failure on PRESENT.
+the exact scope and the failure on PRESENT. P-F2 deliberately leaves `m3-target.json`
+unchanged: VM `os_environment` now becomes PRESENT, making that allowance STALE.
+The integration owner must update it with the final F-2 pin and browser evidence.
 
 ## Rule choices
 
@@ -51,13 +54,17 @@ Not exceptions, but they decide statuses:
 | `host_class_type_proxy` | REFUSED only when core raises "a type cannot be sent back" (`h_b07`). `h_b08`, where core cannot build a class value at all ("MontyClassType is not a MontyValue"), is ABSENT, not REFUSED, so the row (REFUSED + ABSENT) is ABSENT | not being able to build the value is absence, not a refusal of a request |
 | `resume_os_call` | PARTIAL: the not-handled probe records core's public substitute (`osCallNoHandlerDefault` + `resumeWithException`) as `unsupported` | core has no not-handled verb; reproducing upstream's error with a substitute is not parity of the API |
 | `memory_filesystem` | the separate `refmem` engine outcome is compared to upstream's `OSAccess`+`MemoryFile` (`refmem-py.json`); compares value, exception type and message | the row is the in-memory filesystem; upstream's in-memory filesystem is the comparable oracle |
-| B1 filesystem OS rows (all ten) | `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm, and temporarily on VM until P-F2; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; F-1 also has no host mount on VM. P-F2 restores VM scoring against `MountDir` / `ref-py.json` |
-| cases with `fs.mounts`; mount budget probes | `unsupported: fs.mounts` scores UNSUPPORTED and an all-unsupported row is ABSENT, until P-F2 | OSAccess has neither host mounts nor mount budgets. The separate refmem run seeds only files and applies no mount mode or cap |
+| B1 filesystem OS rows (all ten) | `core-vm.json` against `ref-py.json` on VM; `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; the VM uses the same host-directory mount as the Python oracle |
+| cases with nonempty `fs.mounts`; mount budget probes | real `MountDir` on VM; `refused: {where: 'MountDir', type: 'UnsupportedError'}` on web scores REFUSED | upstream only exports MountDir from `monty-js/ts/node.ts:3-4`; the separate refmem run applies no mount mode or cap |
+| `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects only mount-free cases on web | mount refusal must not hide portable cwd/path behavior |
+| `mount_dispatch_and_fallback` | web scores mount-dependent cases; portable sleep/no-table controls still execute | the mount capability is refused on web; the portable controls verify dispatch independently |
+| `mount_usage_inspection` | declared REFUSED, `allowed: REFUSED-as-upstream`, no synthetic probe | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
 | `raised_exception` / `traceback_frames` | exception type + message / frames only, over the 273 `b12_*` cases | each row is one part of an exception |
 | `turn_execution_limit`, `host_sleep_budget`, `garbage_collection_interval`, `host_suspension_budget` | ABSENT, not REFUSED, when the limit has no `MontyLimits` field | a missing knob is absence, even where the web backend refuses session limits |
 | `file_mode_inspection`, `file_handle_value_conversion` (cases marked `local_refusal`: `x8hostmode_zz`, `x8hostmode_rplus`, `x8hostmode_neg`) | a step whose upstream outcome is the host's own refusal to build an OS call's answer (`thrown: host`, or a `HOST:` type; no traceback, no value) matches a step the Dart host refused building that answer (`thrown: host`, no traceback, no value), whatever the type and message; any other step compares as usual (`score.py with_host_refusals`) | the host returned a file handle with a mode or position the binding refuses: upstream's host raises `ValueError`/`OverflowError` constructing it, core's `ArgumentError`; both refuse on the host before the feed resumes, as the worker engine's `local_refusal` rule matches host-side input refusals. The session driver resumes by hand, as the oracle does, so the refusal stays on the host |
+| mount constructor and closed-mount cases marked `local_refusal` | the same host-refusal comparison as above; both sides must refuse before a sandbox value/traceback | Python TypeError/ValueError/OverflowError and Dart ArgumentError/RangeError/StateError are each binding's programming-error family |
 | `os_entry_removal` | no exception | its one cross-platform difference (`b11fs_unlink_dir`) is upstream `MountDir` following the macOS errno; on the committed Linux expectations core matches |
 | `boolean_integer_values` | no exception | core's own cases match |
 

@@ -1,0 +1,20 @@
+{
+ "id": "x21_dispatch_outside_not_handled",
+ "code": "from pathlib import Path\nPath('/else/a.txt').read_text()",
+ "os": {
+  "Path.read_text": []
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -1,0 +1,6 @@
+{
+ "id": "x21_cwd_invalid_nul",
+ "code": "import os\nos.getcwd()",
+ "cwd": "/a\u0000b",
+ "host_errors": "plain"
+}

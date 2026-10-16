@@ -1,0 +1,27 @@
+{
+ "id": "x21_dispatch_rename_same_mount",
+ "code": "from pathlib import Path\nPath('/data/a.txt').rename('/data/z.txt')",
+ "os": {
+  "Path.rename": [
+   {
+    "return": {
+     "t": "path",
+     "v": "/data/z.txt"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

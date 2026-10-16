@@ -1,8 +1,8 @@
 {
  "generator": {
-  "sha256": "7a9e8a0177b01c3bf0166ac92c5acdab7b1b84cdbb1d0ad5a026a5e031c1f90e",
+  "sha256": "85bbb627e5ce520d5e8d95b81576bcb1bd7b8bcc812f83a05bf49f4ed16248cc",
   "files": {
-   "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
+   "tool/parity/oracle/run_cases.py": "125fb79d4fe176904e1bf5c0f56cb730ad596eced665eb76ed6ee8a97e72135b",
    "tool/parity/oracle/run_probes.py": "acbe65cf1b0cdb49aa70f77e70fc0dbcb0c5a42727ae0079603da3ec890dc4b1",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
@@ -2980,9 +2980,58 @@
   },
   "g19_close_then_feed": {
    "suite": "os_fs",
-   "case": "f40806451ddf909be84ea8ff61c4b543ee6aa1cd7049cf1826f27d08e3b99047",
+   "case": "80964b3a5e191932a678f885ab68319145075bf980f78c82ea425041e5be2bb4",
    "outcomes": {
     "ref-py": "5598c54f6b167ea95a108dd2d38b5196ed13917edeb4dbe29d33f9ac23cb0d74"
+   }
+  },
+  "x21_abs_symlink": {
+   "suite": "os_fs",
+   "case": "44b0197f90ae7b3b494d5f732f4c01e0ba861d9b26b897ccf5c32d0d7c15e84f",
+   "outcomes": {
+    "ref-py": "27e86f9cc1e37acf5925ae4bf6ff170813063b98a29be8530882f1ad0775e0fc"
+   }
+  },
+  "x21_cross_mount_rename": {
+   "suite": "os_fs",
+   "case": "f4d1134c01ecae29f820f7f3b6c6f8543a524f70519612cfeb28207cc0544fa0",
+   "outcomes": {
+    "ref-py": "453b98b5ada6e5d54bd61e240f83294087d58276c8673c0cf9d085ddfd6dd16b"
+   }
+  },
+  "x21_ctor_bad_mode": {
+   "suite": "os_fs",
+   "case": "f5d515d82f1308498d0a706bd7a88f70ba5caa23c61a3519830c9e83af678e47",
+   "outcomes": {
+    "ref-py": "66ec4cc743287e9033da75d3228c690a0e081c274f97e0465b8965885d005c08"
+   }
+  },
+  "x21_ctor_missing_host": {
+   "suite": "os_fs",
+   "case": "56128529837ebcb8d3fd760dc15944a791d976a4b789103a965734fefe057f03",
+   "outcomes": {
+    "ref-py": "e4c918bc2d3e02f932f7e4ace8cfebf5098bf74d42f1675dffacb1cff8fe8017"
+   }
+  },
+  "x21_ctor_negative_limit": {
+   "suite": "os_fs",
+   "case": "2fd6b9f4e71ebc585d77b8633c7e6622ced6d32bfad088e4fc3f395494e6972e",
+   "outcomes": {
+    "ref-py": "c636308c1d73620cf035674b644f325b4bd683d80518acbfa2b03bef2b0ae266"
+   }
+  },
+  "x21_ctor_negative_memory_limit": {
+   "suite": "os_fs",
+   "case": "bb64cd8ccf00194fcb5b89c33966e16e5e46fb732e1bc078c2ad5a7e4cbefdc8",
+   "outcomes": {
+    "ref-py": "a8c9125f9aeb2dc794703bd80a94e2652debcc646c72246a9a556030d7f41001"
+   }
+  },
+  "x21_ctor_relative_virtual": {
+   "suite": "os_fs",
+   "case": "1cd8871a54a1c9171ccffb50d0b32e2b1fd78d5d2bdeeff7f84dc8f068f2e385",
+   "outcomes": {
+    "ref-py": "26aa30a6eb42126c71f4c5fbcfef50e18eff9a0b3c35ddfacd54707608466705"
    }
   },
   "x21_cwd_default_mount": {
@@ -2999,6 +3048,48 @@
     "ref-py": "43324c340c1e96d3658bf4be2c58ca0968530a4a2d33b53f1483c0711a9dd304"
    }
   },
+  "x21_cwd_feed_web": {
+   "suite": "os_fs",
+   "case": "22a57050bb697906d3dd3a10e5890102369b5767464f6b463e22a47228d64b41",
+   "outcomes": {
+    "ref-py": "19ce1a52d3e2ff7d79dda5c23793b292941698b29e2d3f4ead90afdfb65f7d5d"
+   }
+  },
+  "x21_cwd_first_typing_rejected": {
+   "suite": "os_fs",
+   "case": "a3207f103890b16cb9b95b2a65a265bc42b0d9f0b6658affac4ba2998b0d3812",
+   "outcomes": {
+    "ref-py": "67b084a2378e8aef13b7cc3045e935b3282d1a4f4e5941485856bad39a9c4eb0"
+   }
+  },
+  "x21_cwd_first_typing_rejected_established": {
+   "suite": "os_fs",
+   "case": "9beeec55b6dd3b00995c9712445a97acb2a63d0745ce387c8fb13ed5fc592043",
+   "outcomes": {
+    "ref-py": "0950f591d380d70ffb990ff6a9a4be4e60869afadf69958853ef377c67ffa5f9"
+   }
+  },
+  "x21_cwd_first_typing_rejected_established_web": {
+   "suite": "os_fs",
+   "case": "a3a1416545d5d4565fc23daf057b60fa033d0f21dd414856495dd327c8b683bd",
+   "outcomes": {
+    "ref-py": "a4a70397c9c74f49dc8cf0cf043a02541f2ff9c5d3a67aee7fc72f7ec0b42e5f"
+   }
+  },
+  "x21_cwd_first_typing_rejected_explicit": {
+   "suite": "os_fs",
+   "case": "8dc75a99771dd1f1f43ebbaa3f2d4ecc3e31de27d188b438fb1201ff8fe7365a",
+   "outcomes": {
+    "ref-py": "05918daa8f0f96f7868738d40d9308d5ae6fdfebec17c6a583d4dc42574ff349"
+   }
+  },
+  "x21_cwd_first_typing_rejected_web": {
+   "suite": "os_fs",
+   "case": "c01d57c2c3b032c8cd660b9152d121dbfddd1c5aa1475280a71231dedd0efc81",
+   "outcomes": {
+    "ref-py": "f0057e727265c0a450a2f310d090910411ecf9aae0da69cd3eb83cf3d7f0b541"
+   }
+  },
   "x21_cwd_invalid": {
    "suite": "os_fs",
    "case": "f92f23e0b5fd0a575e5b88c578f8c88766c957505c479ddd82629a57b8b8387c",
@@ -3006,11 +3097,361 @@
     "ref-py": "a58a1829ec685cb1b27503227317e34bee2688df319eb0c3a35744145e7dcaa6"
    }
   },
+  "x21_cwd_invalid_before_overlap": {
+   "suite": "os_fs",
+   "case": "21abe820e6f42fb4e3a89b1f33a4e8a2b93fb0c87415167a0b948ddae3970a7a",
+   "outcomes": {
+    "ref-py": "5cd3c36888b36fdb3df0ca5b52cd9fb38d41165fc4e10c576b3e2fe82f92d613"
+   }
+  },
+  "x21_cwd_invalid_empty": {
+   "suite": "os_fs",
+   "case": "b6dbdcf75a194ea02a61b618abb4e20efe066cae0524cee26c183bae9b5fe043",
+   "outcomes": {
+    "ref-py": "9f520308b229d888a17cb7ac06fc554521e5f912b7584f1ece65800750bfd1a2"
+   }
+  },
+  "x21_cwd_invalid_nul": {
+   "suite": "os_fs",
+   "case": "52de6c1cb6afd95da3fd3d81375236f0b1440187a39c346596a2be670a0dd295",
+   "outcomes": {
+    "ref-py": "7241667c782d5b2b56f8bb03aec39754b6d80b1ea82d625c51325f1458a93de4"
+   }
+  },
+  "x21_cwd_invalid_web": {
+   "suite": "os_fs",
+   "case": "122475582a7823ae781c9aac0b2f507080f360ce4e60767138c6a9bc742b22f0",
+   "outcomes": {
+    "ref-py": "46c83e8b4cb04ac2a0c5bb2541127f2d02f1f014b0368206bc45bfd356a99ba5"
+   }
+  },
+  "x21_cwd_load_session": {
+   "suite": "os_fs",
+   "case": "dc399ff981545b417071b6702a65eb2948669de58758160f14703bd5ff6eb222",
+   "outcomes": {
+    "ref-py": "5d358ba1d71a68c716a81601b1010ec8def545726409139e278a5f80ce1f8519"
+   }
+  },
+  "x21_cwd_load_session_web": {
+   "suite": "os_fs",
+   "case": "87eebeb6eb6b23ef0c2a6ed67100c660119e7da9de2398ba205bb9cf27a04673",
+   "outcomes": {
+    "ref-py": "9013055958ea4ec6b25259ca3ebaf3e1ed5095eca0838303e8704f1d5d4eb6fd"
+   }
+  },
+  "x21_cwd_load_snapshot": {
+   "suite": "os_fs",
+   "case": "538051855ec5a6696e8c4209afeb9a6239766236057de356a16aaffec28e1d11",
+   "outcomes": {
+    "ref-py": "97a0fe9ba17ae1c75aa9da70cafbe353ff926a5b468d389e842583fe29f477e4"
+   }
+  },
+  "x21_cwd_load_snapshot_web": {
+   "suite": "os_fs",
+   "case": "926540b6af76ebb51f1df1d026f20c1a8bb629e264e70d8679865f8c1c9364fe",
+   "outcomes": {
+    "ref-py": "cba480ddbdd7be1b4fc35ba6586576d3bf0179be2de9d5bb742b81a4160f733f"
+   }
+  },
   "x21_cwd_relative_fallback": {
    "suite": "os_fs",
    "case": "69fe756ac16104c6cf6a89cd2d61d7ff8894bb6f437d2e6dc03fc492926199ae",
    "outcomes": {
     "ref-py": "4152cdbbcedf8a5145b1f58d6bdadf75948f0573e9902ac46aa21b9084340e0a"
+   }
+  },
+  "x21_cwd_syntax_error_establishes": {
+   "suite": "os_fs",
+   "case": "b66f4cca9248e58948f367e562e158f98ce2c0a14f1769f661be45325ee1f141",
+   "outcomes": {
+    "ref-py": "641c5b67bca8aa2bad7fa04eb545d6fa53fdcb1a322506f3d46aae99f35c9ea6"
+   }
+  },
+  "x21_cwd_syntax_error_establishes_web": {
+   "suite": "os_fs",
+   "case": "b5eaf993a99addab9b21efb0c2314750738a206faecdaf1810b77e3df2427f04",
+   "outcomes": {
+    "ref-py": "55585fc1714eb8fb4c5201918dc2d4f79127be3e3ee90b029df10a0a9444867a"
+   }
+  },
+  "x21_dispatch_getenv_with_mount": {
+   "suite": "os_fs",
+   "case": "33b8b21138ffc2b8f7cb5fcccf4f3bc1b5b392fba4329a2814b72ff4c91de1b8",
+   "outcomes": {
+    "ref-py": "40e0ea8ca18f027237beef020b00f177465638bc855ab9262531c83074534615"
+   }
+  },
+  "x21_dispatch_in_mount": {
+   "suite": "os_fs",
+   "case": "786cd9b9d8f7916d5477f6d51a7b8db6c629216eea37e65f6923a60100de1545",
+   "outcomes": {
+    "ref-py": "92cf55936a297ff67fa692b748d64d6f2cc08597c6d33e7da1bb8879cece345c"
+   }
+  },
+  "x21_dispatch_missing_in_mount_no_fallback": {
+   "suite": "os_fs",
+   "case": "446fda0b9f19951fb23e305364aa642ad11140878d80c5d047d2563e48a59126",
+   "outcomes": {
+    "ref-py": "afac916cc478159c429af402f1b4ff2022892f52632e3df0660cbf3083e079d8"
+   }
+  },
+  "x21_dispatch_outside_not_handled": {
+   "suite": "os_fs",
+   "case": "ede62dae5edc650b3847394117df66c7627faa70984112bb054e8e769f78e38f",
+   "outcomes": {
+    "ref-py": "ef982cdba855eb446d22a4c5b0010594fb3ad972f44d7c2c7d38e3811bb56b54"
+   }
+  },
+  "x21_dispatch_outside_to_os": {
+   "suite": "os_fs",
+   "case": "28df316102cedc901ed58720cab18013ccfa3bb4cb68008d7c2dd956ae158551",
+   "outcomes": {
+    "ref-py": "292d09b902413ec1405c8f82f9a1a577fef6ba76170c42bc0c7a5464027eac25"
+   }
+  },
+  "x21_dispatch_rename_distinct_mounts": {
+   "suite": "os_fs",
+   "case": "c1cf98a5fe6d7067184c50e7404a27c8d3801e133460365d1478093ef400b2bf",
+   "outcomes": {
+    "ref-py": "6c983d5e53542a1d2c9a1425ee8f703c64c3d5b04cc934df48fd065a311bf707"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst": {
+   "suite": "os_fs",
+   "case": "da4bf67dc5b986ae39605caa086a6c6b2ee9bf445d6d5b57c17d1b9d1e0f04f9",
+   "outcomes": {
+    "ref-py": "b9a11f4c41e2ed2e80ea75ecf63d9596f8f37361e18615803b4aecf43e00dbbc"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst_length_before_nul": {
+   "suite": "os_fs",
+   "case": "497cb069ccf1fbc72cca47a0bb8cfc4e0a9e2673138c4f96c10acfb59487a553",
+   "outcomes": {
+    "ref-py": "72bbd0216638ec7f44dd232723ec957c38adbfd311d9afdcca0e73b64a127e84"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst_length_before_nul_no_table": {
+   "suite": "os_fs",
+   "case": "5454e0d656dba6a0d218eb0fc9faef9a9fa62ec3a42770fcd8dbc6c7ed0e9904",
+   "outcomes": {
+    "ref-py": "d5d88090084a0d432148b444591aa055709586e0f4fe87723c25a08e6337d39b"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst_no_table": {
+   "suite": "os_fs",
+   "case": "895ee22831def3e883eabc4f564614c949eb890f39d5e1deb514fe431c147a62",
+   "outcomes": {
+    "ref-py": "6590811025ea3df626de4e94e1c8df306cbd2ee3e4114151975145c25ba9a9fe"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst_nul": {
+   "suite": "os_fs",
+   "case": "8aede1317d33b991fb123936c289e2561d3c79db0af852f45a02f52cb0b253b8",
+   "outcomes": {
+    "ref-py": "03b05d69a8620b43c50fbeaf2c9d60d8757f596461041361a8e7686b646768fb"
+   }
+  },
+  "x21_dispatch_rename_invalid_dst_nul_no_table": {
+   "suite": "os_fs",
+   "case": "6660c82cf5c80b62a21a6fd77f81261d96ba9de965f014fd5332e760e90d2974",
+   "outcomes": {
+    "ref-py": "b4cdcbb0b4ac50aa3cb7b9e46f01c3a693678dd6097d0ebd8678b8b912fc76de"
+   }
+  },
+  "x21_dispatch_rename_mounted_to_unmounted": {
+   "suite": "os_fs",
+   "case": "4862b885291f38c719fe0386d06b03a341d4c1c74baaa7bd160952699c255f13",
+   "outcomes": {
+    "ref-py": "ef693633d12e3541ec76dfb61f7347b22502bee0cc3f7c6bd50821dee4eb2ed8"
+   }
+  },
+  "x21_dispatch_rename_neither_mounted": {
+   "suite": "os_fs",
+   "case": "411182be8086a3a489da9b664ec52a6e0775a1f286d7e23ac996f679a3cbe12f",
+   "outcomes": {
+    "ref-py": "3b7de4132fd66f8cd1026ce5b158c9787aa0ff63009d288598215a38bd985e07"
+   }
+  },
+  "x21_dispatch_rename_same_mount": {
+   "suite": "os_fs",
+   "case": "ef01ff0aed11475e3cc2d117a02aa6d2756df0e5742cad58e577a07999b03db2",
+   "outcomes": {
+    "ref-py": "43272cb9fc557552b0ee3fbcb128f15fcc4496883bf7d63747b4ca5e2d005610"
+   }
+  },
+  "x21_dispatch_rename_unmounted_to_mounted": {
+   "suite": "os_fs",
+   "case": "029c654179f80fc64aa3c25663560f4b02aa87c42f02652b05ab000d563db7a4",
+   "outcomes": {
+    "ref-py": "b08eca532ce6e99e9056f9517caa7ec4d6533fb9d7b5d78bf1d327492c2ed81e"
+   }
+  },
+  "x21_dispatch_sleep_feed_start": {
+   "suite": "os_fs",
+   "case": "94c62a55000381786b5ce00d2feb761b6a2396f3ca22957bbb38f6eebf0286de",
+   "outcomes": {
+    "ref-py": "49aaf8898e62d5ab71aaf7bdeff1494daf913b25cb503f3e0fa1bbef0f1c7558"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_access": {
+   "suite": "os_fs",
+   "case": "2a918e02aa43742f1ae4fa274ff76458567d33bfc34d2b62ae3713d5b27577ae",
+   "outcomes": {
+    "ref-py": "96dad6590ead775bc020051f5fff8bd6df0ccb199eb29df753f6dc3066a010d8"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_access_mount": {
+   "suite": "os_fs",
+   "case": "4072c025a2c117737890d2b455c0c8bffb35f922fe824521f1095ba66252beee",
+   "outcomes": {
+    "ref-py": "a4ed1da818863d7bf4257b52ba26f200883218e6a3334d66fd3e2b68fa4fbd5f"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_access": {
+   "suite": "os_fs",
+   "case": "7e24c0c72571ab622916128bc1127aee47d8858025ab59fb0dc2531be9c63e17",
+   "outcomes": {
+    "ref-py": "b8e53d23275ee83280b9740d9b49271d89b9fa3655a5455335a5fa1a334aa551"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_access_mount": {
+   "suite": "os_fs",
+   "case": "f4dac0b1cfe1f5e902dc66b179ba7bb8b23492407301083337bc8ef2ca9d2d6a",
+   "outcomes": {
+    "ref-py": "b7cbb1112c95738e44e25d4856bda544992f0ce13cf92c5f924b4d222b31bff4"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_auto": {
+   "suite": "os_fs",
+   "case": "311c1e290afdf17c87ec9012b5978e1248dfb186540322cca8db9987c9e8de87",
+   "outcomes": {
+    "ref-py": "47e1efbe43d288f63fe785f661cd470cef18128f2b39106df12b2d2e0baa86f3"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_auto_mount": {
+   "suite": "os_fs",
+   "case": "59ce0b4a63e8e363e04eff8d317133b7fb5f88e1ffe8b8cc56350e79c393d1a5",
+   "outcomes": {
+    "ref-py": "9eda70f619845060d459fc91271520832eef98610ce86c829ea8b233b1ec2e27"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_call_host": {
+   "suite": "os_fs",
+   "case": "0801ac032491e660be1bad6c236064e304662fe7acbb471119891395e6ff5237",
+   "outcomes": {
+    "ref-py": "6d996d8730f1fe2a3802c9490547f736460fc9805c98c170a5dadc68792edc51"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_call_host_mount": {
+   "suite": "os_fs",
+   "case": "be5ff1267fc3c3cae23321ccfee63c6c55ff1cd038ce38d1b1dfc7ee867744d9",
+   "outcomes": {
+    "ref-py": "e51265f9eccd0f9966af9eb0c05c2d5a50c04399019c9192b0b4f6f624684505"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_call_host_run": {
+   "suite": "os_fs",
+   "case": "29b28d08dfefb07930ab918c4f4362ed393e9b611b6091be2e9f50c8236f43bf",
+   "outcomes": {
+    "ref-py": "7f50baf16648ad9ca21fa84c2426d8916367142c351687bf6d1042226e18414f"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_call_host_run_mount": {
+   "suite": "os_fs",
+   "case": "d4b677de918a5f80e7d9f1e8d9aba061e666e55f545f5d800aaa9a8d91813201",
+   "outcomes": {
+    "ref-py": "78c96cc200f37e41b049f55f5af6a2a08853696457b2d3167e3626d9ba626efd"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_manual": {
+   "suite": "os_fs",
+   "case": "f7d6a2237d1fde03c741d9f11b1a0355198f6d51976c316eeb1d7b85d91bbf7c",
+   "outcomes": {
+    "ref-py": "10d7fa6fa8b4205ee7b89b0e1977a805d0b11a3ffe924fd35e61272e42bdf516"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_manual_mount": {
+   "suite": "os_fs",
+   "case": "9368cc1c1c3e4b6fa01f7e24acf9b3f015ac6a268c10a346fdd52795929ca878",
+   "outcomes": {
+    "ref-py": "d4d0316f46f13737102bcfded39bb35228c697b8e89113c06abf5cb68da849bb"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_run": {
+   "suite": "os_fs",
+   "case": "be1d3d6b94edd43a5ca022d959da30bcf1bff53c65db3e8119ae49552d87f3dc",
+   "outcomes": {
+    "ref-py": "d575e402b159ce6157a882774a7943c456f941e8bb37fec329cdfc6be414a87a"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_async_run_mount": {
+   "suite": "os_fs",
+   "case": "324914d60ff13afd292f59778b0ed5ece367df9576940535af09a7cfdba85cbc",
+   "outcomes": {
+    "ref-py": "22913610a43df24f332b9e43905edcabd6323a0c437ce270c0aa14980132e41b"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_auto_mount": {
+   "suite": "os_fs",
+   "case": "4d3284da0a531264ac580297f24ba398b751908816dedee536db279d2f16ddbe",
+   "outcomes": {
+    "ref-py": "2fe5d0d962bc3d4496ceaa314d076b0d6facd2a4e4194b61c6276b60060d0fed"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_call_host": {
+   "suite": "os_fs",
+   "case": "62929dce4c6e66c5c73c621cb859e502fd736fdada6d216b15bf8a0a0d4dc5fb",
+   "outcomes": {
+    "ref-py": "1f99ed20904cf0713cb48d694785f57ecb8c34bad7e031aa2464dadc6426a3b9"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_call_host_mount": {
+   "suite": "os_fs",
+   "case": "a1600963ccf6b87a3c0c7a6c0acd49dda41bea7a8968b131d0cd4bc4d573b041",
+   "outcomes": {
+    "ref-py": "6c64126e5922ccad27af088f9b666c9595a138fb7f15d086544a93ea6f578886"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_call_host_run": {
+   "suite": "os_fs",
+   "case": "1783fd0d5b9df97c8fa8c0f2314e1d9b495294a645a96c721fac15e2f943e925",
+   "outcomes": {
+    "ref-py": "79c4573b50c5026e0bceb4960b92dda265428a38356d1a1d5be729e57c3fa8c4"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_call_host_run_mount": {
+   "suite": "os_fs",
+   "case": "e25b3b3bd8a4fe3978fdafb489886e1978159b5fe052ce6a9cc4cbce9b36b858",
+   "outcomes": {
+    "ref-py": "d1c403f501179be9c82c7996116a4568194058227dc2d6b0f9fa1ab3e64f44a4"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_manual": {
+   "suite": "os_fs",
+   "case": "5073a3676042bbd7d22ae17c25c4d4e7a67186656b4a457cdd1f5d586a46f795",
+   "outcomes": {
+    "ref-py": "456cb934986084d44a19cdb7fc19eb5b304b382d2245f14bf2d12855807b76a6"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_manual_mount": {
+   "suite": "os_fs",
+   "case": "84b3d34d4098a8c1b0143435165e3520dc70628b4a74d5cb368db17dfee08bf9",
+   "outcomes": {
+    "ref-py": "e3ea9908de63851ec0dc616cbf7a5673215449855679e5ff443950621ab76846"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_run": {
+   "suite": "os_fs",
+   "case": "9f0f96ee642e5167c8db93e66c14a20bcba16074d97391eb8a84c77447b242ff",
+   "outcomes": {
+    "ref-py": "db04c6716e775e8285592cea46b9a399409945cc85782a2ed865a5830f7aadff"
+   }
+  },
+  "x21_dispatch_sleep_feed_start_run_mount": {
+   "suite": "os_fs",
+   "case": "f979a614cf10977a0082781ab07e10ca5da5ac0ef869ee8f6e2cfd41990306d9",
+   "outcomes": {
+    "ref-py": "d6f92a8a933f4c767fee22076f5c83360cb4ad1af2f5b1c4244db0d27fd4d4bc"
    }
   },
   "x21_dup_virtual": {
@@ -3069,6 +3510,13 @@
     "ref-py": "eabf8cc823ab1530d409592c526d79c63cca866abff49c9e8bd2370c0bfbbd24"
    }
   },
+  "x21_memory_read_transient": {
+   "suite": "os_fs",
+   "case": "32631317806e65ebce5fa33a4b2ad86ee6822a6b9316888b01e109c66d1c3003",
+   "outcomes": {
+    "ref-py": "de43c56f290328c829a6d6cfba5096cce8e6fcd4919c729d3e8d00035c85f4ce"
+   }
+  },
   "x21_nested_virtual": {
    "suite": "os_fs",
    "case": "570b68f0f934194af708cc84ae4cbc338c2c64c7bbf419effd779a563d558f4a",
@@ -3083,6 +3531,13 @@
     "ref-py": "3ccece9b89baa1fa804a06564471b75418ca6137ecefc2aac5746a68b9b1b3d0"
    }
   },
+  "x21_overlay_across_suspension": {
+   "suite": "os_fs",
+   "case": "ce98aac8d45478318ccb76dfaa65e1010a0c6aff19f849606df524db64c97db5",
+   "outcomes": {
+    "ref-py": "71df795cb9c81cff78b53de463e5e02c68977b93c8f8e9bb58ac3606478ab37a"
+   }
+  },
   "x21_overlay_same_feed": {
    "suite": "os_fs",
    "case": "cc3a95def244e3bc06507338aa1b1981d5fac39fb7d02a7d0f1349a54d2d4d79",
@@ -3090,11 +3545,32 @@
     "ref-py": "20606a0f8d1c1f56c2c19b6180b5b3fd8437cb45c479ffa7204eee9be52175f1"
    }
   },
+  "x21_rel_symlink": {
+   "suite": "os_fs",
+   "case": "357e01de8afe2513eda4e17e59359c4606fb622f897e3f2101df3f277a91101f",
+   "outcomes": {
+    "ref-py": "de469a6db27e2cecc672ee113a6bda2c6bc03d1bda8c155aeec6bae7434e6503"
+   }
+  },
   "x21_relative_virtual": {
    "suite": "os_fs",
-   "case": "20a6d6d8accc6f8c41c0114f7533792ecfca6694eb4223b29621c81bb30023ec",
+   "case": "f64fa4e174c12cbb6413c1700ecf7d67afa14465e4fec19d5a0902e75edbf493",
    "outcomes": {
     "ref-py": "dc33b8fb802cd9889a301680c3d3382809bd1fc8ec4236a9de6e046c02e7dad2"
+   }
+  },
+  "x21_restore_with_mount": {
+   "suite": "os_fs",
+   "case": "96ca106e31505b896926c2726df44abfd4f018ff7d9e35483e20939573b14cd7",
+   "outcomes": {
+    "ref-py": "1cf99668be9c681b4a795f3d994f7894586edb157bb26312936425887b14f9eb"
+   }
+  },
+  "x21_restore_without_mount": {
+   "suite": "os_fs",
+   "case": "129f0d531dae8947056d597348f77747f50a367b0777d42a905f9da4fedcc3ce",
+   "outcomes": {
+    "ref-py": "7780fa2ffea57c1a5af5a22564a6098e0e3bdffb9def400c6ca94e5f2560ea4e"
    }
   },
   "x21_ro_mkdir": {
@@ -3132,6 +3608,20 @@
     "ref-py": "c4cff62003ef0e75a2c87aa5daa22266f6c193cae0f85daf7333af945b6a1282"
    }
   },
+  "x21_root_canonical_host_path": {
+   "suite": "os_fs",
+   "case": "286d901d7f89e826a5f4b51297860c0d5642da170028f986362c20dd75654c85",
+   "outcomes": {
+    "ref-py": "b3fb8f45308de07983bbdf60e0ca30a7bc8213b65bfdde35781cdc0e423b931b"
+   }
+  },
+  "x21_root_rename_host": {
+   "suite": "os_fs",
+   "case": "10122fe634d1df8c17aad82073077d9b0faa7c02788f6b8f3d3468076439d0a7",
+   "outcomes": {
+    "ref-py": "252f039c9e13ae2bf21db1565237e0e5eada86a2c92e5d863468e9a11480a2a4"
+   }
+  },
   "x21_trailing_slash_virtual": {
    "suite": "os_fs",
    "case": "eee01f371a422f7d8fafb4a37d3ba264c3257f2f0ea33d58a4cbb870508486b2",
@@ -3144,6 +3634,20 @@
    "case": "157dc72aa5f21bf551b805e3e838de9ff09bc92f4b7dd17341e1387603165005",
    "outcomes": {
     "ref-py": "6771676593fb52a143247a62c520c02a5d67e841f95cbb3f6d17147a68174266"
+   }
+  },
+  "x21_virtual_normalised": {
+   "suite": "os_fs",
+   "case": "4fc3b529825f08aadc1361045588a325235ba5788cb86be76f90bc032b0b835c",
+   "outcomes": {
+    "ref-py": "348279a6c16bc19bb826506a691b5a3aadf9b0fb010a7c591174915a3e4d10cd"
+   }
+  },
+  "x21_virtual_normalised_trailing": {
+   "suite": "os_fs",
+   "case": "766bc2ee8e75f5d7ca5c16a26129250c82e4ed03cee9935bf4626dc57907a983",
+   "outcomes": {
+    "ref-py": "d2b4c93e8bd72eb1a0dffbd5d0dce5725e5e9825eb4a80f721869ed797947d33"
    }
   },
   "x21_write_limit": {

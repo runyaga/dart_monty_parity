@@ -38,6 +38,9 @@ const _inexpressible = {
   'host': 'no host objects in the worker driver; ran without them',
   'restore_before': 'no snapshot/restore in the worker driver',
   'close_mount_before_feed': 'no mounts in the worker driver',
+  'ctor_only': 'no mounts in the worker driver',
+  'rename_host_before_feed': 'no mounts in the worker driver',
+  'restore_snapshot_at': 'no snapshots in the worker driver',
   'assert_message_annotations': 'no knob in the worker driver',
 };
 
@@ -60,6 +63,8 @@ abstract interface class CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
     String? cwd,
+    Map<String, Object?> options = const {},
+    List<Object?>? observations,
   });
 
   /// Moves the session's state to a fresh session (dump, then load into a
@@ -205,7 +210,8 @@ Future<Map<String, Object?>> runEngineCase(
   OsHandler? fsHandler;
   Object? fsError;
   final fs = (c['fs'] as Map?)?.cast<String, Object?>();
-  if (fs != null) {
+  if (fs != null &&
+      !(applies.contains('fs.mounts') && fs.containsKey('mounts'))) {
     try {
       fsHandler = buildFsHandler(
         fs,
@@ -237,9 +243,14 @@ Future<Map<String, Object?>> runEngineCase(
     return out;
   }
   try {
-    final feeds =
-        (c['feeds'] as List?)?.cast<String>() ?? [c['code']! as String];
+    final feeds = (c['feeds'] as List?) ?? [c['code']! as String];
     for (var n = 0; n < feeds.length; n++) {
+      final feed = feeds[n];
+      final options = <String, Object?>{
+        ...c,
+        if (feed is Map) ...feed.cast<String, Object?>(),
+        'feed_index': n,
+      };
       final step = newStep();
       steps.add(step);
       host.log = step['host_calls']! as List<Object?>;
@@ -279,8 +290,10 @@ Future<Map<String, Object?>> runEngineCase(
       }
       try {
         final value = await session.feed(
-          feeds[n],
-          cwd: c['cwd'] as String?,
+          feed is String ? feed : options['code']! as String,
+          cwd: options['cwd'] as String?,
+          options: options,
+          observations: step['host_calls']! as List<Object?>,
           inputs: n == 0 ? inputs : const {},
           externals: {
             for (final name in script.externals.keys)
@@ -313,6 +326,24 @@ Future<Map<String, Object?>> runEngineCase(
           e.exception.attributes,
         );
         step['thrown'] = 'MontyRuntimeError';
+        host.rawOutputs.add(null);
+      } on MontyTypingError catch (e) {
+        step['exception'] = {
+          'type': 'MontyTypingError',
+          'message': e.display(),
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'MontyTypingError';
+        host.rawOutputs.add(null);
+        // A closed mount is a host-state refusal.
+        // ignore: avoid_catching_errors
+      } on StateError catch (e) {
+        step['exception'] = {
+          'type': 'StateError',
+          'message': e.message,
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'host';
         host.rawOutputs.add(null);
       } on MontySyntaxError catch (e) {
         step['exception'] = raisedDisplayed(
@@ -380,17 +411,22 @@ final class _ProtoCaseSession implements CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
     String? cwd,
+    Map<String, Object?> options = const {},
+    List<Object?>? observations,
   }) async {
     final result = await _session.drive(
-      code,
+      _session.prepareFeed(
+        code,
+        inputs,
+        cwd: cwd,
+        skipTypeCheck: options['skip_type_check'] == true,
+      ),
       HostAnswers(
         externalLookup: hostFunctions(externals),
         os: onOsCall,
         objects: _session.objects,
       ),
-      inputs: inputs,
       onPrint: onPrint,
-      cwd: cwd,
     );
 
     return result.value;

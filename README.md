@@ -16,12 +16,14 @@ current baseline against every pull request.
 CI's `current` job reproduces it there. A core commit that does not change parity behaviour passes too,
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
-P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
-`CallbackFile`), pinned by `CORE_REF` to `58106a7c5807691b6fc2c82664229a3bd3680276`.
-The P-F1 baseline records VM, dart2js and dart2wasm from the macOS arm64 host run
-with real Chrome: 79, 78 and 78 PRESENT rows respectively out of 185.
-Linux x86_64 applies the same architecture-independent F-1 window changes, with
-the same PRESENT totals; a Linux measurement remains pending.
+P-F2 requires core's F-2 host `MountDir`, the per-feed `mount` parameter and the
+native mount service beside its worker executable. `tool/build_worker.sh` builds
+both artifacts; the VM Rust cache has a mount-service-specific key.
+`CORE_REF` remains at the F-1 pin pending integration. The VM baseline is
+re-recorded against F-2 `966d71fe764cc897cef6262e880999569576d345`: 90/185
+PRESENT on macOS arm64. Browser and Linux measurements,
+the final core pin, and the M3 F-1-window allowance update remain integration work.
+The filesystem M6 target is a standalone **DRAFT**, pending owner approval.
 
 ## Layout
 
@@ -37,6 +39,7 @@ the same PRESENT totals; a Linux measurement remains pending.
 | `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
 | `tool/parity/c1-gate.json`, `test_gate.py` | the C1 gate: per capability row, the PR whose landing makes the row's `session` rule (in `rows.json`) gated through the session engine, and which of those PRs have landed; and its offline self-test |
 | `tool/parity/m3-target.json`, `test_target.py` | the M3 parity target: the in-scope manifest rows the M3 milestone owns, each with the backends it must be PRESENT on, the rest `excluded` under a named clause, and a row's `allowed` entry where an approved exception lets it be non-PRESENT; `score.py --target` prints it (not fatal until `--assert-target`), and with `--target-engines DIR` judges each row over the session and worker engines' outcomes in DIR too (CI job `target`); and its offline self-test |
+| `tool/parity/m6-target.json`, `test_m6_f_target.py` | DRAFT M6 F target: the 24 A1/B1 filesystem rows, separate from R-P2 telemetry; offline schema/scorer checks only, no CI assertion |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
@@ -69,14 +72,45 @@ python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/score.md \
 run and removed afterwards. `--cases GLOB ...` limits a run to some cases. One output directory holds one
 architecture's outcomes; `score.py` reads the architecture from `platform.json` in it.
 
-Every selected case marked `refmem: true` also runs independently through the public
-session with `OSAccess(files: [MemoryFile(...)])` and writes
-`OUTDIR/<case>/refmem-<backend>.json`. The VM, dart2js and dart2wasm all produce this
-column. Stale memory outcomes are removed before the run. B1 rows and
-`memory_filesystem` score it against `refmem-py.json`; until P-F2 this applies to the
-VM too. The ordinary case outcome records `unsupported: fs.mounts` for mount
-requests. Mount write and memory budget probes also remain unsupported until P-F2.
-The case's `cwd` is passed to each feed, including manually resumed feeds.
+Every selected case marked `refmem: true` also runs independently through
+`OSAccess(files: [MemoryFile(...)])`, writing `OUTDIR/<case>/refmem-<backend>.json`
+on all three backends. `memory_filesystem` always scores this column against
+`refmem-py.json`. The ten B1 rows use it only on web; their VM measurement uses
+host `MountDir` against `ref-py.json`. Missing outcomes never fall back to another
+engine. The refmem seeds and oracle outcomes are unchanged.
+
+On VM, `fs.mounts` opens fresh seeded host directories, with each mount's real mode
+and budgets, and retains the capabilities across feeds. Overlay state belongs to
+each feed. On web, construction records
+`refused: {where: 'MountDir', type: 'UnsupportedError'}`. Mount budget probes follow
+the same rule. Temporary roots are canonicalized to `<fsroot>` in outcomes.
+The scripted `os` handler receives only calls the mount table did not handle.
+
+Cases can use string `feeds` or dictionaries containing `code` and per-feed
+options: `cwd`, `mount_indices`, `skip_type_check`, `feed_start`, `dispatch`
+(`auto` or `manual`), `record_dispatch`, `sleep_access` (zero-delay `OSAccess`),
+`restore_snapshot_at` (an external function name), and `restore_mount` (false to
+restore without mounts). `type_check` configures the checkout. Type rejections
+record the actual diagnostics. Dispatch observations live in `host_calls`,
+including the handler-call count at the first snapshot. `restore_before` restores
+session dumps before the indexed feeds. `ctor_only` records constructor metadata
+or its host refusal; `rename_host_before_feed` renames the opened host directory;
+`close_mount_before_feed` closes capabilities before the indexed feed. Seeds also
+support `symlink` targets (`{host}` denotes the host directory); mount specs
+accept `host_index` for shared roots, `host_missing` for constructor refusals, and
+`host_noncanonical` to pass a host path ending in `/.`. All cwd choices
+are passed through to core; the runner never emulates cwd establishment.
+
+`rows.json` uses `cases_web` to select mount-free cwd/path cases on browsers and
+mount-dependent dispatch cases for the browser mount-refusal row. The portable
+sleep controls still execute on every backend. Mixed case/probe rows score both.
+Explicit historical assertions use each changed row's `historical` rule, keeping
+the original runner-0.23 measurement and original cwd cases intact.
+
+For an offline dependency cache, add `--offline` to `run.py`. The scorer can
+record only the measured VM with `--backends vm --write-current FILE`; new cells
+on unmeasured architectures are explicitly null, and unselected backends retain
+their earlier measurements. `--record-note TEXT` appends provenance while writing.
 
 `run.py` generates the temporary browser input `packages/monty_parity/test/cases.g.dart`.
 After baking it, `run.py BACKEND --check --engine ENGINE [--cases GLOB ...]` checks
@@ -180,8 +214,8 @@ without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 Either historical assertion explicitly selects `runner-0.23`'s filesystem
 measurement: `core-<backend>.json` against `ref-py.json` for B1 and
 `memory_filesystem`. That runner writes no independent refmem outcomes. Current
-scoring still requires `refmem-<backend>.json` against `refmem-py.json`, and a
-missing file is `NO-OUTCOME`. Historical assertions cannot be combined with
+scoring requires the backend-specific column described above; a missing file
+is `NO-OUTCOME`. Historical assertions cannot be combined with
 `--assert-current`, `--write-current`, target or other engine scoring.
 
 ## Checks (CI)
@@ -224,6 +258,11 @@ python3.12 -m venv /tmp/oracle
 /tmp/oracle/bin/python -I tool/parity/oracle/check_expected.py --write \
   --rust tool/parity/oracle/rust/target/release/parity-rust-oracle
 ```
+
+If regenerating on macOS, restore `expected/b11fs_unlink_dir/ref-py.json` from
+git after regeneration (rule 11), then rewrite `manifest.json` using `tool/check_parity_manifest.py`'s `compute()`
+(the same function the oracle regeneration uses). This retains the Linux oracle;
+the macOS VM's different errno remains a scored divergence, not an exception.
 
 Review the diff and commit the cases, `expected/` and `manifest.json` together. Moving the upstream pin
 starts in dart_monty_core: copy its new `tool/upstream` files here, regenerate, and re-record the

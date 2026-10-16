@@ -1,0 +1,27 @@
+{
+ "id": "x21_dispatch_rename_mounted_to_unmounted",
+ "code": "from pathlib import Path\nPath('/data/a.txt').rename('/else/z.txt')",
+ "os": {
+  "Path.rename": [
+   {
+    "return": {
+     "t": "path",
+     "v": "/else/z.txt"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

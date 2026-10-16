@@ -11,10 +11,12 @@ asks for upstream's in-memory filesystem as a second column). Exit 0 unless the
 runner itself breaks; a case that cannot run records `runner_error`.
 
 Case format (tool/parity/cases/<suite>/<id>.json): `id`; `code` (one feed)
-or `feeds` (one REPL session, one feed each); optional typed `inputs`;
+or `feeds` (one REPL session, strings or code/options dictionaries); optional typed `inputs`;
 scripted `externals` / `os` answers per name in call order (`return`,
 `raise`, `echo`, `echo_arg`; `auto_externals` has upstream's own loop answer them); `limits`; `os_policy`; `fs` (mounts + seeded
-files); `cwd`; `host` (host classes, objects, wrappers); `restore_before`;
+files, including symlinks); `ctor_only`; `rename_host_before_feed`;
+`restore_snapshot_at` / `restore_mount`; `mount_indices`; `type_check`;
+`feed_start` / `dispatch` / `record_dispatch` / `sleep_access`; `cwd`; `host` (host classes, objects, wrappers); `restore_before`;
 `refmem` (also run upstream's in-memory filesystem); `display` (also record the
 error's rendered forms, see `display_fields`). Values use the canonical
 form `canon` produces ({"t": kind, ...}; floats compared by IEEE-754 bits;
@@ -30,6 +32,7 @@ import collections
 import dataclasses
 import datetime as dt
 import json
+import posixpath
 import re
 import shutil
 import struct
@@ -593,6 +596,7 @@ def policy_of(p: dict[str, Any]) -> dict[str, Any]:
 
 
 def seed_files(root: Path, virtual: str, files: dict[str, Any]) -> None:
+    virtual = posixpath.normpath(virtual)
     for vpath, content in files.items():
         if not (vpath == virtual or vpath.startswith(virtual.rstrip('/') + '/')):
             continue
@@ -602,7 +606,10 @@ def seed_files(root: Path, virtual: str, files: dict[str, Any]) -> None:
             continue
         f = root / rel
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_bytes(bytes.fromhex(content['hex']) if 'hex' in content else content['text'].encode())
+        if 'symlink' in content:
+            f.symlink_to(content['symlink'].replace('{host}', str(root)))
+        else:
+            f.write_bytes(bytes.fromhex(content['hex']) if 'hex' in content else content['text'].encode())
 
 
 def build_mounts(case: dict[str, Any], fsroot: Path) -> tuple[list[Any] | None, Exception | None]:
@@ -618,14 +625,19 @@ def build_mounts(case: dict[str, Any], fsroot: Path) -> tuple[list[Any] | None, 
             host = base / str(m.get('host_index', i))
             host.mkdir(parents=True, exist_ok=True)
             seed_files(host, m['virtual'], fs.get('files', {}))
-            kw: dict[str, Any] = {'host_path': host, 'virtual_path': m['virtual'], 'mode': m.get('mode', 'read-write')}
+            kw: dict[str, Any] = {'host_path': host / 'missing' if m.get('host_missing') else str(host) + '/.' if m.get('host_noncanonical') else host, 'virtual_path': m['virtual'], 'mode': m.get('mode', 'read-write')}
             if m.get('write_bytes_limit') is not None:
                 kw['write_bytes_limit'] = m['write_bytes_limit']
             if m.get('memory_usage_limit') is not None:
                 kw['memory_usage_limit'] = m['memory_usage_limit']
             mounts.append(pm.MountDir(**kw))
     except Exception as e:  # noqa: BLE001 - a registration error is the outcome
+        for mount in mounts:
+            mount.close()
         return [], e
+    if case.get('rename_host_before_feed'):
+        for host in {Path(m.host_path) for m in mounts}:
+            host.rename(str(host) + '-renamed')
     return mounts, None
 
 
@@ -721,6 +733,8 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
     for k, v in (case.get('limits') or {}).items():
         limits['max_feed_duration_secs' if k == 'max_duration_secs' else k] = v
     checkout_kw: dict[str, Any] = {}
+    if case.get('type_check'):
+        checkout_kw['type_check'] = True
     if limits:
         checkout_kw['limits'] = limits
     if case.get('os_policy'):
@@ -747,7 +761,9 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
         out['unsupported']['usage'] = 'pydantic_monty exposes no per-feed resource usage'
         return out
     try:
-        for n, code in enumerate(feeds):
+        for n, feed in enumerate(feeds):
+            options = {**case, **(feed if isinstance(feed, dict) else {})}
+            code = feed['code'] if isinstance(feed, dict) else feed
             if n in restore_before:
                 blob = session.dump()
                 cm.__exit__(None, None, None)
@@ -779,6 +795,12 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     out['steps'].append(step)
                     continue
             kw.update(feed_kw)
+            if 'cwd' in options:
+                kw['cwd'] = options['cwd']
+            if options.get('skip_type_check'):
+                kw['skip_type_check'] = True
+            if 'mount_indices' in options:
+                kw['mount'] = [mounts[i] for i in options['mount_indices']]
             if case.get('auto_externals'):
                 # The host functions are answered by upstream's own loop (resume_auto), not scripted resumes:
                 # a value it cannot convert, or an exception, reaches the guest as upstream's binding delivers it.
@@ -795,8 +817,12 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                         raise getattr(builtins, a['raise']['type'])(a['raise'].get('message', ''))
                     return ext
                 kw['external_lookup'] = {n: make_ext(n) for n in (case.get('externals') or {})}
-            if mounts is not None:
+            if mounts is not None or options.get('record_dispatch'):
+                sleep_access = pm.OSAccess(max_sleep=0) if options.get('sleep_access') else None
                 def recorder(*, name: Any, args: Any, kwargs: Any, is_async: Any, **_: Any) -> Any:
+                    if sleep_access is not None:
+                        step['host_calls'].append({'ev': 'handler', 'name': str(name)})
+                        return sleep_access(name=name, args=args, kwargs=kwargs, is_async=is_async)
                     c_args, c_kwargs = canon_call(args, kwargs)
                     step['os_calls'].append({'name': str(name), 'args': c_args, 'kwargs': c_kwargs})
                     a = answer((case.get('os') or {}).get(str(name)), used.get('os:' + str(name), 0))
@@ -814,7 +840,36 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
             try:
                 if mount_err is not None:
                     raise mount_err
+                if case.get('ctor_only'):
+                    step['value'] = canon([(m.host_path, m.virtual_path, m.mode) for m in mounts])
+                    out['steps'].append(step)
+                    continue
+                if options.get('record_dispatch') and not options.get('feed_start'):
+                    raw_out = session.feed_run(code, **kw)
+                    step['value'] = canon(raw_out)
+                    ctx.raw_outputs.append(raw_out)
+                    step['prints'] = merge_prints(raw_prints)
+                    out['steps'].append(step)
+                    continue
                 snap = session.feed_start(code, **kw)
+                if options.get('record_dispatch') and isinstance(snap, pm.FunctionSnapshot):
+                    step['host_calls'].append({'ev': 'start', 'name': str(snap.function_name), 'is_os': snap.is_os_function, 'handler_calls': len(step['os_calls']) + len(step['host_calls'])})
+                restore_at = options.get('restore_snapshot_at')
+                if restore_at:
+                    while isinstance(snap, pm.FunctionSnapshot) and str(snap.function_name) != restore_at:
+                        snap = snap.resume_auto()
+                    if not isinstance(snap, pm.FunctionSnapshot) or str(snap.function_name) != restore_at:
+                        raise RuntimeError(f'restore suspension {restore_at} not reached')
+                    blob = snap.dump()
+                    cm.__exit__(None, None, None)
+                    cm = pool.checkout(**checkout_kw)
+                    session = cm.__enter__()
+                    restore_kw = {k: v for k, v in kw.items() if k in ('external_lookup', 'os', 'print_callback')}
+                    restore_kw['mount'] = kw.get('mount') if options.get('restore_mount', True) else []
+                    snap = session.load_snapshot(blob, **restore_kw)
+                if options.get('dispatch') == 'manual' and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:
+                    value = recorder(name=snap.function_name, args=snap.args, kwargs=snap.kwargs, is_async=False)
+                    snap = snap.resume({'return_value': value})
                 guard = 0
                 while not isinstance(snap, pm.MontyComplete):
                     guard += 1
@@ -825,7 +880,7 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                             or (case.get('auto_externals') and not snap.is_os_function)):
                         snap = snap.resume_auto()
                         continue
-                    if mounts is not None and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:
+                    if (mounts is not None or options.get('record_dispatch')) and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:
                         snap = snap.resume_auto()  # mounts first, then os= (recorder), then default
                         continue
                     if (isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function
@@ -878,6 +933,9 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                 step['host_exception_mro'] = [k.__name__ for k in type(e.exception()).__mro__]
                 if case.get('display'):
                     step['display'] = display_fields(e)
+            except pm.MontyTypingError as e:
+                step['exception'] = {'type': 'MontyTypingError', 'message': e.display(), 'traceback': []}
+                step['thrown'] = 'MontyTypingError'
             except pm.MontyConversionError as e:  # input/return conversion rejected
                 inner = e.exception()
                 step['exception'] = {'type': type(inner).__name__, 'message': str(e), 'traceback': []}
@@ -901,6 +959,8 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
             out['steps'].append(step)
     finally:
         cm.__exit__(None, None, None)
+        for m in mounts or []:
+            m.close()
     out['unsupported']['usage'] = 'pydantic_monty exposes no per-feed resource usage'
     return out
 

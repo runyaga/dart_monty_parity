@@ -1,0 +1,19 @@
+{
+ "id": "x21_ctor_relative_virtual",
+ "code": "1",
+ "ctor_only": true,
+ "local_refusal": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "id": "x21_cwd_load_snapshot_web",
+ "code": "1",
+ "feeds": [
+  {
+   "code": "ext()",
+   "cwd": "/saved",
+   "restore_snapshot_at": "ext",
+   "restore_mount": false
+  },
+  {
+   "code": "import os\nos.getcwd()"
+  }
+ ],
+ "restore_before": [],
+ "externals": {
+  "ext": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ }
+}

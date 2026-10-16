@@ -1,0 +1,27 @@
+{
+ "id": "x21_overlay_across_suspension",
+ "code": "from pathlib import Path\nPath('/data/n.txt').write_text('ov')\next()\nPath('/data/n.txt').read_text()",
+ "feed_start": true,
+ "externals": {
+  "ext": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

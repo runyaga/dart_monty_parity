@@ -1,0 +1,13 @@
+{
+ "id": "x21_cwd_syntax_error_establishes_web",
+ "code": "1",
+ "feeds": [
+  {
+   "code": "if",
+   "cwd": "/syntax"
+  },
+  {
+   "code": "import os\nos.getcwd()"
+  }
+ ]
+}

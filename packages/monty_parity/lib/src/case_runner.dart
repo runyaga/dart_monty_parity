@@ -488,7 +488,8 @@ class CoreHost {
 // ------------------------------------------------------------ filesystem
 
 /// Builds OSAccess from the seeded files, preserving the scripted fallback.
-/// Host mounts are unavailable until P-F2; refmem cases omit that request.
+/// The raw worker driver cannot mount host directories; public sessions use
+/// MountFixture instead, and refmem cases omit the mount request.
 OsHandler buildFsHandler(
   Map<String, Object?> fs,
   OsHandler fallthrough,
@@ -496,7 +497,7 @@ OsHandler buildFsHandler(
   bool scriptedEnvironment = true,
 }) {
   if (fs['mounts'] case final List<Object?> mounts when mounts.isNotEmpty) {
-    unsupported['fs.mounts'] = 'host mounts are unavailable until P-F2';
+    unsupported['fs.mounts'] = 'host mounts require the public session driver';
   }
   final files = <MemoryFile>[];
   for (final entry in ((fs['files'] as Map?) ?? const {}).entries) {

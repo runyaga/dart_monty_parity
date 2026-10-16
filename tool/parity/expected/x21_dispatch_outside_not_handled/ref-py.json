@@ -1,0 +1,58 @@
+{
+ "case": "x21_dispatch_outside_not_handled",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": null,
+   "exception": {
+    "type": "PermissionError",
+    "message": "Permission denied: '/else/a.txt'",
+    "traceback": [
+     {
+      "filename": "<python-input-0>",
+      "line": 2,
+      "column": 1,
+      "end_line": 2,
+      "end_column": 32,
+      "function": "<module>",
+      "source_line": "Path('/else/a.txt').read_text()"
+     }
+    ]
+   },
+   "prints": [],
+   "os_calls": [
+    {
+     "name": "Path.read_text",
+     "args": [
+      {
+       "t": "path",
+       "v": "/else/a.txt"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null,
+   "error_class": "MontyRuntimeError",
+   "host_exception_mro": [
+    "PermissionError",
+    "OSError",
+    "Exception",
+    "BaseException",
+    "object"
+   ]
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

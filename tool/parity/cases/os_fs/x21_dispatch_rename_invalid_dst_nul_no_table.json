@@ -1,0 +1,17 @@
+{
+ "id": "x21_dispatch_rename_invalid_dst_nul_no_table",
+ "code": "from pathlib import Path\nPath('/else/a').rename('/else/a\\x00b')",
+ "os": {
+  "Path.rename": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [],
+  "files": {}
+ }
+}

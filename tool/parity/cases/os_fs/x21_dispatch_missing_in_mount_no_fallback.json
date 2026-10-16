@@ -1,0 +1,27 @@
+{
+ "id": "x21_dispatch_missing_in_mount_no_fallback",
+ "code": "from pathlib import Path\nPath('/data/nope.txt').read_text()",
+ "os": {
+  "Path.read_text": [
+   {
+    "return": {
+     "t": "str",
+     "v": "WRONG"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "id": "x21_cross_mount_rename",
+ "code": "from pathlib import Path\nPath('/data/a.txt').rename('/other/z.txt')",
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   },
+   {
+    "virtual": "/other"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

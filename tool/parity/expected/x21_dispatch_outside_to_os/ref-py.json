@@ -1,0 +1,39 @@
+{
+ "case": "x21_dispatch_outside_to_os",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": {
+    "t": "str",
+    "v": "from-os"
+   },
+   "exception": null,
+   "prints": [],
+   "os_calls": [
+    {
+     "name": "Path.read_text",
+     "args": [
+      {
+       "t": "path",
+       "v": "/else/a.txt"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
+   "ext_calls": [],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

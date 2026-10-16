@@ -1,0 +1,64 @@
+{
+ "case": "x21_restore_without_mount",
+ "engine": "ref",
+ "backend": "py",
+ "engine_version": "pydantic_monty 1.1.0",
+ "steps": [
+  {
+   "value": null,
+   "exception": {
+    "type": "PermissionError",
+    "message": "Permission denied: '/data/n.txt'",
+    "traceback": [
+     {
+      "filename": "<python-input-0>",
+      "line": 4,
+      "column": 2,
+      "end_line": 4,
+      "end_column": 30,
+      "function": "<module>",
+      "source_line": "(Path('/data/n.txt').exists(), Path('/data/a.txt').read_text())"
+     }
+    ]
+   },
+   "prints": [],
+   "os_calls": [
+    {
+     "name": "Path.exists",
+     "args": [
+      {
+       "t": "path",
+       "v": "/data/n.txt"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
+   "ext_calls": [
+    {
+     "name": "ext",
+     "args": [],
+     "kwargs": {}
+    }
+   ],
+   "name_lookups": [],
+   "host_calls": [],
+   "usage": null,
+   "error_class": "MontyRuntimeError",
+   "host_exception_mro": [
+    "PermissionError",
+    "OSError",
+    "Exception",
+    "BaseException",
+    "object"
+   ]
+  }
+ ],
+ "unsupported": {
+  "usage": "pydantic_monty exposes no per-feed resource usage"
+ },
+ "notes": {
+  "inputs": "typed: feed_start(inputs=...) on the first feed"
+ },
+ "runner_error": null
+}

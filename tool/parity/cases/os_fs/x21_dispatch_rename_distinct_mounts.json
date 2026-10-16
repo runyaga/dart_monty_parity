@@ -1,0 +1,30 @@
+{
+ "id": "x21_dispatch_rename_distinct_mounts",
+ "code": "from pathlib import Path\nPath('/data/a.txt').rename('/other/z.txt')",
+ "os": {
+  "Path.rename": [
+   {
+    "return": {
+     "t": "path",
+     "v": "/other/z.txt"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   },
+   {
+    "virtual": "/other"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

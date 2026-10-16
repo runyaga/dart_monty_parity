@@ -1,0 +1,20 @@
+{
+ "id": "x21_abs_symlink",
+ "code": "from pathlib import Path\nPath('/data/link').read_text()",
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   },
+   "/data/link": {
+    "symlink": "{host}/a.txt"
+   }
+  }
+ }
+}

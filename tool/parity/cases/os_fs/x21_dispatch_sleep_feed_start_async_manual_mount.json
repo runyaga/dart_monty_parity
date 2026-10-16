@@ -1,0 +1,29 @@
+{
+ "id": "x21_dispatch_sleep_feed_start_async_manual_mount",
+ "code": "import asyncio\nawait asyncio.sleep(0)\n7",
+ "feed_start": true,
+ "record_dispatch": true,
+ "dispatch": "manual",
+ "os": {
+  "system.async_sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

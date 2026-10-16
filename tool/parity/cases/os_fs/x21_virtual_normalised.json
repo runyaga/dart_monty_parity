@@ -1,0 +1,18 @@
+{
+ "id": "x21_virtual_normalised",
+ "code": "1",
+ "ctor_only": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/a/../data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -129,7 +129,7 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: core/native/worker
-          key: core-${{ needs.core-ref.outputs.sha }}
+          key: core-mount-service-${{ needs.core-ref.outputs.sha }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.pub-cache
@@ -152,7 +152,7 @@ jobs:
             test/filesystem_test.dart test/session_filesystem_test.dart
           dart analyze --fatal-infos
           rm test/cases.g.dart pubspec_overrides.yaml
-      - name: Build core's worker executable
+      - name: Build core's worker executable and native mount service
         run: bash core/tool/build_worker.sh
       - name: Filesystem runner regression tests
         working-directory: packages/monty_parity
@@ -217,7 +217,7 @@ jobs:
           path: ~/.pub-cache
           key: pub-parity-${{ runner.os }}-${{ hashFiles('packages/monty_parity/pubspec.yaml') }}
           restore-keys: pub-${{ runner.os }}-
-      - name: Build core's worker executable
+      - name: Build core's worker executable and native mount service
         run: bash core/tool/build_worker.sh
       - name: E0 on the VM (worker process) + crash tests
         run: python3 -I tool/parity/run.py vm --engine worker --core core --out /tmp/e0

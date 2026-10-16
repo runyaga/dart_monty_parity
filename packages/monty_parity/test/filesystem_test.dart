@@ -96,7 +96,7 @@ void _mountTests() {
       expect(await handler('os.environ', [], {}), const MontyDict([]));
     },
   );
-  test('mount requests stay unsupported until P-F2', () {
+  test('raw worker memory handler does not emulate host mounts', () {
     final unsupported = <String, Object?>{};
     buildFsHandler(
       {
@@ -191,6 +191,8 @@ final class _RecordingSession implements CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
     String? cwd,
+    Map<String, Object?> options = const {},
+    List<Object?>? observations,
   }) async {
     directories.add(cwd);
 

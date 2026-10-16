@@ -1,0 +1,42 @@
+{
+ "id": "x21_cwd_load_session",
+ "code": "1",
+ "feeds": [
+  {
+   "code": "import os\nos.getcwd()",
+   "cwd": "/saved"
+  },
+  {
+   "code": "import os\nos.getcwd()",
+   "mount_indices": [
+    2
+   ]
+  }
+ ],
+ "restore_before": [
+  1
+ ],
+ "externals": {
+  "ext": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/first"
+   },
+   {
+    "virtual": "/second"
+   },
+   {
+    "virtual": "/other"
+   }
+  ],
+  "files": {}
+ }
+}

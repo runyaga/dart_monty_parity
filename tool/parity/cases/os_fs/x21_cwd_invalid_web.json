@@ -1,0 +1,6 @@
+{
+ "id": "x21_cwd_invalid_web",
+ "code": "import os\nos.getcwd()",
+ "cwd": "relative/dir",
+ "host_errors": "plain"
+}

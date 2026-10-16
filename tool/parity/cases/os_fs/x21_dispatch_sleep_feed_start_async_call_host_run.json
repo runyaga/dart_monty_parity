@@ -1,0 +1,19 @@
+{
+ "id": "x21_dispatch_sleep_feed_start_async_call_host_run",
+ "code": "import asyncio\nawait asyncio.sleep(0)\n7",
+ "feed_start": false,
+ "record_dispatch": true,
+ "dispatch": "auto",
+ "os": {
+  "asyncio.sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "os_policy": {
+  "sleep": "call_host"
+ }
+}
