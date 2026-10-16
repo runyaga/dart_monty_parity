@@ -154,7 +154,7 @@ jobs:
         run: bash core/tool/build_worker.sh
       - name: Filesystem runner regression tests
         working-directory: packages/monty_parity
-        run: dart test --no-pub test/filesystem_test.dart test/session_filesystem_test.dart
+        run: dart test test/filesystem_test.dart test/session_filesystem_test.dart
       - name: Run on the VM (worker process)
         run: python3 -I tool/parity/run.py vm --core core --out /tmp/parity
       - name: Run on dart2js

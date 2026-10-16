@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -50,9 +52,51 @@ class FilesystemScoreTest(unittest.TestCase):
 
     def test_refmem_missing_does_not_fall_back_to_core(self):
         cid = 'b11fs_read_text'
-        self.write(cid, 'core', 'vm', score.load(EXPECTED / cid / 'refmem-py.json'))
-        self.assertEqual(score.classify_case(cid, 'vm', self.rules['os_file_reads'], self.out, EXPECTED)[0],
-                         'NO-OUTCOME')
+        for backend in BACKENDS:
+            with self.subTest(backend=backend):
+                self.write(cid, 'core', backend, score.load(EXPECTED / cid / 'ref-py.json'))
+                self.assertEqual(score.classify_case(cid, backend, self.rules['os_file_reads'],
+                                                     self.out, EXPECTED)[0], 'NO-OUTCOME')
+
+    def test_historical_filesystem_uses_core_and_host_oracle(self):
+        for row, rule in self.rules.items():
+            if rule.get('engine') != 'refmem':
+                continue
+            for cid in rule['cases']:
+                for backend in BACKENDS:
+                    with self.subTest(row=row, cid=cid, backend=backend):
+                        got = score.load(EXPECTED / cid / 'ref-py.json')
+                        self.write(cid, 'core', backend, got)
+                        self.assertEqual(score.classify_case(cid, backend, rule, self.out, EXPECTED,
+                                                             historical=True)[0], 'MATCH')
+                        # Historical selection is explicit even if a refmem file exists.
+                        self.write(cid, 'refmem', backend, {'runner_error': 'wrong instrument'})
+                        self.assertEqual(score.classify_case(cid, backend, rule, self.out, EXPECTED,
+                                                             historical=True)[0], 'MATCH')
+        # This case distinguishes the two oracles, including for memory_filesystem.
+        cid = 'b11fs_rename_missing'
+        self.assertNotEqual(score.load(EXPECTED / cid / 'ref-py.json')['steps'][0]['exception']['message'],
+                            score.load(EXPECTED / cid / 'refmem-py.json')['steps'][0]['exception']['message'])
+
+    def test_cli_selects_historical_only_for_historical_assertions(self):
+        (self.out / 'platform.json').write_text('{"arch": "arm64"}')
+        for flags, historical in [([], False), (['--assert-rows'], True), (['--assert-baseline'], True),
+                                  (['--assert-rows', '--assert-baseline'], True)]:
+            with self.subTest(flags=flags), \
+                 mock.patch.object(sys, 'argv', ['score.py', str(self.out), *flags]), \
+                 mock.patch.object(score, 'classify_case', return_value=('NO-OUTCOME', ['!'], [])) as classify, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                score.main()
+                self.assertTrue(classify.called)
+                self.assertEqual({call.kwargs['historical'] for call in classify.call_args_list}, {historical})
+
+    def test_historical_flags_cannot_disable_current_checks(self):
+        for flag in ['--assert-current', '--write-current']:
+            with self.subTest(flag=flag), \
+                 mock.patch.object(sys, 'argv', ['score.py', str(self.out), '--assert-baseline', flag, 'unused.json']), \
+                 contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+                score.main()
+            self.assertEqual(error.exception.code, 2)
 
     def test_mount_unsupported_cannot_match_even_without_config_comparison(self):
         cid = 'b11fs_read_text'

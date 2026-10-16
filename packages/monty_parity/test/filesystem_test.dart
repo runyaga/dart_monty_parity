@@ -1,4 +1,3 @@
-// ignore_for_file: implementation_imports
 import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart';
@@ -115,9 +114,9 @@ void _caseTests() {
       },
     };
     final memory = refmemCase(original);
-    expect((memory['fs'] as Map).containsKey('mounts'), isFalse);
-    expect((original['fs'] as Map).containsKey('mounts'), isTrue);
-    expect((memory['fs'] as Map)['files'], (original['fs'] as Map)['files']);
+    expect((memory['fs']! as Map).containsKey('mounts'), isFalse);
+    expect((original['fs']! as Map).containsKey('mounts'), isTrue);
+    expect((memory['fs']! as Map)['files'], (original['fs']! as Map)['files']);
   });
 }
 

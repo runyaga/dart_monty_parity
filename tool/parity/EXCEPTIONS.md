@@ -11,6 +11,11 @@ The historical 5873ec5 totals were measured with three exceptions. P-F1 retires
 `rename-missing-message`: OSAccess must now match the refmem oracle's exact message,
 and a rule that still names that exception fails validation. Historical baselines
 are unchanged; their totals are not measurements of the F-1 runner.
+`--assert-rows` or `--assert-baseline` explicitly selects the historical
+`runner-0.23` instrument: B1 and `memory_filesystem` read `core-<backend>.json`
+against `ref-py.json`. Its missing-source rename message matches that host
+oracle exactly, so no retired message exception is restored. Current scoring
+requires the separate `refmem` column even when a matching core file exists.
 
 ## Named exceptions
 

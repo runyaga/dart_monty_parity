@@ -42,6 +42,11 @@ the architecture (re-measured rows from this run, the rest as recorded), and
 on arm64 when the FFI count differs from the manifest's frozen baseline other
 than by the rows rows.json lists under `rescored` (rows whose status these
 scoring rules decide differently from the manifest's method).
+Either historical assertion explicitly selects runner-0.23's core filesystem
+outcomes against ref-py, including memory_filesystem. That runner has no refmem
+column. Other scoring requires the rule's refmem output and oracle; missing
+refmem never falls back to core. Historical assertions cannot join current
+baseline recording/assertions or target/other engine scoring.
 
 Expectations are per CPU architecture. The baseline was measured on arm64;
 `platforms` in rows.json (and in the current-baseline file) lists, per other
@@ -245,10 +250,17 @@ def load(p: Path):
 
 
 def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
-                  engine: str = 'core') -> tuple[str, list[str], list[str]]:
+                  engine: str = 'core', *, historical: bool = False) -> tuple[str, list[str], list[str]]:
     """-> (class, differing codes, names of the exceptions that changed the verdict)."""
-    ref = load(expected / cid / f"{rule.get('oracle', 'ref-py')}.json")
-    got = load(out / cid / f"{rule.get('engine', engine)}-{backend}.json")
+    # runner-0.23 measured these cases through its ordinary filesystem column
+    # against ref-py. It predates the independent refmem run (and its oracle's
+    # rename wording). Select that instrument explicitly, never by file presence:
+    # a missing current refmem outcome must still be NO-OUTCOME.
+    legacy_fs = historical and rule.get('engine') == 'refmem'
+    oracle = 'ref-py' if legacy_fs else rule.get('oracle', 'ref-py')
+    selected_engine = 'core' if legacy_fs else rule.get('engine', engine)
+    ref = load(expected / cid / f'{oracle}.json')
+    got = load(out / cid / f'{selected_engine}-{backend}.json')
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!'], []
     if is_refusal(got, rule):
@@ -1107,6 +1119,9 @@ def main() -> int:
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
+    historical = a.assert_rows or a.assert_baseline
+    if historical and (a.assert_current or a.write_current or a.target or a.assert_e0 or a.assert_gate or a.assert_worker):
+        ap.error('--assert-rows/--assert-baseline select runner-0.23; they cannot join current or other engine scoring')
     if a.assert_target and not a.target:
         sys.exit('--assert-target needs --target')
     if a.core and not a.target:
@@ -1130,7 +1145,8 @@ def main() -> int:
     # A row with only a `worker` block has no core-engine cases: its recorded status stands.
     rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule}
     backends = a.backends.split(',')
-    manifest = list(csv.DictReader(MANIFEST.open(), delimiter='\t'))
+    with MANIFEST.open() as manifest_file:
+        manifest = list(csv.DictReader(manifest_file, delimiter='\t'))
     in_scope = {r['cap_id']: r for r in manifest if r['in_scope'] == 'yes'}
     unknown = sorted(set(all_rules) - set(in_scope))
     if unknown:
@@ -1152,7 +1168,7 @@ def main() -> int:
             else:
                 cells = []
                 for cid in rule['cases']:
-                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected)
+                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=historical)
                     cells.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
                 status = row_status([c['class'] for c in cells])
             expect = (rule.get('expect') or {}).get('web' if b != 'vm' else 'ffi')

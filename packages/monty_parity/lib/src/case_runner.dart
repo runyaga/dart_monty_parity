@@ -507,8 +507,8 @@ OsHandler buildFsHandler(
       MemoryFile(
         path,
         content.containsKey('hex')
-            ? Uint8List.fromList(bytesOfHex(content['hex'] as String))
-            : content['text'] as String,
+            ? Uint8List.fromList(bytesOfHex(content['hex']! as String))
+            : content['text']! as String,
       ),
     );
   }

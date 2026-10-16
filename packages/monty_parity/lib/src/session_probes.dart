@@ -202,7 +202,7 @@ _probes = {
     const code =
         "from pathlib import Path\np = Path('/cb/f.txt')\na = p.read_text()\n"
         "p.write_text('new')\nb = p.read_text()\n(a, b, p.exists())";
-    await _run(t, () => s.feedRun(code, os: h));
+    await _run(t, () => s.feedRun(code, os: h.call));
   }),
   'api_boundary_uuid': (t, shared, _) => shared.withSession((s) async {
     await s.feedRun('class A:\n    pass\na1 = A()\na2 = A()');
@@ -2157,7 +2157,7 @@ CallbackFile _callbackFile(_T transcript, Map<String, String> store) =>
       (path) {
         transcript.add({'ev': 'host', 'op': 'read', 'path': path});
 
-        return store['v'] as String;
+        return store['v']!;
       },
       (path, content) {
         transcript.add({

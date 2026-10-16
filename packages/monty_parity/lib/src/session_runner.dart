@@ -77,7 +77,7 @@ Future<Map<String, Object?>> runSessionCase(
 
 /// The oracle's memory column seeds files without applying mount policy.
 Map<String, Object?> refmemCase(Map<String, Object?> c) {
-  final fs = (c['fs'] as Map).cast<String, Object?>();
+  final fs = (c['fs']! as Map).cast<String, Object?>();
 
   return {
     ...c,
@@ -231,7 +231,8 @@ final class _PoolCaseSession implements CaseSession {
     return _resume(snap, answer);
   }
 
-  Future<MontyValue> _resume(MontySnapshot snap, _OsAnswer answer) async {
+  Future<MontyValue> _resume(MontySnapshot initial, _OsAnswer answer) async {
+    var snap = initial;
     while (true) {
       switch (snap) {
         case MontyComplete(:final output):

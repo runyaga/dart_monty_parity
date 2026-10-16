@@ -1,5 +1,4 @@
 // Requires an F-1 checkout with its VM worker built, as tool/parity/run.py does.
-// ignore_for_file: implementation_imports
 @TestOn('vm')
 library;
 
@@ -25,7 +24,7 @@ void main() {
       'vm',
       () async => channel,
     );
-    final steps = (result['steps'] as List).cast<Map<String, Object?>>();
+    final steps = (result['steps']! as List).cast<Map<String, Object?>>();
     expect(steps, hasLength(2));
     for (final step in steps) {
       expect(step['value'], {'t': 'str', 'v': '/work'});
@@ -46,7 +45,7 @@ void main() {
         'vm',
         pool,
       );
-      final steps = (result['steps'] as List).cast<Map<String, Object?>>();
+      final steps = (result['steps']! as List).cast<Map<String, Object?>>();
       expect(steps, hasLength(1));
       expect(steps[0]['value'], {'t': 'str', 'v': '/work'});
       expect(result['unsupported'], isEmpty);
@@ -73,7 +72,7 @@ Future<void> _callbackProbe() async {
     () => 0,
   );
   expect(result['runner_error'], isNull);
-  final events = (result['events'] as List).cast<Map<String, Object?>>();
+  final events = (result['events']! as List).cast<Map<String, Object?>>();
   final host = events.where((event) => event['ev'] == 'host').toList();
   expect(host, [
     {'ev': 'host', 'op': 'read', 'path': '/cb/f.txt'},

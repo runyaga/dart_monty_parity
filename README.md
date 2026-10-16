@@ -17,8 +17,11 @@ CI's `current` job reproduces it there. A core commit that does not change parit
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
 P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
-`CallbackFile`). While that branch has no supplied commit, [CORE_REF.pending.md](CORE_REF.pending.md)
-records the pending pin and measurements; the historical `CORE_REF` cannot compile this runner.
+`CallbackFile`), pinned by `CORE_REF` to `57d0685579cc53ff9bf5a40caeaa3d1113e1593d`.
+The P-F1 VM baseline is re-recorded at that pin. Browser columns still carry the
+previous measurements and are marked pending in `baseline-current.json`:
+local Chrome launches exit before executing any dart2js or dart2wasm cases.
+Completing the F-1 baseline requires recording those two backends.
 
 ## Layout
 
@@ -173,6 +176,13 @@ rules: on arm64 FFI PRESENT 36/185, dart2js 35, dart2wasm 35; on x86_64 35/35/34
 expectations in `EXCEPTIONS.md`). The manifest's frozen FFI number, 37, was scored more leniently;
 `rows.json` `rescored` lists the rows that account for the difference. That core needs `npm ci` in its `js/` for the browser WASI worker, and on a toolchain
 without its cross targets `RUSTUP_TOOLCHAIN=stable`.
+
+Either historical assertion explicitly selects `runner-0.23`'s filesystem
+measurement: `core-<backend>.json` against `ref-py.json` for B1 and
+`memory_filesystem`. That runner writes no independent refmem outcomes. Current
+scoring still requires `refmem-<backend>.json` against `refmem-py.json`, and a
+missing file is `NO-OUTCOME`. Historical assertions cannot be combined with
+`--assert-current`, `--write-current`, target or other engine scoring.
 
 ## Checks (CI)
 
