@@ -1,9 +1,9 @@
 {
  "generator": {
-  "sha256": "26294307fa20e4e764f8cb05d1da8790c8372cb757665201227f5ee59b42e475",
+  "sha256": "5c8ad354feec9b2540a08ada08b887123a15436c838a1d4eb0aaab2312e86cac",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "ee89dc18647c2a41f6802c0e97b23982445f942db8e9f6c90acdadcf02cf79c4",
+   "tool/parity/oracle/run_probes.py": "5ab6fc0f8c0e1172e344b0d868f692a2c81c78aee8762f0769b81ac89130b4fd",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -5185,6 +5185,11 @@
     "ref-py": "ca508ded8158db946016f5c2c4dbe83a7dcd81fef833fef5b8bfb69dbf697794"
    }
   },
+  "sp_memory_headroom": {
+   "outcomes": {
+    "ref-py": "e9a1158b506f15c9e18a9abfe13e025e72d04ab52ae15b2b22adf275d1e19a84"
+   }
+  },
   "sp_oversized_answer": {
    "outcomes": {
     "ref-py": "a9913185919222a5dc23beb54f8135d5fd0cf751118eabc5817448b63f17ef4f"
@@ -5210,6 +5215,11 @@
     "ref-py": "0022ecfcd235f12564d35f4879a2282d85473e6fc62abbae1caeabf958ab6341"
    }
   },
+  "sp_print_kill_after_print": {
+   "outcomes": {
+    "ref-py": "403bd4837a58e0ce151a1627f2d7b972c300c8c523e60a07d61b3b5b2cda6d2a"
+   }
+  },
   "sp_print_lines": {
    "outcomes": {
     "ref-py": "60104827d424e718ef77089b443d9ee23ff2ce94c314efc1daba16913fb5d1c0"
@@ -5228,6 +5238,11 @@
   "sp_print_raise_then_error": {
    "outcomes": {
     "ref-py": "7f34011fe1c9d25bc2575193908c1053a472e598990170bb11038115cca5c718"
+   }
+  },
+  "sp_print_volume_under_limit": {
+   "outcomes": {
+    "ref-py": "73e5a28ce00abb34173d65cba4304f98daab9a61ff56669f6ad71b962aeef0d9"
    }
   },
   "sp_request_timeout": {

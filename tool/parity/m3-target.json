@@ -25,13 +25,9 @@
    "text": "upstream lacks the row in its bindings: neither python_cite nor js_cite in the manifest, and no parity case, probe, worker set or session rule compares it against the python binding (a Rust-API oracle does not count)",
    "owner": "upstream"
   },
-  "G7": {
-   "text": "browser aggregate-memory resource_limits rows (M6, G7): the web backends are not targets for the row, the native backend is",
-   "owner": "M6"
-  },
   "D1": {
-   "text": "standalone type checking: the rule makes only type_checking in the session a target; M6 removes standalone typeCheck",
-   "owner": "M6"
+   "text": "standalone type checking was removed at the core cutover (#253); upstream's binding has no check-only call",
+   "owner": "upstream"
   },
   "D2": {
    "text": "upstream has no behaviour to compare: the C1 gate records it as core-gated (c1-gate.json core_gated), upstream's sinks and cancellation are its binding's own",
@@ -754,12 +750,10 @@
   "allocator_memory_limit": {
    "area": "resource_limits",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
-   "backends_excluded": {
-    "dart2js": "G7",
-    "dart2wasm": "G7"
-   },
    "judgement": [
     "J05"
    ]
@@ -802,12 +796,10 @@
   "hard_memory_ceiling": {
    "area": "resource_limits",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
-   "backends_excluded": {
-    "dart2js": "G7",
-    "dart2wasm": "G7"
-   },
    "judgement": [
     "J05"
    ]
@@ -1766,7 +1758,7 @@
   "type_check_source": {
    "area": "type_checking",
    "clause": "D1",
-   "owner": "M6",
+   "owner": "upstream",
    "judgement": [
     "J06"
    ]
