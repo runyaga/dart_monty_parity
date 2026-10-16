@@ -12,18 +12,25 @@ current baseline against every pull request.
 
 ## Compatible core
 
-`CORE_REF` holds the dart_monty_core commit that `tool/parity/baseline-current.json` was recorded on;
-CI's `current` job reproduces it there. A core commit that does not change parity behaviour passes too,
+`CORE_REF` holds the dart_monty_core commit CI targets; its `current` job checks
+`tool/parity/baseline-current.json` there. A core commit that does not change parity behaviour passes too,
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
 P-F2 requires core's F-2 host `MountDir`, the per-feed `mount` parameter and the
 native mount service beside its worker executable. `tool/build_worker.sh` builds
 both artifacts; the VM Rust cache has a mount-service-specific key.
-`CORE_REF` uses F-2 head `99c65a833868c06c1b123a122fe8945833a8a2c5`.
+`CORE_REF` uses F-2's squash merge `8f45d1de077f9dca7d23045819518758a39ea3d7`.
 The merged baseline currently comes from main's R-P2 recording; all three
 backends need re-recording for the combined telemetry and filesystem runner.
 The M3 F-1-window allowance has been retired on VM.
-The single M6 target combines filesystem and telemetry rows and remains a **DRAFT**, pending owner approval.
+The owner-approved M6 target (PLAN M6T) combines 24 filesystem and four telemetry
+rows. CI asserts it at `CORE_REF` in `current`, over the core engine's measured
+outcomes on all three backends. It needs no E0 outcomes or `--target-engines`.
+The M3 target remains asserted in `target` over core, session and worker outcomes.
+
+CI runs on Linux x86_64. On macOS, `os_entry_removal` is PARTIAL because
+`b11fs_unlink_dir` reports the host's different errno; a local M6
+`--assert-target` reports that one failing cell. The target has no macOS allowance.
 
 ## Layout
 
@@ -39,7 +46,7 @@ The single M6 target combines filesystem and telemetry rows and remains a **DRAF
 | `tool/parity/e0.json` | the E0 gate: the `e0` cases core's monty-proto worker must match upstream on, per backend, and the cases deferred from it |
 | `tool/parity/c1-gate.json`, `test_gate.py` | the C1 gate: per capability row, the PR whose landing makes the row's `session` rule (in `rows.json`) gated through the session engine, and which of those PRs have landed; and its offline self-test |
 | `tool/parity/m3-target.json`, `test_target.py` | the M3 parity target: the in-scope manifest rows the M3 milestone owns, each with the backends it must be PRESENT on, the rest `excluded` under a named clause, and a row's `allowed` entry where an approved exception lets it be non-PRESENT; `score.py --target` prints it (not fatal until `--assert-target`), and with `--target-engines DIR` judges each row over the session and worker engines' outcomes in DIR too (CI job `target`); and its offline self-test |
-| `tool/parity/m6-target.json`, `test_m6_target.py` | DRAFT single M6 target: 24 A1/B1 filesystem rows and four R-P2 telemetry rows; telemetry_flush is excluded because Python has no flush and core delivers synchronously, while cli_telemetry stays N/A; offline schema/scorer checks only, no CI assertion |
+| `tool/parity/m6-target.json`, `test_m6_target.py` | approved M6 target: 24 A1/B1 filesystem rows and four R-P2 telemetry rows, asserted in CI's `current` job; telemetry_flush is excluded because Python has no flush and core delivers synchronously, while cli_telemetry stays N/A; offline schema/scorer and assertion mutation checks |
 | `tool/parity/EXCEPTIONS.md` | every tolerated difference (named exception) and rule choice, see below |
 | `tool/parity/run.py`, `score.py`, `probes_compare.py` | run the cases through core on a backend; score each row against `expected/` |
 | `tool/parity/worker_compare.py`, `test_worker_compare.py` | the worker engine's comparison (shared objects and sandbox ids up to relabelling, strings exactly) and its offline self-test |
@@ -66,6 +73,8 @@ python3 -I tool/parity/run.py dart2js   --core core --out /tmp/parity
 python3 -I tool/parity/run.py dart2wasm --core core --out /tmp/parity
 python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/score.md \
   --assert-current tool/parity/baseline-current.json
+python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/m6-target.md \
+  --target tool/parity/m6-target.json --assert-target
 ```
 
 `--core` is required. `run.py` points the runner at it with a `pubspec_overrides.yaml` written for the

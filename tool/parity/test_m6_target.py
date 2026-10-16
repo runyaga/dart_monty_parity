@@ -1,4 +1,4 @@
-"""Offline checks for the DRAFT M6 filesystem and telemetry target and backend-specific measurement."""
+"""Offline checks for the approved M6 target, CI assertion and backend-specific measurement."""
 import copy
 import contextlib
 import io
@@ -21,22 +21,23 @@ class M6TargetTest(unittest.TestCase):
         self.assertEqual(score.cases_for({'cases': ['mounted'], 'cases_web': []}, 'dart2js'), [])
         self.assertEqual(score.cases_for({'cases': ['portable']}, 'dart2wasm'), ['portable'])
 
-    def test_web_matrix_with_constructed_refusals_and_portable_matches(self):
-        target = json.loads((score.ROOT / 'tool/parity/m6-target.json').read_text())
+    def test_assertion_with_constructed_refusals_and_portable_matches(self):
+        target_path = score.ROOT / 'tool/parity/m6-target.json'
+        target = json.loads(target_path.read_text())
         rules = json.loads(score.RULES.read_text())['rows']
         cases = score.case_index()
         expected = score.ROOT / 'tool/parity/expected'
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
-            (out / 'platform.json').write_text('{"arch": "arm64"}')
+            (out / 'platform.json').write_text('{"arch": "x86_64", "os": "linux"}')
             for row in target['rows']:
                 rule = rules[row]
                 for cid in rule.get('cases', []):
                     folder = out / cid
                     folder.mkdir(exist_ok=True)
                     mounted = bool(cases[cid].get('fs', {}).get('mounts'))
-                    for backend in ('dart2js', 'dart2wasm'):
-                        got = {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}} if mounted else score.load(expected / cid / 'ref-py.json')
+                    for backend in score.ALL_BACKENDS:
+                        got = {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}} if mounted and backend != 'vm' else score.load(expected / cid / 'ref-py.json')
                         (folder / f'core-{backend}.json').write_text(json.dumps(got))
                         refmem = score.load(expected / cid / 'refmem-py.json')
                         if refmem:
@@ -44,21 +45,48 @@ class M6TargetTest(unittest.TestCase):
                 for pid in rule.get('probes', []):
                     folder = out / pid
                     folder.mkdir(exist_ok=True)
-                    got = {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}} if row.startswith('mount_') else score.load(expected / pid / 'ref-py.json')
-                    for backend in ('dart2js', 'dart2wasm'):
+                    for backend in score.ALL_BACKENDS:
+                        got = {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}} if row.startswith('mount_') and backend != 'vm' else score.load(expected / pid / 'ref-py.json')
                         (folder / f'core-{backend}.json').write_text(json.dumps(got))
             report = out / 'score.json'
-            with mock.patch.object(sys, 'argv', ['score.py', str(out), '--backends', 'dart2js,dart2wasm', '--json', str(report)]), contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(score.main(), 0)
+            def run_scorer(assert_target=True):
+                argv = ['score.py', str(out), '--json', str(report), '--target', str(target_path)]
+                if assert_target:
+                    argv.append('--assert-target')
+                with mock.patch.object(sys, 'argv', argv), contextlib.redirect_stdout(io.StringIO()) as output:
+                    return score.main(), output.getvalue()
+
+            # The same command as CI: all backends, core outcomes only.
+            rc, output = run_scorer()
+            self.assertEqual(rc, 0, output)
             measured = json.loads(report.read_text())['rows']
-            for backend in ('dart2js', 'dart2wasm'):
+            for backend in score.ALL_BACKENDS:
                 statuses = [measured[row][backend]['status'] for row in target['rows']]
-                self.assertEqual(statuses.count('PRESENT'), 18)
-                self.assertEqual(statuses.count('REFUSED'), 10)
+                self.assertEqual(statuses.count('PRESENT'), 27 if backend == 'vm' else 18)
+                self.assertEqual(statuses.count('REFUSED'), 1 if backend == 'vm' else 10)
             for row in ('working_directory', 'virtual_path_validation_normalization'):
                 self.assertTrue(rules[row]['cases_web'])
                 self.assertTrue(set(rules[row]['cases_web']) <= set(rules[row]['cases']))
                 self.assertFalse(any(cases[c].get('fs', {}).get('mounts') for c in rules[row]['cases_web']))
+
+            # Removing measured evidence makes a required row non-PRESENT.
+            # Showing the failure is nonfatal; the CI assertion must fail.
+            for row, field in [('os_path_predicates', 'cases'), ('telemetry_adapter', 'probes')]:
+                for backend in score.ALL_BACKENDS:
+                    with self.subTest(row=row, backend=backend):
+                        path = out / rules[row][field][0] / f'core-{backend}.json'
+                        if row == 'os_path_predicates' and backend != 'vm':
+                            path = path.with_name(f'refmem-{backend}.json')
+                        original = path.read_bytes()
+                        path.unlink()
+                        rc, output = run_scorer(assert_target=False)
+                        self.assertEqual(rc, 0, output)
+                        rc, output = run_scorer()
+                        self.assertEqual(rc, 1, output)
+                        target_row = next(line for line in reversed(output.splitlines()) if line.startswith(f'| {row} |'))
+                        self.assertIn('FAIL', target_row)
+                        self.assertNotEqual(json.loads(report.read_text())['rows'][row][backend]['status'], 'PRESENT')
+                        path.write_bytes(original)
 
     def test_recorded_handler_controls_detect_unwanted_dispatch(self):
         expected = score.ROOT / 'tool/parity/expected'
@@ -170,7 +198,7 @@ class M6TargetTest(unittest.TestCase):
                         statuses[row][backend] = (status, 'measured')
                         self.assertEqual(score.score_target(subset, statuses, [backend])[1], 1)
 
-    def test_draft_partition_and_allowances(self):
+    def test_approved_partition_and_allowances(self):
         target = json.loads((score.ROOT / 'tool/parity/m6-target.json').read_text())
         scope = {r['cap_id']: r for r in csv.DictReader(score.MANIFEST.read_text().splitlines(), delimiter='\t') if r['in_scope']=='yes'}
         m3 = json.loads(score.TARGET.read_text())
@@ -189,7 +217,8 @@ class M6TargetTest(unittest.TestCase):
         self.assertIn('N/A', target['clauses'][cli_clause]['text'])
         self.assertEqual(scope['cli_telemetry']['baseline_ffi'], 'N/A')
         self.assertEqual(scope['cli_telemetry']['baseline_web'], 'N/A')
-        self.assertEqual(target['status'], 'DRAFT')
+        self.assertEqual(target['status'], 'APPROVED')
+        self.assertEqual(target['name'], 'M6')
         self.assertEqual(score.target_problems(target, scope), [])
         for backend, count in [('vm', 1), ('dart2js', 10), ('dart2wasm', 10)]:
             self.assertEqual(sum(backend in r.get('allowed', {}).get('backends', []) for r in target['rows'].values()), count)

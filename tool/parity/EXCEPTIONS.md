@@ -18,6 +18,15 @@ oracle exactly, so no retired message exception is restored. Current scoring
 requires the separate `refmem` column on web and for `memory_filesystem`, even
 when a matching core file exists; B1 on VM uses the host-mount column.
 
+The owner-approved M6 target (PLAN M6T, `m6-target.json`) is asserted at
+`CORE_REF` (`8f45d1de077f9dca7d23045819518758a39ea3d7`, F-2's squash merge)
+in CI's `current` job. Its 24 filesystem and four telemetry rows are judged over
+the core engine's measured outcomes on vm, dart2js and dart2wasm, with the approved
+upstream refusals unchanged. The M3 target remains asserted separately over all
+three engines. CI uses Linux x86_64; macOS's `b11fs_unlink_dir` errno difference
+makes `os_entry_removal` PARTIAL and fails the M6 assertion locally. No target
+allowance or comparison exception masks that difference.
+
 ## Named exceptions
 
 | ID | Rows (cases) | Fields | Observed difference | Rationale | Without it | Removed when |
@@ -58,7 +67,7 @@ Not exceptions, but they decide statuses:
 | cases with nonempty `fs.mounts`; mount budget probes | real `MountDir` on VM; `refused: {where: 'MountDir', type: 'UnsupportedError'}` on web scores REFUSED | upstream only exports MountDir from `monty-js/ts/node.ts:3-4`; the separate refmem run applies no mount mode or cap |
 | `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects the capability cells; all omitted cases retain mandatory web verdicts (MountDir constructor REFUSED for mounted cases, MATCH for portable cases) | missing, crashing, unrefused mounted cases and omitted portable regressions fail scoring and baseline recording |
 | `mount_dispatch_and_fallback` | web scores mount-dependent cases as the capability verdict; every mount-free sleep/no-table case is also a mandatory `controls_web` verdict | each portable control must MATCH or `score.py` fails, even when the capability row is accepted as REFUSED; missing outcomes, refusals and transcript/value mutations fail |
-| `mount_usage_inspection` | REFUSED derived from the validated `allowed: REFUSED-as-upstream` declaration and exact reason `no binding API (P13)`; no arbitrary `status` fallback | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
+| `mount_usage_inspection` | REFUSED derived from the validated `allowed: REFUSED-as-upstream` declaration and exact reason `no binding API (P13)`; no arbitrary `status` fallback | P13: neither binding exposes usage counters; the approved M6 target allows REFUSED everywhere |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
 | `raised_exception` / `traceback_frames` | exception type + message / frames only, over the 273 `b12_*` cases | each row is one part of an exception |

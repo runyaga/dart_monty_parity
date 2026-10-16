@@ -1,6 +1,6 @@
 {
- "about": "DRAFT single M6 target: 24 A1/B1 filesystem rows from P-F2 and four telemetry rows from R-P2. Pending owner approval; no CI assertion. telemetry_flush is excluded because the Python binding has no flush; core delivers synchronously. cli_telemetry remains N/A.",
- "status": "DRAFT",
+ "about": "Owner-approved single M6 target (PLAN M6T): 24 A1/B1 filesystem rows from P-F2 and four telemetry rows from R-P2. Asserted in CI at CORE_REF. telemetry_flush is excluded because the Python binding has no flush; core delivers synchronously. cli_telemetry remains N/A.",
+ "status": "APPROVED",
  "clauses": {
   "outside-F": {
    "text": "Outside the 24 M6 F filesystem A1/B1 rows and four R-P2 telemetry rows",
@@ -972,5 +972,5 @@
    "clause": "outside-F"
   }
  },
- "name": "M6 DRAFT"
+ "name": "M6"
 }
