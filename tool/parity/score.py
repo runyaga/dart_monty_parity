@@ -61,6 +61,11 @@ every re-measured row, every row's status, on every backend, and the PRESENT
 totals. A change that moves a case or a row updates that file, with the move
 listed under `deltas`.
 
+--write-current FILE refreshes the selected backends (all three by default),
+including the measured architecture's overrides and totals. Other architectures'
+expectations, unselected backends, subject and deltas are preserved. Row-table
+annotations labelled `historical` refer to rows.json, not the current baseline.
+
 --target [FILE] (default tool/parity/m3-target.json) also scores the M3 parity target: the in-scope
 manifest rows M3 owns, each with the backends it must be PRESENT on (the rest of the 185 are `excluded`,
 each under a named clause). It prints per-area PRESENT counts and every target row's status per backend
@@ -1092,6 +1097,41 @@ def platform_arch(outcomes: Path) -> str:
     return json.loads(p.read_text())['arch']
 
 
+def record_current(previous: dict, arch: str, measured: dict) -> dict:
+    """Refresh selected backends, including platform overrides, without changing other measurements."""
+    doc = copy.deepcopy(previous)
+    doc.setdefault('subject', '')
+    doc.setdefault('deltas', [])
+    platforms = doc.setdefault('platforms', {})
+    current = platforms.setdefault(arch, {})
+    others = [p for name, p in platforms.items() if name != arch]
+
+    def update(base, override, other_overrides, values, depth):
+        for key, value in values.items():
+            if depth > 1:
+                update(base.setdefault(key, {}), override.setdefault(key, {}),
+                       [p.setdefault(key, {}) for p in other_overrides], value, depth - 1)
+                for p in [override, *other_overrides]:
+                    if not p[key]:
+                        del p[key]
+            else:
+                # Other architectures may inherit the old shared value. Pin it
+                # before replacing it with this architecture's measurement.
+                if key in base and base[key] != value:
+                    for p in other_overrides:
+                        p.setdefault(key, copy.deepcopy(base[key]))
+                base[key] = copy.deepcopy(value)
+                override.pop(key, None)  # a stale override must not shadow the write
+
+    for field, depth in [('rows', 2), ('cells', 3), ('present', 1), ('totals', 1)]:
+        update(doc.setdefault(field, {}), current.setdefault(field, {}),
+               [p.setdefault(field, {}) for p in others], measured[field], depth)
+    # PRESENT totals are required explicitly by --assert-current for each arch.
+    current['present'].update(measured['present'])
+    current['totals'].update(measured['totals'])
+    return doc
+
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -1103,7 +1143,8 @@ def main() -> int:
     ap.add_argument('--assert-rows', action='store_true')
     ap.add_argument('--assert-baseline', action='store_true')
     ap.add_argument('--assert-current', type=Path)
-    ap.add_argument('--write-current', type=Path, help='write the measured rows and totals (keeps `deltas`)')
+    ap.add_argument('--write-current', type=Path,
+                    help='refresh selected backends for the measured architecture (keeps `deltas`)')
     ap.add_argument('--assert-e0', type=Path, nargs='?', const=ROOT / 'tool/parity/e0.json',
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     ap.add_argument('--assert-worker', action='store_true',
@@ -1197,7 +1238,7 @@ def main() -> int:
         cells = []
         for b in backends:
             r = result['rows'][row][b]
-            mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (recorded {r['expect']})"
+            mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (historical {r['expect']})"
             cells.append(r['status'] + mark)
         lines.append(f'| {row} | ' + ' | '.join(cells) + ' |')
     lines.append('')
@@ -1219,9 +1260,9 @@ def main() -> int:
                    for c in result['rows'][row][backends[0]]['cells']} for row in rules}
     if a.write_current:
         prev = json.loads(a.write_current.read_text()) if a.write_current.exists() else {}
-        doc = {'subject': prev.get('subject', ''), 'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
-               'platforms': prev.get('platforms', {}), 'deltas': prev.get('deltas', []),
-               'rows': measured, 'cells': cells}
+        doc = record_current(prev, arch, {
+            'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
+            'rows': measured, 'cells': cells})
         a.write_current.write_text(json.dumps(doc, indent=1) + '\n')
     rc = 0
     if a.assert_current:

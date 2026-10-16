@@ -1,9 +1,9 @@
 {
- "subject": "dart_monty_core F-1 57d0685579cc53ff9bf5a40caeaa3d1113e1593d: VM re-recorded through the public session API for P-F1; dart2js/dart2wasm retain the prior baseline pending browser measurements (Chrome exits -6 before page execution). Rows the harness does not re-measure retain their capability-manifest status.",
+ "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 retains its prior expectations and was not re-measured in this recording.",
  "present": {
   "vm": 79,
-  "dart2js": 80,
-  "dart2wasm": 80
+  "dart2js": 78,
+  "dart2wasm": 78
  },
  "totals": {
   "vm": {
@@ -14,16 +14,16 @@
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 38,
-   "PRESENT": 80,
-   "PARTIAL": 38,
+   "ABSENT": 44,
+   "PRESENT": 78,
+   "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 38,
-   "PRESENT": 80,
-   "PARTIAL": 38,
+   "ABSENT": 44,
+   "PRESENT": 78,
+   "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -34,18 +34,209 @@
    "rows": {},
    "present": {
     "vm": 79,
-    "dart2js": 80,
-    "dart2wasm": 80
+    "dart2js": 78,
+    "dart2wasm": 78
+   },
+   "cells": {},
+   "totals": {
+    "vm": {
+     "ABSENT": 48,
+     "PRESENT": 79,
+     "PARTIAL": 31,
+     "N/A": 26,
+     "REFUSED": 1
+    },
+    "dart2js": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    },
+    "dart2wasm": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    }
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
-   "rows": {},
+   "rows": {
+    "os_environment": {
+     "dart2js": "PRESENT",
+     "dart2wasm": "PRESENT"
+    },
+    "mount_table": {
+     "dart2js": "PARTIAL",
+     "dart2wasm": "PARTIAL"
+    },
+    "mount_modes": {
+     "dart2js": "PARTIAL",
+     "dart2wasm": "PARTIAL"
+    },
+    "mount_errors": {
+     "dart2js": "PARTIAL",
+     "dart2wasm": "PARTIAL"
+    },
+    "mount_feed_lifecycle": {
+     "dart2js": "PARTIAL",
+     "dart2wasm": "PARTIAL"
+    },
+    "mount_write_budget": {
+     "dart2js": "PARTIAL",
+     "dart2wasm": "PARTIAL"
+    },
+    "mount_memory_budget": {
+     "dart2js": "PRESENT",
+     "dart2wasm": "PRESENT"
+    }
+   },
    "present": {
     "vm": 79,
     "dart2js": 80,
     "dart2wasm": 80
-   }
+   },
+   "cells": {
+    "os_environment": {
+     "x21_fallback_nonfs": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     }
+    },
+    "mount_table": {
+     "x21_two_mounts": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_nested_virtual": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_trailing_slash_virtual": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_dup_virtual": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_relative_virtual": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_modes": {
+     "x21_ro_read_ok": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_ro_write": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_overlay_same_feed": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_errors": {
+     "x21_write_limit": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_ro_write": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_ro_mkdir": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_ro_open_w": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_ro_unlink": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_dup_virtual": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_relative_virtual": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "g19_close_then_feed": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_feed_lifecycle": {
+     "x21_lifecycle_read-write": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_lifecycle_delete_read-write": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "x21_lifecycle_overlay": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_write_limit_per_feed": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_close": {
+     "g19_close_then_feed": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "working_directory": {
+     "b14_getcwd_set": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_cwd_feed": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_cwd_default_mount": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     },
+     "x21_cwd_relative_fallback": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_write_budget": {
+     "api_write_budget_feed1": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     },
+     "api_write_budget_feed2": {
+      "dart2js": "DIVERGE",
+      "dart2wasm": "DIVERGE"
+     }
+    },
+    "mount_memory_budget": {
+     "api_memory_budget": {
+      "dart2js": "MATCH",
+      "dart2wasm": "MATCH"
+     }
+    }
+   },
+   "note": "Prior expectations retained from the pre-host-run baseline; this arm64 F-1 recording does not re-measure Linux x86_64.",
+   "totals": {}
   }
  },
  "deltas": [
@@ -891,11 +1082,13 @@
   {
    "row": "os_environment",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PRESENT",
    "to": "PARTIAL",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "The mount-free getenv case still MATCHes; the fallback case requests a mount, which F-1 cannot supply. The row becomes PARTIAL until P-F2.",
    "cells": [
@@ -905,16 +1098,19 @@
      "to": "UNSUPPORTED",
      "why": "x21_fallback_nonfs requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_table",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "F-1 OSAccess has no host mount table. All mount table cases are explicitly unsupported until P-F2.",
    "cells": [
@@ -948,16 +1144,19 @@
      "to": "UNSUPPORTED",
      "why": "x21_relative_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_modes",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "F-1 OSAccess has no host read-only/read-write/overlay mount modes. All mount-mode cases are unsupported until P-F2.",
    "cells": [
@@ -979,16 +1178,19 @@
      "to": "UNSUPPORTED",
      "why": "x21_overlay_same_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_errors",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "F-1 cannot construct mounts or exercise their validation, policy errors or close lifecycle. Every case is unsupported until P-F2.",
    "cells": [
@@ -1040,16 +1242,19 @@
      "to": "UNSUPPORTED",
      "why": "g19_close_then_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_feed_lifecycle",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "F-1 has no host mounts to persist, overlay or budget across feeds. All lifecycle cases are unsupported until P-F2.",
    "cells": [
@@ -1077,16 +1282,19 @@
      "to": "UNSUPPORTED",
      "why": "x21_write_limit_per_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_close",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "ABSENT",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "Closing a host mount cannot be exercised in F-1. The cell changes from DIVERGE to UNSUPPORTED; the row stays ABSENT until P-F2.",
    "cells": [
@@ -1096,16 +1304,19 @@
      "to": "UNSUPPORTED",
      "why": "g19_close_then_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "working_directory",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "PARTIAL",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "cwd is now forwarded to feedRun/feedStart. Both mount-free getcwd cases MATCH; the three mount cases remain unsupported until P-F2, so the whole row stays PARTIAL rather than claiming PRESENT.",
    "cells": [
@@ -1133,16 +1344,19 @@
      "to": "UNSUPPORTED",
      "why": "x21_cwd_relative_fallback requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_write_budget",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PARTIAL",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "Mount write budgets are explicitly unsupported in F-1; neither probe runs a feed. The row becomes ABSENT until P-F2.",
    "cells": [
@@ -1158,16 +1372,19 @@
      "to": "UNSUPPORTED",
      "why": "api_write_budget_feed2 requests a mount budget absent from F-1 OSAccess; the probe records unsupported fs.mounts until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   },
   {
    "row": "mount_memory_budget",
    "backends": [
-    "vm"
+    "vm",
+    "dart2js",
+    "dart2wasm"
    ],
    "from": "PRESENT",
    "to": "ABSENT",
-   "commit": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
    "pr": "P-F1",
    "why": "The host mount memory budget is explicitly unsupported in F-1; the probe runs no feed. The row becomes ABSENT until P-F2.",
    "cells": [
@@ -1177,7 +1394,8 @@
      "to": "UNSUPPORTED",
      "why": "api_memory_budget requests a mount budget absent from F-1 OSAccess; the probe records unsupported fs.mounts until P-F2."
     }
-   ]
+   ],
+   "arch": "arm64"
   }
  ],
  "rows": {
@@ -1358,28 +1576,28 @@
   },
   "os_environment": {
    "vm": "PARTIAL",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "mount_table": {
    "vm": "ABSENT",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_modes": {
    "vm": "ABSENT",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_errors": {
    "vm": "ABSENT",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_feed_lifecycle": {
    "vm": "ABSENT",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_close": {
    "vm": "ABSENT",
@@ -1553,13 +1771,13 @@
   },
   "mount_write_budget": {
    "vm": "ABSENT",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_memory_budget": {
    "vm": "ABSENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "callback_files": {
    "vm": "PRESENT",
@@ -2681,123 +2899,123 @@
    },
    "x21_fallback_nonfs": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_table": {
    "x21_two_mounts": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_nested_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_trailing_slash_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_dup_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_relative_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_modes": {
    "x21_ro_read_ok": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_write": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_overlay_same_feed": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_errors": {
    "x21_write_limit": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_write": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_mkdir": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_open_w": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_unlink": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_dup_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_relative_virtual": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "g19_close_then_feed": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_feed_lifecycle": {
    "x21_lifecycle_read-write": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_lifecycle_delete_read-write": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_lifecycle_overlay": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_write_limit_per_feed": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_close": {
    "g19_close_then_feed": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "async_os_sleep": {
@@ -2883,23 +3101,23 @@
    },
    "b14_getcwd_set": {
     "vm": "MATCH",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x21_cwd_feed": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_cwd_default_mount": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_cwd_relative_fallback": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "clock_source": {
@@ -6239,20 +6457,20 @@
   "mount_write_budget": {
    "api_write_budget_feed1": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "api_write_budget_feed2": {
     "vm": "UNSUPPORTED",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_memory_budget": {
    "api_memory_budget": {
     "vm": "UNSUPPORTED",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "callback_files": {
@@ -6400,18 +6618,5 @@
     "dart2wasm": "MATCH"
    }
   }
- },
- "recording": {
-  "core_ref": "57d0685579cc53ff9bf5a40caeaa3d1113e1593d",
-  "measured_backends": [
-   "vm"
-  ],
-  "pending_backends": [
-   "dart2js",
-   "dart2wasm"
-  ],
-  "command": "python3 -I tool/parity/score.py .gate-logs/pf1-fix-current --backends vm --write-current tool/parity/baseline-current.json",
-  "artifacts": ".gate-logs/pf1-fix-current",
-  "note": "VM measured on macOS arm64. x86_64 VM expectations apply the same backend-independent deltas and await CI. Browser columns retain prior measurements, not F-1 measurements: both browser launch attempts fail before any case runs; do not record NO-OUTCOME infrastructure failures as intended parity."
  }
 }

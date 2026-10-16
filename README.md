@@ -17,11 +17,10 @@ CI's `current` job reproduces it there. A core commit that does not change parit
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
 P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
-`CallbackFile`), pinned by `CORE_REF` to `57d0685579cc53ff9bf5a40caeaa3d1113e1593d`.
-The P-F1 VM baseline is re-recorded at that pin. Browser columns still carry the
-previous measurements and are marked pending in `baseline-current.json`:
-local Chrome launches exit before executing any dart2js or dart2wasm cases.
-Completing the F-1 baseline requires recording those two backends.
+`CallbackFile`), pinned by `CORE_REF` to `58106a7c5807691b6fc2c82664229a3bd3680276`.
+The P-F1 baseline records VM, dart2js and dart2wasm from the macOS arm64 host run
+with real Chrome: 79, 78 and 78 PRESENT rows respectively out of 185.
+Linux x86_64 retains its prior expectations pending a measurement there.
 
 ## Layout
 
@@ -236,8 +235,11 @@ moves):
 
 1. Here: run the suite against the core change on all three backends and re-record with
    `score.py OUT --write-current tool/parity/baseline-current.json`. `rows`, `cells`, `present` and
-   `totals` are recorded as measured on **arm64**; per-architecture differences live under
-   `platforms` (`--write-current` keeps `platforms`, `subject` and `deltas`). Add the move to `deltas`
+   `totals` are refreshed for the architecture in `OUT/platform.json`, including its
+   `platforms` overrides. Other architectures' expectations and unselected backends are
+   preserved, as are `subject` and `deltas`. All three backends are selected by default;
+   a subset uses comma-separated `--backends vm,dart2js`. Re-run with `--assert-current`
+   on the same artifacts to verify the recording. Add the move to `deltas`
    (row, backends, from, to, the core commit or PR, why), set `CORE_REF` to the core change's commit, and merge.
 2. In dart_monty_core: bump the pinned commit of this repository in the same pull request as the change.
    Its `parity` job then asserts the new baseline.
