@@ -3683,10 +3683,14 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_first_typing_rejected": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_first_typing_rejected_established": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_first_typing_rejected_established_web": {
     "vm": "MATCH",
@@ -3694,7 +3698,9 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_first_typing_rejected_explicit": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_first_typing_rejected_web": {
     "vm": "MATCH",
@@ -3702,7 +3708,9 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_load_session": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_load_session_web": {
     "vm": "MATCH",
@@ -3710,7 +3718,9 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_load_snapshot": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_load_snapshot_web": {
     "vm": "MATCH",
@@ -3718,7 +3728,9 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_syntax_error_establishes": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_syntax_error_establishes_web": {
     "vm": "MATCH",
@@ -7391,7 +7403,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_rename_invalid_dst_no_table": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_rename_invalid_dst_nul": {
     "vm": "MATCH",
@@ -7399,7 +7413,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_rename_invalid_dst_nul_no_table": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_rename_mounted_to_unmounted": {
     "vm": "MATCH",
@@ -7422,10 +7438,14 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_access": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_access_mount": {
     "vm": "MATCH",
@@ -7433,7 +7453,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_access": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_access_mount": {
     "vm": "MATCH",
@@ -7441,7 +7463,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_auto": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_auto_mount": {
     "vm": "MATCH",
@@ -7449,7 +7473,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_call_host": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_call_host_mount": {
     "vm": "MATCH",
@@ -7457,7 +7483,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_call_host_run": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_call_host_run_mount": {
     "vm": "MATCH",
@@ -7465,7 +7493,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_manual": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_manual_mount": {
     "vm": "MATCH",
@@ -7473,7 +7503,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_async_run": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_async_run_mount": {
     "vm": "MATCH",
@@ -7486,7 +7518,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_call_host": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_call_host_mount": {
     "vm": "MATCH",
@@ -7494,7 +7528,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_call_host_run": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_call_host_run_mount": {
     "vm": "MATCH",
@@ -7502,7 +7538,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_manual": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_manual_mount": {
     "vm": "MATCH",
@@ -7510,7 +7548,9 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_sleep_feed_start_run": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_dispatch_sleep_feed_start_run_mount": {
     "vm": "MATCH",
@@ -7520,7 +7560,9 @@
   },
   "virtual_path_validation_normalization": {
    "x21_cwd_feed": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_feed_web": {
     "vm": "MATCH",
@@ -7528,10 +7570,14 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_invalid": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_invalid_before_overlap": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_invalid_empty": {
     "vm": "MATCH",
@@ -7549,13 +7595,19 @@
     "dart2wasm": "MATCH"
    },
    "x21_normalise_inside": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_virtual_normalised": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_virtual_normalised_trailing": {
-    "vm": "MATCH"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    }
   },
   "mount_usage_inspection": {}
