@@ -198,7 +198,10 @@ vm, dart2js and dart2wasm. Its new `U1` upstream clause excludes
 synchronously”. `cli_telemetry` stays N/A as an upstream CLI capability.
 There is no M6 CI assertion or change to the owner's M3 target.
 
-The measured R-3 error-log timing type (`str` versus Python's `int`) is **not**
-normalized away. It must be fixed in core; `telemetry_error` and the rows using
-it remain non-PRESENT until then. The dependency-lock and P-F1 API blockers
-are recorded in README.md. The existing baseline and `CORE_REF` are unchanged.
+The measured error-log timing type (`str` versus Python's `int`) is **not**
+normalized away. Unlike tracing span attributes, the `logfire::error!` SDK
+log path preserves this integer. Core must correct its error-log timing
+construction; `telemetry_error` and the rows using it remain non-PRESENT
+until then. See [the source-cited finding](../../.gate-logs/R-P2-core-findings.md).
+The OTel lock and F-1 API blockers are resolved. The existing baseline and
+`CORE_REF` are unchanged.

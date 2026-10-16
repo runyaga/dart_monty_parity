@@ -1,0 +1,196 @@
+R-P2 validation, supplied read-only ../rp2-core
+
+Environment:
+  Dart 3.13.5: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart
+  PATH begins with /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin
+  Dart commands use CI=true DART_SUPPRESS_ANALYTICS=true.
+  PUB_CACHE=$PWD/.gate-logs/pub-cache (absolute repo-root path) supplies a
+  writable active_roots directory with read-only symlinks to installed packages.
+  TMPDIR=$PWD/.gate-logs for Python oracle runs.
+  DCM runs without CI=true (local license).
+
+RED before Dart recorder/probes existed:
+  cd packages/monty_parity
+  dart test test/telemetry_probes_test.dart
+  FAIL: telemetry_probes.dart missing; telemetryProbeIds undefined.
+  Evidence: .gate-logs/telemetry-red.txt
+
+Oracle generation (only the new expected outcomes were written):
+  ../oracle-venv/bin/python -I tool/parity/oracle/run_probes.py tool/parity/expected telemetry_plain telemetry_print telemetry_external telemetry_manual telemetry_error telemetry_dump_load
+  PASS: six outcomes generated using Python 3.12 and installed OTel versions.
+  git restore --source=HEAD -- tool/parity/expected/b11fs_unlink_dir
+  Manifest rebound with tool/check_parity_manifest.py compute().
+
+Final full oracle check, after all changes:
+  ../oracle-venv/bin/python -I tool/parity/oracle/run_probes.py .gate-logs/oracle-final
+  PASS: all 104 Python probe outcomes compare byte-for-byte with expected/.
+  This includes every pre-existing Python probe with telemetry installed.
+  Rust-only probes were not regenerated.
+
+Offline tests (repo root):
+  python3 -I tool/check_parity_manifest.py
+  PASS: 673 cases, 107 probes, 839 bound outcomes.
+  python3 -I tool/parity/test_m6_target.py
+  PASS: 3 tests.
+  python3 -I tool/parity/test_telemetry.py
+  PASS: 7 tests (negative controls included).
+  python3 -I tool/parity/test_target.py
+  PASS: 28 tests; M3 target unchanged.
+  python3 -I tool/check_core_upstream.py --core ../rp2-core
+  PASS: 4 files currently identical. OTel lock additions are still BLOCKED.
+
+Dart (packages/monty_parity working directory):
+  dart test test/telemetry_probes_test.dart test/telemetry_recorder_test.dart
+  PASS: 7 tests.
+  dart test test/telemetry_probes_test.dart test/telemetry_recorder_test.dart test/telemetry_vm_test.dart
+  FAIL: 12 pass, 1 fail. telemetry_error alone differs:
+  events[1].logs[0].attributes.total_execution_micros.type
+  Python int, R-3 str. All spans and raw metrics match in that scenario.
+  Other five telemetry scenarios MATCH completely.
+  Evidence: .gate-logs/telemetry-vm-tests.txt
+
+  dart analyze lib/src/telemetry_recorder.dart lib/src/telemetry_probes.dart test/telemetry_recorder_test.dart test/telemetry_probes_test.dart test/telemetry_vm_test.dart
+  PASS: no issues.
+  dart analyze
+  FAIL: 7 errors and 3 inference warnings from missing P-F1 filesystem APIs
+  in existing case_runner.dart and session_probes.dart against R-3.
+  Generated web cases were baked without running a browser.
+  Evidence: .gate-logs/dart-analyze.txt
+
+Formatting (repo root, before commit):
+  git diff --cached --name-only -- '*.dart' | xargs dart format --output=none --set-exit-if-changed
+  PASS: 8 changed Dart files, 0 format changes.
+  git diff --cached --check
+  PASS.
+
+DCM (repo root):
+  dcm analyze packages/monty_parity
+  Exit 0; repository has no configured DCM rules (all contexts skipped).
+  dcm analyze packages/monty_parity --include-rules=avoid-throw-in-finally-block,avoid-missing-completer-stack-trace,avoid-unassigned-late-fields,avoid-duplicate-map-keys,avoid-duplicate-patterns,avoid-passing-async-when-sync-expected,avoid-nested-futures,avoid-future-tostring
+  PASS: 22 files analyzed with those eight correctness rules, no issues.
+  Evidence: .gate-logs/dcm-correctness.txt
+
+Requested full VM run and score (repo root):
+  python3 -I tool/parity/run.py vm --core ../rp2-core --out .gate-logs/vm
+  FAIL exit 1: each runner compilation exits 254 because R-3 predates the
+  OSAccess, MemoryFile, CallbackFile APIs required by this P-F1 parity HEAD.
+  python3 -I tool/parity/score.py .gate-logs/vm --backends vm --markdown .gate-logs/vm/score.md
+  Exit 0 (report only); 95 measured rows ABSENT from missing outcomes.
+  This is NOT a parity pass. No baseline was written.
+
+Independent telemetry diagnostic (temporary, uncommitted driver):
+  dart --packages=packages/monty_parity/.dart_tool/package_config.json .gate-logs/telemetry_vm.dart
+  PASS: six outcomes produced with installed recorder, fresh pools per scenario.
+  python3 -I tool/parity/score.py .gate-logs/telemetry-vm --backends vm --markdown .gate-logs/telemetry-vm/score.md
+  telemetry_context PRESENT; the other three telemetry rows PARTIAL because
+  they include telemetry_error. Other rows lack outcomes in this isolated run.
+
+Blocked dependency item:
+  PyPI JSON request was rejected by sandbox domain allowlist.
+  Missing verified wheel/sdist SHA-256 hashes for:
+    opentelemetry-api==1.45.1
+    opentelemetry-sdk==1.45.1
+    opentelemetry-semantic-conventions==0.66b1
+  typing-extensions==4.16.0 is already pinned. No other base dependencies
+  are required by those installed versions. requirements.lock unchanged.
+  Core needs the identical eventual lock update in a separate core PR.
+
+No browser run. No edits to core, CORE_REF, m3-target.json or baseline-current.json.
+No CI gate added for draft m6-target.json. No baseline regenerated.
+
+======================================================================
+Continuation, 2026-10-16: F-1 merge plus R-2/R-3
+======================================================================
+
+Starting parity HEAD: 7739d193c94e9ff11bf1af18ffa50e7e4f04489c
+Read-only core HEAD: 597659896f70616960b1c63d5b82ba7f6a438e3a
+Read-only upstream HEAD: 591527397445bf734873252d1ee20c1b6308fe7f
+Environment: same Dart SDK, analytics suppression and writable PUB_CACHE
+as above. Python oracle uses ../oracle-venv; TMPDIR=$PWD/.gate-logs.
+Offline Python checks also used /opt/homebrew/bin/python3.
+
+Requested run:
+  python3 -I tool/parity/run.py vm --core ../rp2-core --out .gate-logs/vm2
+  PASS exit 0: refmem, batch, every isolated case and all 52 probes.
+  Evidence: .gate-logs/vm2/run-vm.log, run-refmem-vm.log and outcome files.
+  python3 -I tool/parity/score.py .gate-logs/vm2 --backends vm --markdown .gate-logs/vm2/score.md --json .gate-logs/vm2/score.json
+  Exit 0 (report only): 80/185 PRESENT; 80/95 re-measured PRESENT.
+  All-row totals: PRESENT 80, PARTIAL 34, ABSENT 44, N/A 26, REFUSED 1.
+  Re-measured totals: PRESENT 80, PARTIAL 5, ABSENT 10.
+  telemetry_adapter: PARTIAL
+  telemetry_context: PRESENT
+  telemetry_metrics: PARTIAL
+  telemetry_instrumentation_lifecycle: PARTIAL
+  Five telemetry probes MATCH. telemetry_error DIVERGE only at
+  events[1].logs[0].attributes.total_execution_micros.type: int vs str.
+  All spans and raw metric measurements match, including in telemetry_error.
+
+Classification:
+  (a) No parity normalization/runner defect found; no masking changed.
+  (b) Core errorAttributes uses the unsigned span timing helper for an SDK
+      log integer. Exact core change site, upstream citations and the rule 2
+      span/log distinction are in .gate-logs/R-P2-core-findings.md.
+
+Baseline and installation audit:
+  Compared every non-telemetry scored row and cell against baseline-current,
+  merging arm64 platform overrides exactly as score.py does.
+  PASS: all 91 non-telemetry rows and their cells retain the exact baseline
+  status. No PRESENT regression. Total PRESENT rises from 79 to 80 because
+  telemetry_context is newly measured PRESENT.
+  The production runner installs once before its first pool; its full probe
+  process ran all 52 selected probes together.
+  dart --packages=packages/monty_parity/.dart_tool/package_config.json .gate-logs/telemetry_repeat.dart
+  PASS: one installation, six scenarios in normal then reverse order; all
+  12 normalized event arrays equal the full-suite recordings. The error
+  scenario retains its real int/str mismatch in every context.
+  A temporary copy of the VM runner with only installParityTelemetry and
+  its import removed ran all 46 non-telemetry probes. Comparing score.norm
+  of each complete outcome with the installed run gives zero differences.
+  Existing rules: 40 MATCH, 3 DIVERGE, 3 UNSUPPORTED. The six non-MATCH
+  probes are listed in the findings; none is an instrumentation regression.
+  Evidence: telemetry-repeat.txt, nontelemetry-uninstalled.txt,
+  nontelemetry-audit.json and vm2-uninstalled/.
+
+Oracle and lock:
+  ../oracle-venv/bin/python -I tool/parity/oracle/run_probes.py .gate-logs/oracle-vm2
+  PASS exit 0: all 104 Python probes regenerate byte-for-byte, with
+  instrumentation installed once for the entire oracle probe process.
+  ../oracle-venv/bin/python -I tool/parity/oracle/run_cases.py .gate-logs/oracle-vm2 tool/parity/cases/*/*.json
+  PASS exit 0: all 673 Python cases generated.
+  Of the combined 777 Python outcomes, 776 match byte-for-byte; only the
+  documented macOS/Linux errno in b11fs_unlink_dir differs. No expected
+  outcome was overwritten. Rust-only outcomes were not regenerated.
+  Committed the orchestrator's OTel hashes and recomputed the manifest via
+  check_parity_manifest.compute(), asserting generator/cases/probes unchanged.
+  python3 -I tool/check_parity_manifest.py
+  PASS: 673 cases, 107 probes, 839 bound outcomes; pins b9f99d39f056.
+  python3 -I tool/check_core_upstream.py --core ../rp2-core
+  FAIL exit 1: core's tool/upstream/requirements.lock lacks these OTel
+  additions. Core must mirror the identical file separately. Core untouched.
+
+Offline checks:
+  python3 -I tool/parity/test_telemetry.py: PASS, 7 tests.
+  python3 -I tool/parity/test_m6_target.py: PASS, 3 tests.
+  python3 -I tool/parity/test_target.py: PASS, 28 tests.
+
+Dart checks:
+  dart analyze packages/monty_parity
+  PASS: no issues (including the formerly missing F-1 APIs).
+  cd packages/monty_parity
+  dart test test/telemetry_probes_test.dart test/telemetry_recorder_test.dart test/telemetry_vm_test.dart
+  12 PASS, 1 FAIL: telemetry_error's exact int/str difference. No skip,
+  expectation relaxation or allowance added. This is not a full test pass.
+  Evidence: .gate-logs/telemetry-vm2-tests.txt.
+  git ls-files '*.dart' | xargs dart format --output=none --set-exit-if-changed
+  PASS: all 22 tracked Dart files, zero changes.
+  An earlier whole-directory format check found only ignored cases.g.dart
+  from the previous web bake needed formatting; no tracked Dart file did.
+
+DCM:
+  dcm analyze packages/monty_parity --include-rules=avoid-throw-in-finally-block,avoid-missing-completer-stack-trace,avoid-unassigned-late-fields,avoid-duplicate-map-keys,avoid-duplicate-patterns,avoid-passing-async-when-sync-expected,avoid-nested-futures,avoid-future-tostring
+  PASS exit 0: 22 files, no issues under the same eight correctness rules.
+  Evidence: .gate-logs/dcm-correctness-vm2.txt.
+
+Not run: dart2js/dart2wasm browser suites; Rust oracle regeneration;
+fresh pip install of the supplied lock (the pinned oracle venv was reused).
+No core, CORE_REF, baseline-current.json or m3-target.json changes.

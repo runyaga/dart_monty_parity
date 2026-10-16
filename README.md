@@ -300,22 +300,24 @@ and run the checker. On macOS keep `expected/b11fs_unlink_dir` from git; its
 committed expectation is Linux's errno. The telemetry helper is included in
 the manifest's generator hash.
 
-R-P2 integration blockers in the supplied checkout:
+R-P2 VM validation against core `597659896f70616960b1c63d5b82ba7f6a438e3a`
+(F-1 merge, including R-2/R-3):
 
-- PyPI's JSON API was denied by the sandbox domain allowlist. The lock still
-  needs verified wheel/sdist SHA-256 hashes for `opentelemetry-api==1.45.1`,
-  `opentelemetry-sdk==1.45.1` and
-  `opentelemetry-semantic-conventions==0.66b1`. Their remaining dependency,
-  `typing-extensions==4.16.0`, is already hash-pinned. These are the versions
-  in the supplied read-only oracle venv. No hashes have been invented. Core
-  must mirror the eventual **identical** `tool/upstream/requirements.lock`
-  change in a core PR, as required by `tool/check_core_upstream.py`.
-- The supplied R-3 core predates P-F1's `OSAccess`, `MemoryFile`, and
-  `CallbackFile`. The full runner cannot compile against it. Telemetry tests
-  use the public API independently so they can still measure this checkout.
-- Five telemetry scenarios match R-3 on the VM. The error log's
-  `total_execution_micros` is an integer in Python and a string in R-3. This is
-  a failing comparison, not an exception: core must preserve Python's type.
+- The full runner compiles and completes. The oracle lock now includes the
+  orchestrator-supplied OTel hashes, and the parity manifest binds that lock.
+- VM scores 80/185 PRESENT, versus the baseline's 79. Every non-telemetry
+  row and cell retains its baseline status. All 46 non-telemetry probe
+  transcripts are identical with instrumentation installed or absent.
+- Five telemetry scenarios MATCH. `telemetry_context` is PRESENT; adapter,
+  metrics and instrumentation lifecycle are PARTIAL because they also compare
+  the complete `telemetry_error` transcript. Its only difference is the
+  error-log `total_execution_micros`: Python `int`, core `str`.
+- This is a core recorder finding, not a normalization exception. The
+  unsigned debug-string rule applies to the upstream tracing span path;
+  the error uses `logfire::error!` and the SDK log path, which preserves an
+  integer. Core's `telemetry_attributes.dart:137` incorrectly reuses the
+  span-oriented timing helper. The exact evidence and proposed correction
+  are in [R-P2-core-findings.md](.gate-logs/R-P2-core-findings.md).
 
 No baseline was regenerated and `CORE_REF` remains unchanged. Web runs are
 left to the host orchestrator.
