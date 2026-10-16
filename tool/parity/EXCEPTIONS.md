@@ -1,22 +1,22 @@
 # Parity named exceptions and rule choices
 
 Every difference the parity scorer tolerates is a named exception in `tool/parity/rows.json`, with the
-stable ID used below. `score.py` accepts only these three (`KEPT_EXCEPTIONS`) and fails on a
+stable ID used below. `score.py` accepts only these two (`KEPT_EXCEPTIONS`) and fails on a
 `rows.json` that names any other. Nothing else is tolerated, and an exception applies to a case only
 when the difference it names is actually present in that case. Evidence is in the
 `parity-baseline-5873ec5` CI artifact (`<case>/core-<backend>.json`) against
 `tool/parity/expected/<case>/`.
 
-**Why each one matters (measured):** with no exceptions, core `5873ec5` on arm64 scores FFI PRESENT
-33/185 (dart2js 32, dart2wasm 32) instead of the recorded 36/35/35. Every exception changes at least one
-row's status.
+The historical 5873ec5 totals were measured with three exceptions. P-F1 retires
+`rename-missing-message`: OSAccess must now match the refmem oracle's exact message,
+and a rule that still names that exception fails validation. Historical baselines
+are unchanged; their totals are not measurements of the F-1 runner.
 
 ## Named exceptions
 
 | ID | Rows (cases) | Fields | Observed difference | Rationale | Without it | Removed when |
 |---|---|---|---|---|---|---|
-| `rename-missing-message` | `memory_filesystem` (`b11fs_rename_missing`) | exception message | core `No such file or directory: '/data/nope' -> '/data/z.txt'`; upstream OSAccess `No such file or directory: '/data/nope'`. Same type | every other in-memory filesystem case is equal (58/59); core's wording matches upstream `MountDir` | PARTIAL (recorded **PRESENT**) | core uses OSAccess's wording |
-| `payload-host-type` | `callback_files` (probe `api_callback_files`) | the write event's `type` field | Python `str` (pydantic-monty `CallbackFile`) vs core `VfsText`; path, text, values and order are equal | the host language's type name for the same payload, not sandbox behaviour | ABSENT (recorded **PRESENT**) | not expected (inherently per binding) |
+| `payload-host-type` | `callback_files` (probe `api_callback_files`) | the write event's `type` field | Python `str` (pydantic-monty `CallbackFile`) vs Dart `String`; path, text, values and order are equal | the host language's type name for the same payload, not sandbox behaviour | ABSENT (recorded **PRESENT**) | not expected (inherently per binding) |
 | `no-suspension-position` | `run_progress_variants`, `resume_os_call`, `resolve_pending_futures`, `feed_repl_suspendable` (their probes) | suspension `position` | core `null`; upstream filename + byte range | core exposes no suspension position, which `suspension_source_position` measures on its own (ABSENT); these rows compare kind, name, args, kwargs, resumed values and errors | ABSENT (recorded PARTIAL ×3, **PRESENT** for `resolve_pending_futures`) | core reports suspension positions |
 
 ## Rule choices
@@ -28,7 +28,9 @@ Not exceptions, but they decide statuses:
 | all | **strict PARTIAL**: a row is PARTIAL only when at least one case matches upstream in full (every compared field equal, after only the named exceptions above); a row with no such case is ABSENT, including one of REFUSED and diverging cases; REFUSED needs every case refused. Encoded in `score.py` (`row_status`, `KEPT_EXCEPTIONS`) | a field that merely resembles upstream's (the same text in another type, equal values without identity, a transcript that differs) is not parity |
 | `host_class_type_proxy` | REFUSED only when core raises "a type cannot be sent back" (`h_b07`). `h_b08`, where core cannot build a class value at all ("MontyClassType is not a MontyValue"), is ABSENT, not REFUSED, so the row (REFUSED + ABSENT) is ABSENT | not being able to build the value is absence, not a refusal of a request |
 | `resume_os_call` | PARTIAL: the not-handled probe records core's public substitute (`osCallNoHandlerDefault` + `resumeWithException`) as `unsupported` | core has no not-handled verb; reproducing upstream's error with a substitute is not parity of the API |
-| `memory_filesystem` | oracle is upstream's `OSAccess`+`MemoryFile` (`refmem-py.json`); compares value, exception type and message | the row is the in-memory filesystem; upstream's in-memory filesystem is the comparable oracle |
+| `memory_filesystem` | the separate `refmem` engine outcome is compared to upstream's `OSAccess`+`MemoryFile` (`refmem-py.json`); compares value, exception type and message | the row is the in-memory filesystem; upstream's in-memory filesystem is the comparable oracle |
+| B1 filesystem OS rows (all ten) | `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm, and temporarily on VM until P-F2; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; F-1 also has no host mount on VM. P-F2 restores VM scoring against `MountDir` / `ref-py.json` |
+| cases with `fs.mounts`; mount budget probes | `unsupported: fs.mounts` scores UNSUPPORTED and an all-unsupported row is ABSENT, until P-F2 | OSAccess has neither host mounts nor mount budgets. The separate refmem run seeds only files and applies no mount mode or cap |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
 | `raised_exception` / `traceback_frames` | exception type + message / frames only, over the 273 `b12_*` cases | each row is one part of an exception |

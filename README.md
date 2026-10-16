@@ -16,6 +16,10 @@ current baseline against every pull request.
 CI's `current` job reproduces it there. A core commit that does not change parity behaviour passes too,
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
+P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
+`CallbackFile`). While that branch has no supplied commit, [CORE_REF.pending.md](CORE_REF.pending.md)
+records the pending pin and measurements; the historical `CORE_REF` cannot compile this runner.
+
 ## Layout
 
 | Path | What |
@@ -61,6 +65,19 @@ python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/score.md \
 `--core` is required. `run.py` points the runner at it with a `pubspec_overrides.yaml` written for the
 run and removed afterwards. `--cases GLOB ...` limits a run to some cases. One output directory holds one
 architecture's outcomes; `score.py` reads the architecture from `platform.json` in it.
+
+Every selected case marked `refmem: true` also runs independently through the public
+session with `OSAccess(files: [MemoryFile(...)])` and writes
+`OUTDIR/<case>/refmem-<backend>.json`. The VM, dart2js and dart2wasm all produce this
+column. Stale memory outcomes are removed before the run. B1 rows and
+`memory_filesystem` score it against `refmem-py.json`; until P-F2 this applies to the
+VM too. The ordinary case outcome records `unsupported: fs.mounts` for mount
+requests. Mount write and memory budget probes also remain unsupported until P-F2.
+The case's `cwd` is passed to each feed, including manually resumed feeds.
+
+`run.py` generates the temporary browser input `packages/monty_parity/test/cases.g.dart`.
+After baking it, `run.py BACKEND --check --engine ENGINE [--cases GLOB ...]` checks
+its bytes without launching Dart or a browser (no `--core` or `--out` needed).
 
 ### E0 through the worker
 

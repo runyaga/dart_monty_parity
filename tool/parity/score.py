@@ -189,7 +189,6 @@ def expand(codes: list[str]) -> list[str]:
 # actually present: `ignore` (case rows: field codes) or `ignore_keys` (probe
 # rows: event keys).
 KEPT_EXCEPTIONS = {
-    'rename-missing-message': 'ignore',
     'payload-host-type': 'ignore_keys',
     'no-suspension-position': 'ignore_keys',
 }
@@ -249,13 +248,15 @@ def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
                   engine: str = 'core') -> tuple[str, list[str], list[str]]:
     """-> (class, differing codes, names of the exceptions that changed the verdict)."""
     ref = load(expected / cid / f"{rule.get('oracle', 'ref-py')}.json")
-    got = load(out / cid / f'{engine}-{backend}.json')
+    got = load(out / cid / f"{rule.get('engine', engine)}-{backend}.json")
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!'], []
     if is_refusal(got, rule):
         return 'REFUSED', [], []
     if ref is None or ref.get('runner_error'):
         return 'NO-ORACLE', ['?'], []
+    if 'fs.mounts' in (got.get('unsupported') or {}):
+        return 'UNSUPPORTED', ['fs.mounts'], []
     codes = expand(rule.get('compare', ALL_CODES))
     applied = []
     for ex in rule.get('exceptions', []):
