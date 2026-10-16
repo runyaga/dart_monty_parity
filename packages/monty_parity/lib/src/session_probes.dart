@@ -1097,6 +1097,40 @@ _probes = {
       await p.withSession((s) => _run(t, () => s.feedRun('3')));
     },
   ),
+  // P7 plus the 2 MB second-frame-copy regression. Use a fresh worker so
+  // earlier type-checking allocations cannot affect the tight limits.
+  'sp_memory_headroom': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
+    (p) async {
+      for (final size in [700000, 1500000, 2000000, 6000000]) {
+        t.add({'ev': 'input', 'bytes': size, 'max_memory': 1000000});
+        await p.withSession((s) async {
+          await _limitError(
+            t,
+            () =>
+                s.feedRun('len(x)', inputs: {'x': MontyBytes(Uint8List(size))}),
+          );
+          if (size == 6000000) {
+            await _finishedFeed(t, () => s.feedRun('2'));
+          } else if (size > 1000000) {
+            await _limitError(t, () => s.feedRun('2'));
+          }
+        }, limits: const ResourceLimits(maxMemory: 1000000));
+      }
+      t.add({'ev': 'no_limit'});
+      await p.withSession(
+        (s) => _run(t, () => s.feedRun("len('x' * 50_000_000)")),
+      );
+      t.add({'ev': 'baseline', 'checkouts': 20, 'max_memory': 300000});
+      for (var i = 0; i < 20; i++) {
+        await p.withSession(
+          (s) => _run(t, () => s.feedRun('sum(range(1000))')),
+          limits: const ResourceLimits(maxMemory: 300000),
+        );
+      }
+    },
+  ),
   'sp_install_dependencies': (t, shared, _) => shared.withSession((s) async {
     await _install(t, () => s.installDependencies([]));
     await _install(t, () => s.installDependencies(['httpx']));
@@ -1173,6 +1207,59 @@ _probes = {
       t.add(_errEv(e.exception, e.traceback));
     }
   }),
+  // P2: the print must arrive before the request timeout kills the turn.
+  'sp_print_kill_after_print': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(
+      maxProcesses: 1,
+      checkoutTimeout: Duration(seconds: 10),
+      requestTimeout: Duration(milliseconds: 1500),
+    ),
+    (p) => p.withSession((s) async {
+      try {
+        t.add({
+          'ev': 'complete',
+          'value': identityCanon(
+            await s.feedRun(
+              "print('early')\nwhile True:\n    pass",
+              printCallback: (stream, text) =>
+                  t.add({'ev': 'print', 'stream': stream, 'text': text}),
+            ),
+          ),
+        });
+      } on MontyCrashedError catch (e) {
+        t.add({'ev': 'crashed', 'timed_out': e.timedOut});
+      } on MontyRuntimeError catch (e) {
+        t.add(_errEv(e.exception, e.traceback));
+      } on Object catch (e) {
+        t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
+      }
+    }, printFlushInterval: Duration.zero),
+  ),
+  // P5: prints delivered to the host must not accumulate in worker memory.
+  'sp_print_volume_under_limit': (t, _, start) => _withPool(
+    start,
+    const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
+    (p) => p.withSession(
+      (s) async {
+        final c = CollectString(maxBytes: null);
+        await _limitError(
+          t,
+          () => s.feedRun(
+            "for i in range(20000):\n    print('y' * 200)\n'done'",
+            printCallback: c.call,
+          ),
+        );
+        t.add({
+          'ev': 'collected',
+          'bytes': c.output.length,
+          'content_matches': c.output == ('${'y' * 200}\n' * 20000),
+        });
+      },
+      limits: const ResourceLimits(maxMemory: 2000000),
+      printFlushInterval: Duration.zero,
+    ),
+  ),
   // With a long flush interval, output is held until a host call or the
   // end of the run, then delivered.
   'sp_print_batched': (t, shared, _) => shared.withSessionWith(
