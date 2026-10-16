@@ -256,3 +256,66 @@ is not listed there is tolerated.
 ## License
 
 MIT, see `LICENSE`.
+
+## R-P2 telemetry probes (draft M6)
+
+`telemetry_plain`, `telemetry_print`, `telemetry_external`, `telemetry_manual`,
+`telemetry_error` and `telemetry_dump_load` compare a recording `MontyTelemetry`
+with Python's OpenTelemetry SDK span/log exporters and a raw recording meter.
+Each runner installs once at process start, before any cases or probes. Each
+telemetry scenario clears only its buffers and opens and closes a fresh pool
+under an ambient host span. Other probes therefore also run instrumented.
+The six scenarios explicitly use a 50 MB memory limit and 120 assertion
+annotation bytes on both bindings, so differences in API defaults do not
+change their configuration.
+
+The records preserve span parentage, attributes and their encodings, numeric
+and text log severity, and every raw metric measurement. Timestamps and
+snapshot sizes are validated within each run before their values are masked.
+`EXCEPTIONS.md` describes the exact normalization. The four telemetry rows are
+probed through the core runner on all backends; `tool/parity/m6-target.json` is
+**only a draft**, containing those four target rows and the upstream flush
+exclusion. It is not wired into CI and does not replace `m3-target.json`.
+Its offline self-test validates the scoped draft; the ordinary `score.py
+--target` option requires a complete milestone partition.
+
+```sh
+python3 -I tool/parity/test_m6_target.py
+python3 -I tool/parity/test_telemetry.py
+# With the runner's core dependency configured:
+(cd packages/monty_parity && dart test test/telemetry_probes_test.dart \
+  test/telemetry_recorder_test.dart test/telemetry_vm_test.dart)
+```
+
+To regenerate only these expectations with the supplied Python 3.12 oracle:
+
+```sh
+../oracle-venv/bin/python -I tool/parity/oracle/run_probes.py tool/parity/expected \
+  telemetry_plain telemetry_print telemetry_external telemetry_manual \
+  telemetry_error telemetry_dump_load
+```
+
+Then re-bind `manifest.json` using `tool/check_parity_manifest.py`'s `compute()`
+and run the checker. On macOS keep `expected/b11fs_unlink_dir` from git; its
+committed expectation is Linux's errno. The telemetry helper is included in
+the manifest's generator hash.
+
+R-P2 integration blockers in the supplied checkout:
+
+- PyPI's JSON API was denied by the sandbox domain allowlist. The lock still
+  needs verified wheel/sdist SHA-256 hashes for `opentelemetry-api==1.45.1`,
+  `opentelemetry-sdk==1.45.1` and
+  `opentelemetry-semantic-conventions==0.66b1`. Their remaining dependency,
+  `typing-extensions==4.16.0`, is already hash-pinned. These are the versions
+  in the supplied read-only oracle venv. No hashes have been invented. Core
+  must mirror the eventual **identical** `tool/upstream/requirements.lock`
+  change in a core PR, as required by `tool/check_core_upstream.py`.
+- The supplied R-3 core predates P-F1's `OSAccess`, `MemoryFile`, and
+  `CallbackFile`. The full runner cannot compile against it. Telemetry tests
+  use the public API independently so they can still measure this checkout.
+- Five telemetry scenarios match R-3 on the VM. The error log's
+  `total_execution_micros` is an integer in Python and a string in R-3. This is
+  a failing comparison, not an exception: core must preserve Python's type.
+
+No baseline was regenerated and `CORE_REF` remains unchanged. Web runs are
+left to the host orchestrator.

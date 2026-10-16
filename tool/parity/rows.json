@@ -2802,6 +2802,43 @@
      "sp_install_dependencies"
     ]
    }
+  },
+  "telemetry_adapter": {
+   "probes": [
+    "telemetry_plain",
+    "telemetry_print",
+    "telemetry_external",
+    "telemetry_manual",
+    "telemetry_error",
+    "telemetry_dump_load"
+   ]
+  },
+  "telemetry_context": {
+   "probes": [
+    "telemetry_external",
+    "telemetry_manual",
+    "telemetry_dump_load"
+   ]
+  },
+  "telemetry_metrics": {
+   "probes": [
+    "telemetry_plain",
+    "telemetry_print",
+    "telemetry_external",
+    "telemetry_manual",
+    "telemetry_error",
+    "telemetry_dump_load"
+   ]
+  },
+  "telemetry_instrumentation_lifecycle": {
+   "probes": [
+    "telemetry_plain",
+    "telemetry_print",
+    "telemetry_external",
+    "telemetry_manual",
+    "telemetry_error",
+    "telemetry_dump_load"
+   ]
   }
  },
  "rescored": {

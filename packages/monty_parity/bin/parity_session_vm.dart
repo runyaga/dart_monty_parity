@@ -23,10 +23,12 @@ import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/monty_parity.dart';
 import 'package:monty_parity/src/session_probes.dart';
 import 'package:monty_parity/src/session_runner.dart';
+import 'package:monty_parity/src/telemetry_recorder.dart';
 
 const enc = JsonEncoder.withIndent(' ');
 
 Future<void> main(List<String> args) async {
+  installParityTelemetry();
   final outdir = args.first;
   const flag = '--probes=';
   const engineFlag = '--engine=';
