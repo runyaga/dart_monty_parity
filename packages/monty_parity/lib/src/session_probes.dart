@@ -1234,27 +1234,31 @@ _probes = {
       } on Object catch (e) {
         t.add({'ev': 'refused', 'cls': e.runtimeType.toString(), 'msg': '$e'});
       }
-    }),
+    }, printFlushInterval: Duration.zero),
   ),
   // P5: prints delivered to the host must not accumulate in worker memory.
   'sp_print_volume_under_limit': (t, _, start) => _withPool(
     start,
     const PoolOptions(maxProcesses: 1, checkoutTimeout: Duration(seconds: 10)),
-    (p) => p.withSession((s) async {
-      final c = CollectString(maxBytes: null);
-      await _limitError(
-        t,
-        () => s.feedRun(
-          "for i in range(20000):\n    print('y' * 200)\n'done'",
-          printCallback: c.call,
-        ),
-      );
-      t.add({
-        'ev': 'collected',
-        'bytes': c.output.length,
-        'content_matches': c.output == ('${'y' * 200}\n' * 20000),
-      });
-    }, limits: const ResourceLimits(maxMemory: 2000000)),
+    (p) => p.withSession(
+      (s) async {
+        final c = CollectString(maxBytes: null);
+        await _limitError(
+          t,
+          () => s.feedRun(
+            "for i in range(20000):\n    print('y' * 200)\n'done'",
+            printCallback: c.call,
+          ),
+        );
+        t.add({
+          'ev': 'collected',
+          'bytes': c.output.length,
+          'content_matches': c.output == ('${'y' * 200}\n' * 20000),
+        });
+      },
+      limits: const ResourceLimits(maxMemory: 2000000),
+      printFlushInterval: Duration.zero,
+    ),
   ),
   // With a long flush interval, output is held until a host call or the
   // end of the run, then delivered.
