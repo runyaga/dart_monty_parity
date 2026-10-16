@@ -40,7 +40,7 @@ TGT1 = {
 # The owner's TGT2 allowance (2026-10-15), scoped to the worker engine's one recorded divergence.
 TGT2 = {'unstable_graph_access': ('owner-exception', 'PARTIAL', BACKENDS, ['w_graph_cycle_ret'])}
 # The owner's P-F1 F-1-window allowance (FAST1(4) delegated), until F-2 restores host mounts.
-PF1 = {'os_environment': ('owner-exception', 'PARTIAL', BACKENDS, ['x21_fallback_nonfs'])}
+PF1 = {'os_environment': ('owner-exception', 'PARTIAL', ['dart2js', 'dart2wasm'], ['x21_fallback_nonfs'])}
 
 
 class TargetTest(unittest.TestCase):
@@ -146,23 +146,37 @@ class TargetTest(unittest.TestCase):
             self.assertIn(cells[0], self.rules[cid]['cases'])
             target = {'rows': {cid: row}}
             core = {cid: {b: {'cells': [{'case': 'b14_env', 'class': 'MATCH'},
-                                       {'case': cells[0], 'class': 'UNSUPPORTED'}]} for b in BACKENDS}}
-            st = {cid: {b: ('PARTIAL', 'measured') for b in BACKENDS}}
-            misses = score.scope_misses(target, core, self.rules, BACKENDS, None, Path('/nonexistent'), self.cases)
+                                       {'case': cells[0], 'class': 'UNSUPPORTED'}]} for b in backends}}
+            st = {cid: {b: ('PARTIAL', 'measured') for b in backends}}
+            misses = score.scope_misses(target, core, self.rules, backends, None, Path('/nonexistent'), self.cases)
             self.assertEqual(misses, {})
-            self.assertEqual(score.score_target(target, st, BACKENDS, misses)[1], 0)
-            for b in BACKENDS:
+            self.assertEqual(score.score_target(target, st, backends, misses)[1], 0)
+            for b in backends:
                 core[cid][b]['cells'][0]['class'] = 'DIVERGE'
-            misses = score.scope_misses(target, core, self.rules, BACKENDS, None, Path('/nonexistent'), self.cases)
-            self.assertEqual(misses, {(cid, b): ['b14_env'] for b in BACKENDS})
-            self.assertEqual(score.score_target(target, st, BACKENDS, misses)[1], 3)
-            for b in BACKENDS:
+            misses = score.scope_misses(target, core, self.rules, backends, None, Path('/nonexistent'), self.cases)
+            self.assertEqual(misses, {(cid, b): ['b14_env'] for b in backends})
+            self.assertEqual(score.score_target(target, st, backends, misses)[1], len(backends))
+            for b in backends:
                 with self.subTest(backend=b):
                     present = copy.deepcopy(st)
                     present[cid][b] = ('PRESENT', 'measured')
-                    lines, fails = score.score_target(target, present, BACKENDS)
+                    lines, fails = score.score_target(target, present, backends)
                     self.assertEqual(fails, 1)
                     self.assertIn('PRESENT STALE', '\n'.join(lines))
+
+    def test_pf2_environment_vm_is_present_without_stale_allowance(self) -> None:
+        cid = 'os_environment'
+        rule = self.rules[cid]
+        # Model both cells matching; VM must accept PRESENT and reject a regression.
+        classes = ['MATCH' for _ in rule['cases']]
+        status = score.row_status(classes)
+        self.assertEqual(status, 'PRESENT')
+        lines, fails = score.score_target({'rows': {cid: self.target['rows'][cid]}},
+                                         {cid: {'vm': (status, 'measured')}}, ['vm'])
+        self.assertEqual(fails, 0, '\n'.join(lines))
+        _, fails = score.score_target({'rows': {cid: self.target['rows'][cid]}},
+                                      {cid: {'vm': ('PARTIAL', 'measured')}}, ['vm'])
+        self.assertEqual(fails, 1)
 
     def test_evidenced_by_is_validated(self) -> None:
         t = copy.deepcopy(self.target)

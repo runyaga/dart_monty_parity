@@ -1,0 +1,28 @@
+{
+ "id": "x21_restore_with_mount",
+ "code": "from pathlib import Path\nPath('/data/n.txt').write_text('ov')\next()\n(Path('/data/n.txt').exists(), Path('/data/a.txt').read_text())",
+ "restore_snapshot_at": "ext",
+ "restore_mount": true,
+ "externals": {
+  "ext": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

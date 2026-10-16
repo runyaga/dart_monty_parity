@@ -1,0 +1,32 @@
+{
+ "id": "x21_dispatch_sleep_feed_start_call_host_mount",
+ "code": "import time\ntime.sleep(0)\n7",
+ "feed_start": true,
+ "record_dispatch": true,
+ "dispatch": "auto",
+ "os": {
+  "time.sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "os_policy": {
+  "sleep": "call_host"
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

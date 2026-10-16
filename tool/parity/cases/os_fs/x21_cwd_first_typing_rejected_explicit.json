@@ -1,0 +1,34 @@
+{
+ "id": "x21_cwd_first_typing_rejected_explicit",
+ "code": "1",
+ "type_check": true,
+ "feeds": [
+  {
+   "code": "x: int = \"bad\"",
+   "cwd": "/explicit",
+   "mount_indices": [
+    0
+   ]
+  },
+  {
+   "code": "import os\nos.getcwd()",
+   "mount_indices": [
+    1
+   ]
+  }
+ ],
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/first"
+   },
+   {
+    "virtual": "/second"
+   },
+   {
+    "virtual": "/other"
+   }
+  ],
+  "files": {}
+ }
+}

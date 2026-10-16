@@ -1,0 +1,6 @@
+{
+ "id": "x21_cwd_feed_web",
+ "code": "import os\nos.getcwd()",
+ "cwd": "/a/../work/./",
+ "host_errors": "plain"
+}

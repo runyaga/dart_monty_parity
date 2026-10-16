@@ -528,8 +528,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -537,7 +535,28 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_predicates"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_file_reads": {
    "cases": [
@@ -552,8 +571,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -561,7 +578,33 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_read_text",
+     "b11fs_read_bytes",
+     "b11fs_read_text_unicode",
+     "b11fs_read_open_partial",
+     "b11fs_read_missing",
+     "b11fs_read_dir"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_file_writes": {
    "cases": [
@@ -575,8 +618,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -584,7 +625,32 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_write_text",
+     "b11fs_write_bytes",
+     "b11fs_overwrite",
+     "b11fs_append_open",
+     "b11fs_write_open"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_rename": {
    "cases": [
@@ -597,8 +663,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -606,7 +670,31 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_rename",
+     "b11fs_rename_replace",
+     "b11fs_rename_dir",
+     "b11fs_rename_missing"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_path_resolution": {
    "cases": [
@@ -616,8 +704,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -625,7 +711,28 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_resolve_absolute"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_open_file": {
    "cases": [
@@ -652,8 +759,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -661,7 +766,45 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "x8mode_00",
+     "x8mode_01",
+     "x8mode_02",
+     "x8mode_03",
+     "x8mode_04",
+     "x8mode_05",
+     "x8mode_06",
+     "x8mode_07",
+     "x8mode_08",
+     "x8mode_09",
+     "x8mode_10",
+     "x8mode_11",
+     "x8mode_12",
+     "x8mode_13",
+     "x8mode_14",
+     "x8mode_15",
+     "x8mode_16",
+     "x8mode_17"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_stat_results": {
    "cases": [
@@ -673,8 +816,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -682,7 +823,30 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_stat_file",
+     "b11fs_stat_dir",
+     "b11fs_stat_missing"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_directory_listing": {
    "cases": [
@@ -695,8 +859,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -704,7 +866,31 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_iterdir",
+     "b11fs_iterdir_file",
+     "b11fs_iterdir_missing",
+     "b11fs_read_root_listing"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_directory_creation": {
    "cases": [
@@ -719,8 +905,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -728,7 +912,33 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_mkdir",
+     "b11fs_mkdir_exists",
+     "b11fs_mkdir_exist_ok",
+     "b11fs_mkdir_parents",
+     "b11fs_mkdir_no_parent",
+     "b11fs_mkdir_then_write"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "os_entry_removal": {
    "cases": [
@@ -743,8 +953,6 @@
     "ffi": "PRESENT",
     "web": "PRESENT"
    },
-   "oracle": "refmem-py",
-   "engine": "refmem",
    "compare": [
     "V",
     "E",
@@ -752,7 +960,33 @@
     "O",
     "X",
     "C"
-   ]
+   ],
+   "engine_web": "refmem",
+   "oracle_web": "refmem-py",
+   "historical": {
+    "cases": [
+     "b11fs_unlink",
+     "b11fs_unlink_dir",
+     "b11fs_unlink_missing",
+     "b11fs_rmdir_empty",
+     "b11fs_rmdir_file",
+     "b11fs_rmdir_nonempty"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    },
+    "oracle": "refmem-py",
+    "engine": "refmem",
+    "compare": [
+     "V",
+     "E",
+     "P",
+     "O",
+     "X",
+     "C"
+    ]
+   }
   },
   "memory_filesystem": {
    "cases": [
@@ -844,22 +1078,54 @@
     "x21_nested_virtual",
     "x21_trailing_slash_virtual",
     "x21_dup_virtual",
-    "x21_relative_virtual"
+    "x21_relative_virtual",
+    "x21_ctor_bad_mode",
+    "x21_ctor_relative_virtual",
+    "x21_ctor_missing_host",
+    "x21_ctor_negative_memory_limit",
+    "x21_ctor_negative_limit"
    ],
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "historical": {
+    "cases": [
+     "x21_two_mounts",
+     "x21_nested_virtual",
+     "x21_trailing_slash_virtual",
+     "x21_dup_virtual",
+     "x21_relative_virtual"
+    ],
+    "expect": {
+     "ffi": "PARTIAL",
+     "web": "PARTIAL"
+    }
    }
   },
   "mount_modes": {
    "cases": [
     "x21_ro_read_ok",
     "x21_ro_write",
-    "x21_overlay_same_feed"
+    "x21_overlay_same_feed",
+    "x21_abs_symlink",
+    "x21_rel_symlink",
+    "x21_cross_mount_rename"
    ],
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "historical": {
+    "cases": [
+     "x21_ro_read_ok",
+     "x21_ro_write",
+     "x21_overlay_same_feed"
+    ],
+    "expect": {
+     "ffi": "PARTIAL",
+     "web": "PARTIAL"
+    }
    }
   },
   "mount_errors": {
@@ -871,11 +1137,32 @@
     "x21_ro_unlink",
     "x21_dup_virtual",
     "x21_relative_virtual",
-    "g19_close_then_feed"
+    "g19_close_then_feed",
+    "x21_ctor_bad_mode",
+    "x21_ctor_relative_virtual",
+    "x21_ctor_missing_host",
+    "x21_ctor_negative_memory_limit",
+    "x21_ctor_negative_limit"
    ],
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "historical": {
+    "cases": [
+     "x21_write_limit",
+     "x21_ro_write",
+     "x21_ro_mkdir",
+     "x21_ro_open_w",
+     "x21_ro_unlink",
+     "x21_dup_virtual",
+     "x21_relative_virtual",
+     "g19_close_then_feed"
+    ],
+    "expect": {
+     "ffi": "PARTIAL",
+     "web": "PARTIAL"
+    }
    }
   },
   "mount_feed_lifecycle": {
@@ -883,11 +1170,26 @@
     "x21_lifecycle_read-write",
     "x21_lifecycle_delete_read-write",
     "x21_lifecycle_overlay",
-    "x21_write_limit_per_feed"
+    "x21_write_limit_per_feed",
+    "x21_overlay_across_suspension",
+    "x21_restore_with_mount",
+    "x21_restore_without_mount"
    ],
    "expect": {
     "ffi": "PARTIAL",
     "web": "PARTIAL"
+   },
+   "historical": {
+    "cases": [
+     "x21_lifecycle_read-write",
+     "x21_lifecycle_delete_read-write",
+     "x21_lifecycle_overlay",
+     "x21_write_limit_per_feed"
+    ],
+    "expect": {
+     "ffi": "PARTIAL",
+     "web": "PARTIAL"
+    }
    }
   },
   "mount_close": {
@@ -1001,11 +1303,46 @@
     "b14_getcwd_set",
     "x21_cwd_feed",
     "x21_cwd_default_mount",
-    "x21_cwd_relative_fallback"
+    "x21_cwd_relative_fallback",
+    "x21_cwd_syntax_error_establishes",
+    "x21_cwd_load_session",
+    "x21_cwd_first_typing_rejected_established",
+    "x21_cwd_first_typing_rejected",
+    "x21_cwd_syntax_error_establishes_web",
+    "x21_cwd_load_snapshot_web",
+    "x21_cwd_first_typing_rejected_web",
+    "x21_cwd_load_session_web",
+    "x21_cwd_first_typing_rejected_explicit",
+    "x21_cwd_load_snapshot",
+    "x21_cwd_feed_web",
+    "x21_cwd_first_typing_rejected_established_web"
    ],
    "expect": {
     "ffi": "ABSENT",
     "web": "ABSENT"
+   },
+   "cases_web": [
+    "b14_getcwd_default",
+    "b14_getcwd_set",
+    "x21_cwd_syntax_error_establishes_web",
+    "x21_cwd_load_snapshot_web",
+    "x21_cwd_first_typing_rejected_web",
+    "x21_cwd_load_session_web",
+    "x21_cwd_feed_web",
+    "x21_cwd_first_typing_rejected_established_web"
+   ],
+   "historical": {
+    "cases": [
+     "b14_getcwd_default",
+     "b14_getcwd_set",
+     "x21_cwd_feed",
+     "x21_cwd_default_mount",
+     "x21_cwd_relative_fallback"
+    ],
+    "expect": {
+     "ffi": "ABSENT",
+     "web": "ABSENT"
+    }
    }
   },
   "clock_source": {
@@ -2068,6 +2405,18 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
+   },
+   "cases": [
+    "x21_memory_read_transient"
+   ],
+   "historical": {
+    "probes": [
+     "api_memory_budget"
+    ],
+    "expect": {
+     "ffi": "PRESENT",
+     "web": "PRESENT"
+    }
    }
   },
   "callback_files": {
@@ -2803,6 +3152,136 @@
     ]
    }
   },
+  "mount_root_capability": {
+   "expect": {
+    "ffi": "ABSENT",
+    "web": "ABSENT"
+   },
+   "cases": [
+    "x21_root_rename_host",
+    "x21_root_canonical_host_path"
+   ],
+   "historical": null
+  },
+  "mount_dispatch_and_fallback": {
+   "expect": {
+    "ffi": "ABSENT",
+    "web": "ABSENT"
+   },
+   "cases": [
+    "x21_dispatch_sleep_feed_start_access_mount",
+    "x21_dispatch_sleep_feed_start_call_host_mount",
+    "x21_dispatch_outside_not_handled",
+    "x21_dispatch_sleep_feed_start_async_run_mount",
+    "x21_dispatch_sleep_feed_start_async_access",
+    "x21_dispatch_sleep_feed_start_run_mount",
+    "x21_dispatch_sleep_feed_start_async_auto",
+    "x21_dispatch_rename_neither_mounted",
+    "x21_dispatch_rename_invalid_dst",
+    "x21_dispatch_rename_same_mount",
+    "x21_dispatch_sleep_feed_start_manual_mount",
+    "x21_dispatch_rename_mounted_to_unmounted",
+    "x21_dispatch_sleep_feed_start_async_run",
+    "x21_dispatch_getenv_with_mount",
+    "x21_dispatch_sleep_feed_start_async_access_mount",
+    "x21_dispatch_sleep_feed_start_run",
+    "x21_dispatch_sleep_feed_start",
+    "x21_dispatch_sleep_feed_start_auto_mount",
+    "x21_dispatch_sleep_feed_start_async_call_host",
+    "x21_dispatch_rename_distinct_mounts",
+    "x21_dispatch_sleep_feed_start_manual",
+    "x21_dispatch_sleep_feed_start_async_auto_mount",
+    "x21_dispatch_sleep_feed_start_call_host",
+    "x21_dispatch_sleep_feed_start_async_manual_mount",
+    "x21_dispatch_rename_invalid_dst_nul",
+    "x21_dispatch_rename_invalid_dst_nul_no_table",
+    "x21_dispatch_rename_invalid_dst_no_table",
+    "x21_dispatch_sleep_feed_start_async_manual",
+    "x21_dispatch_sleep_feed_start_async_call_host_mount",
+    "x21_dispatch_in_mount",
+    "x21_dispatch_rename_unmounted_to_mounted",
+    "x21_dispatch_outside_to_os",
+    "x21_dispatch_missing_in_mount_no_fallback",
+    "x21_dispatch_sleep_feed_start_access",
+    "x21_dispatch_sleep_feed_start_call_host_run",
+    "x21_dispatch_sleep_feed_start_call_host_run_mount",
+    "x21_dispatch_sleep_feed_start_async_call_host_run",
+    "x21_dispatch_sleep_feed_start_async_call_host_run_mount"
+   ],
+   "cases_web": [
+    "x21_dispatch_sleep_feed_start_access_mount",
+    "x21_dispatch_sleep_feed_start_call_host_mount",
+    "x21_dispatch_outside_not_handled",
+    "x21_dispatch_sleep_feed_start_async_run_mount",
+    "x21_dispatch_sleep_feed_start_run_mount",
+    "x21_dispatch_rename_neither_mounted",
+    "x21_dispatch_rename_invalid_dst",
+    "x21_dispatch_rename_same_mount",
+    "x21_dispatch_sleep_feed_start_manual_mount",
+    "x21_dispatch_rename_mounted_to_unmounted",
+    "x21_dispatch_getenv_with_mount",
+    "x21_dispatch_sleep_feed_start_async_access_mount",
+    "x21_dispatch_sleep_feed_start_auto_mount",
+    "x21_dispatch_rename_distinct_mounts",
+    "x21_dispatch_sleep_feed_start_async_auto_mount",
+    "x21_dispatch_sleep_feed_start_async_manual_mount",
+    "x21_dispatch_rename_invalid_dst_nul",
+    "x21_dispatch_sleep_feed_start_async_call_host_mount",
+    "x21_dispatch_in_mount",
+    "x21_dispatch_rename_unmounted_to_mounted",
+    "x21_dispatch_outside_to_os",
+    "x21_dispatch_missing_in_mount_no_fallback",
+    "x21_dispatch_sleep_feed_start_call_host_run_mount",
+    "x21_dispatch_sleep_feed_start_async_call_host_run_mount"
+   ],
+   "historical": null,
+   "controls_web": [
+    "x21_dispatch_sleep_feed_start_async_access",
+    "x21_dispatch_sleep_feed_start_async_auto",
+    "x21_dispatch_sleep_feed_start_async_run",
+    "x21_dispatch_sleep_feed_start_run",
+    "x21_dispatch_sleep_feed_start",
+    "x21_dispatch_sleep_feed_start_async_call_host",
+    "x21_dispatch_sleep_feed_start_manual",
+    "x21_dispatch_sleep_feed_start_call_host",
+    "x21_dispatch_rename_invalid_dst_nul_no_table",
+    "x21_dispatch_rename_invalid_dst_no_table",
+    "x21_dispatch_sleep_feed_start_async_manual",
+    "x21_dispatch_sleep_feed_start_access",
+    "x21_dispatch_sleep_feed_start_call_host_run",
+    "x21_dispatch_sleep_feed_start_async_call_host_run"
+   ]
+  },
+  "virtual_path_validation_normalization": {
+   "expect": {
+    "ffi": "ABSENT",
+    "web": "ABSENT"
+   },
+   "cases": [
+    "x21_cwd_invalid_before_overlap",
+    "x21_cwd_invalid",
+    "x21_cwd_invalid_empty",
+    "x21_virtual_normalised",
+    "x21_virtual_normalised_trailing",
+    "x21_cwd_invalid_nul",
+    "x21_cwd_feed",
+    "x21_normalise_inside",
+    "x21_cwd_feed_web",
+    "x21_cwd_invalid_web"
+   ],
+   "cases_web": [
+    "x21_cwd_invalid_empty",
+    "x21_cwd_invalid_nul",
+    "x21_cwd_feed_web",
+    "x21_cwd_invalid_web"
+   ],
+   "historical": null
+  },
+  "mount_usage_inspection": {
+   "allowed": "REFUSED-as-upstream",
+   "reason": "no binding API (P13)",
+   "historical": null
+  },
   "telemetry_adapter": {
    "probes": [
     "telemetry_plain",
@@ -3026,16 +3505,16 @@
      "items": [
       {
        "t": "str",
-       "v": "KeyError(\"'🫩\\\\ud800'\")"
+       "v": "KeyError(\"'\ud83e\udee9\\\\ud800'\")"
       },
       {
        "t": "str",
-       "v": "\"'🫩\\\\ud800'\""
+       "v": "\"'\ud83e\udee9\\\\ud800'\""
       },
       {
        "t": "exception",
        "type": "KeyError",
-       "arg": "'🫩\\ud800'"
+       "arg": "'\ud83e\udee9\\ud800'"
       }
      ]
     }

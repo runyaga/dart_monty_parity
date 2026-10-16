@@ -9,5 +9,6 @@
   ],
   "files": {}
  },
- "host_errors": "plain"
+ "host_errors": "plain",
+ "local_refusal": true
 }

@@ -33,7 +33,10 @@ ID_FIELDS = ('instance_id', 'class_id')
 ALL_CODES = ['V', 'Et', 'Em', 'Ef', 'Ed', 'P', 'O', 'X', 'H', 'C']
 FIELD = {'V': 'value', 'P': 'prints', 'O': 'os_calls', 'X': 'ext_calls', 'H': 'host_calls'}
 EXC = {'Et': 'type', 'Em': 'message', 'Ef': 'traceback', 'Ed': 'data'}
-CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close')
+CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close',
+               'feed_start', 'dispatch', 'expect_os_snapshot', 'record_dispatch',
+               'sleep_access', 'mount_indices', 'restore_mount', 'restore_snapshot_at',
+               'close_mount_before_feed', 'ctor_only', 'rename_host_before_feed')
 UUID = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 
 

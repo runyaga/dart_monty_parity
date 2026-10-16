@@ -1,0 +1,27 @@
+{
+ "id": "x21_dispatch_getenv_with_mount",
+ "code": "import os\nos.getenv('K')",
+ "os": {
+  "os.getenv": [
+   {
+    "return": {
+     "t": "str",
+     "v": "v"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -7,15 +7,16 @@ when the difference it names is actually present in that case. Evidence is in th
 `parity-baseline-5873ec5` CI artifact (`<case>/core-<backend>.json`) against
 `tool/parity/expected/<case>/`.
 
-The historical 5873ec5 totals were measured with three exceptions. P-F1 retires
-`rename-missing-message`: OSAccess must now match the refmem oracle's exact message,
+The historical 5873ec5 totals were measured with three exceptions. P-F1 retired
+`rename-missing-message`; P-F2 keeps it retired: OSAccess matches the refmem oracle's exact message,
 and a rule that still names that exception fails validation. Historical baselines
 are unchanged; their totals are not measurements of the F-1 runner.
 `--assert-rows` or `--assert-baseline` explicitly selects the historical
 `runner-0.23` instrument: B1 and `memory_filesystem` read `core-<backend>.json`
 against `ref-py.json`. Its missing-source rename message matches that host
 oracle exactly, so no retired message exception is restored. Current scoring
-requires the separate `refmem` column even when a matching core file exists.
+requires the separate `refmem` column on web and for `memory_filesystem`, even
+when a matching core file exists; B1 on VM uses the host-mount column.
 
 ## Named exceptions
 
@@ -27,7 +28,7 @@ requires the separate `refmem` column even when a matching core file exists.
 ## P-F1 F-1-window owner exception
 
 Owner approval: P-F1, under FAST1(4)'s delegated F-1 work. This temporary
-`m3-target.json` allowance accepts `os_environment` as PARTIAL on `vm`,
+`m3-target.json` allowance now accepts `os_environment` as PARTIAL on
 `dart2js` and `dart2wasm`, scoped solely to `x21_fallback_nonfs`. F-1 removes
 the memory-backed MountDir; that case requests a host mount and is unsupported
 until F-2 restores host-directory mounts. Every other cell of the row must
@@ -39,7 +40,9 @@ The existing target gate rejects any nonmatching cell outside that scope and
 rejects the allowance as STALE as soon as the row becomes PRESENT on a covered
 backend. F-2 must remove the allowance for each restored backend, and remove
 the entry when none remain. `test_target.py` registers this approval and checks
-the exact scope and the failure on PRESENT.
+the exact scope and the failure on PRESENT. P-F2 removes `vm` from the allowance:
+both VM cases now MATCH and `os_environment` is PRESENT. The browser allowances
+remain pending browser evidence; the integration owner will retire them when restored.
 
 ## Rule choices
 
@@ -51,15 +54,40 @@ Not exceptions, but they decide statuses:
 | `host_class_type_proxy` | REFUSED only when core raises "a type cannot be sent back" (`h_b07`). `h_b08`, where core cannot build a class value at all ("MontyClassType is not a MontyValue"), is ABSENT, not REFUSED, so the row (REFUSED + ABSENT) is ABSENT | not being able to build the value is absence, not a refusal of a request |
 | `resume_os_call` | PARTIAL: the not-handled probe records core's public substitute (`osCallNoHandlerDefault` + `resumeWithException`) as `unsupported` | core has no not-handled verb; reproducing upstream's error with a substitute is not parity of the API |
 | `memory_filesystem` | the separate `refmem` engine outcome is compared to upstream's `OSAccess`+`MemoryFile` (`refmem-py.json`); compares value, exception type and message | the row is the in-memory filesystem; upstream's in-memory filesystem is the comparable oracle |
-| B1 filesystem OS rows (all ten) | `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm, and temporarily on VM until P-F2; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; F-1 also has no host mount on VM. P-F2 restores VM scoring against `MountDir` / `ref-py.json` |
-| cases with `fs.mounts`; mount budget probes | `unsupported: fs.mounts` scores UNSUPPORTED and an all-unsupported row is ABSENT, until P-F2 | OSAccess has neither host mounts nor mount budgets. The separate refmem run seeds only files and applies no mount mode or cap |
+| B1 filesystem OS rows (all ten) | `core-vm.json` against `ref-py.json` on VM; `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; the VM uses the same host-directory mount as the Python oracle |
+| cases with nonempty `fs.mounts`; mount budget probes | real `MountDir` on VM; `refused: {where: 'MountDir', type: 'UnsupportedError'}` on web scores REFUSED | upstream only exports MountDir from `monty-js/ts/node.ts:3-4`; the separate refmem run applies no mount mode or cap |
+| `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects the capability cells; all omitted cases retain mandatory web verdicts (MountDir constructor REFUSED for mounted cases, MATCH for portable cases) | missing, crashing, unrefused mounted cases and omitted portable regressions fail scoring and baseline recording |
+| `mount_dispatch_and_fallback` | web scores mount-dependent cases as the capability verdict; every mount-free sleep/no-table case is also a mandatory `controls_web` verdict | each portable control must MATCH or `score.py` fails, even when the capability row is accepted as REFUSED; missing outcomes, refusals and transcript/value mutations fail |
+| `mount_usage_inspection` | REFUSED derived from the validated `allowed: REFUSED-as-upstream` declaration and exact reason `no binding API (P13)`; no arbitrary `status` fallback | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
 | `raised_exception` / `traceback_frames` | exception type + message / frames only, over the 273 `b12_*` cases | each row is one part of an exception |
 | `turn_execution_limit`, `host_sleep_budget`, `garbage_collection_interval`, `host_suspension_budget` | ABSENT, not REFUSED, when the limit has no `MontyLimits` field | a missing knob is absence, even where the web backend refuses session limits |
 | `file_mode_inspection`, `file_handle_value_conversion` (cases marked `local_refusal`: `x8hostmode_zz`, `x8hostmode_rplus`, `x8hostmode_neg`) | a step whose upstream outcome is the host's own refusal to build an OS call's answer (`thrown: host`, or a `HOST:` type; no traceback, no value) matches a step the Dart host refused building that answer (`thrown: host`, no traceback, no value), whatever the type and message; any other step compares as usual (`score.py with_host_refusals`) | the host returned a file handle with a mode or position the binding refuses: upstream's host raises `ValueError`/`OverflowError` constructing it, core's `ArgumentError`; both refuse on the host before the feed resumes, as the worker engine's `local_refusal` rule matches host-side input refusals. The session driver resumes by hand, as the oracle does, so the refusal stays on the host |
+| mount constructor and closed-mount cases marked `local_refusal` | the same host-refusal comparison as above; both sides must refuse before a sandbox value/traceback | Python TypeError/ValueError/OverflowError and Dart ArgumentError/RangeError/StateError are each binding's programming-error family |
 | `os_entry_removal` | no exception | its one cross-platform difference (`b11fs_unlink_dir`) is upstream `MountDir` following the macOS errno; on the committed Linux expectations core matches |
 | `boolean_integer_values` | no exception | core's own cases match |
+
+## Host-boundary rename validation coverage
+
+The parity runner executes Python source through a real interpreter and can resume
+only OS snapshots that interpreter emits. It cannot inject a raw `Path.rename`
+snapshot into either binding's mount dispatcher. The interpreter rejects a NUL in
+the destination before dispatch, including when that path also exceeds the length
+limit. Therefore the two `x21_dispatch_rename_invalid_dst_length_before_nul*`
+cases were removed: both produced `ValueError: rename: embedded null character in dst`
+and zero handler calls, so neither measured mount-table validation order or no-table
+fallback. The retained NUL-only source cases measure interpreter rejection, not
+host-boundary validation.
+
+The core companion `test/integration/worker/mount_io_test.dart` covers the host
+boundary with `P08 rename invalid destination length no fallback`,
+`P08 rename invalid destination NUL no fallback`, and
+`P08 rename invalid destination length before NUL no fallback`. Each scripts
+`FakeMontySession.willCallOs('Path.rename', args: [MontyPath('/else/a'), MontyPath(dst)])`.
+With a mount table, length wins over NUL (`OSError`, errno 36), NUL alone raises
+`ValueError`, and the fallback handler is never called. With no table, the same raw
+call reaches the handler exactly once. These are core tests, not parity measurements.
 
 ## Rows rescored by these rules
 
@@ -199,3 +227,29 @@ now MATCH and all four telemetry rows are PRESENT on vm. See
 [the source-cited finding and resolution](../../.gate-logs/R-P2-core-findings.md).
 OTel dependencies live in the parity-only oracle lock; the shared upstream
 lock matches core.
+
+## Runner boundaries after P-F2 review
+
+Only the browser fixture's direct `MountDir` constructor can emit a browser mount
+refusal. Unsupported errors in VM construction, fixture setup, checkout, feed,
+or cleanup remain runner failures. The intentional closed-mount case records
+only core's matching closed-root error at the initial feed-start call; snapshot
+guards and unrelated StateErrors escape to `runner_error`.
+
+`host_noncanonical` supplies a real symlink plus `/.` in both runners. Core must
+resolve that link to produce the recorded canonical host path. Seed prefixes
+follow POSIX normalization (including relative paths); an entry equal to the
+mount root denotes a directory. An explicit empty `fs.mounts` list still means
+host dispatch with no mount table, as upstream does, rather than the independent
+`refmem` memory-filesystem instrument. Refmem ignores host mount selection.
+
+`expect_os_snapshot`, manual dispatch, restore points and sleep access request
+the suspendable session path without requiring `feed_start`. The OS-handler
+counter excludes unrelated host-object events. The raw protocol worker cannot
+express public mount/snapshot dispatch semantics: it now reports those controls
+as `unsupported`, including per-feed options, rather than silently ignoring them.
+The Python oracle and Dart public-session runner implement the controls.
+
+Historical scoring uses historical case lists and ignores current browser case
+selection and control audits. Current scoring validates the sole approved
+unmeasured refusal declaration; other empty rows cannot claim PRESENT or REFUSED.

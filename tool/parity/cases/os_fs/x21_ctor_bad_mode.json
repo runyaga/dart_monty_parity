@@ -1,0 +1,19 @@
+{
+ "id": "x21_ctor_bad_mode",
+ "code": "1",
+ "ctor_only": true,
+ "local_refusal": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "rw"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

@@ -34,6 +34,14 @@ reason. Only the exceptions in KEPT_EXCEPTIONS exist, each ignoring one named
 field where the difference is actually present; a rows.json that names any
 other fails. Nothing else is tolerated.
 
+`controls_web` lists portable controls that must MATCH on each selected web
+backend, independently of the row's mount-capability status. A missing,
+refused or divergent control always fails scoring, including baseline recording.
+Every case omitted by `cases_web` is audited too: mounted cases must record a
+MountDir constructor refusal, and portable cases must MATCH. Historical runs
+ignore both current web selectors and controls. The sole unmeasured refusal,
+mount_usage_inspection, is derived from its validated upstream declaration.
+
 --assert-rows fails when a re-measured row's status differs from the status
 recorded for it in rows.json under the backend's `expect` (the baseline
 measured at dart_monty_core 5873ec5); --assert-baseline fails when a PRESENT
@@ -157,7 +165,10 @@ NUM = re.compile(r'\d+(\.\d+)?')
 ALL_CODES = ['V', 'E', 'P', 'O', 'X', 'H', 'C']
 E_PARTS = ['Et', 'Em', 'Ef', 'Ed']  # exception type, message, frames, structured data
 FIELD = {'V': 'value', 'P': 'prints', 'O': 'os_calls', 'X': 'ext_calls', 'H': 'host_calls'}
-CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close')
+CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close',
+               'feed_start', 'dispatch', 'expect_os_snapshot', 'record_dispatch',
+               'sleep_access', 'mount_indices', 'restore_mount', 'restore_snapshot_at',
+               'close_mount_before_feed', 'ctor_only', 'rename_host_before_feed')
 
 
 # ------------------------------------------------------------------ compare
@@ -254,6 +265,55 @@ def load(p: Path):
     return json.loads(p.read_text()) if p.exists() else None
 
 
+def cases_for(rule: dict, backend: str, *, historical: bool = False) -> list[str]:
+    """Historical runs predate web selection; current omissions are audited separately."""
+    return (rule.get('cases_web', rule.get('cases', []))
+            if backend != 'vm' and not historical else rule.get('cases', []))
+
+
+def check_rule_evidence(rules: dict, *, historical: bool = False) -> None:
+    """A status is measured, except the explicitly approved upstream API absence."""
+    for row, rule in rules.items():
+        if 'status' in rule or 'allowed' in rule:
+            if not (row == 'mount_usage_inspection'
+                    and rule.get('allowed') == 'REFUSED-as-upstream'
+                    and rule.get('reason') == 'no binding API (P13)'
+                    and rule.get('status', 'REFUSED') == 'REFUSED'
+                    and not rule.get('cases') and not rule.get('probes')):
+                sys.exit(f'{row}: status needs measured evidence or the approved upstream refusal declaration')
+        for key in (() if historical else ('cases_web', 'controls_web')):
+            if key in rule:
+                ids = rule[key]
+                if (not isinstance(ids, list) or len(ids) != len(set(ids))
+                        or set(ids) - set(rule.get('cases', []))):
+                    sys.exit(f'{row}: {key} must be a unique subset of cases')
+
+
+def web_controls(rule: dict, backend: str, out: Path, expected: Path,
+                 cases: dict) -> list[dict]:
+    """Every omitted case remains enforced: mount construction refuses, portable work matches."""
+    omitted = set(rule.get('cases', [])) - set(cases_for(rule, backend))
+    controls = []
+    for cid in sorted(omitted | set(rule.get('controls_web', []))):
+        mounted = bool(cases[cid].get('fs', {}).get('mounts'))
+        want = 'REFUSED' if mounted else 'MATCH'
+        if mounted:
+            # Check the actual host-mount instrument, never a refmem override.
+            got = load(out / cid / f'core-{backend}.json')
+            if got is None or got.get('runner_error'):
+                cls, bad, applied = 'NO-OUTCOME', ['!'], []
+            elif (got.get('refused') == {'where': 'MountDir', 'type': 'UnsupportedError'}
+                  and not got.get('unsupported') and not got.get('steps')):
+                cls, bad, applied = 'REFUSED', [], []
+            else:
+                cls, bad, applied = 'DIVERGE', ['refusal'], []
+        else:
+            cls, bad, applied = classify_case(cid, backend, rule, out, expected, historical=False)
+        controls.append({'case': cid, 'class': cls, 'expected': want,
+                         'differs': bad, 'exceptions': applied})
+    return controls
+
+
 def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
                   engine: str = 'core', *, historical: bool = False) -> tuple[str, list[str], list[str]]:
     """-> (class, differing codes, names of the exceptions that changed the verdict)."""
@@ -262,8 +322,9 @@ def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
     # rename wording). Select that instrument explicitly, never by file presence:
     # a missing current refmem outcome must still be NO-OUTCOME.
     legacy_fs = historical and rule.get('engine') == 'refmem'
-    oracle = 'ref-py' if legacy_fs else rule.get('oracle', 'ref-py')
-    selected_engine = 'core' if legacy_fs else rule.get('engine', engine)
+    web = backend != 'vm' and not historical
+    oracle = 'ref-py' if legacy_fs else rule.get('oracle_web' if web else 'oracle', rule.get('oracle', 'ref-py'))
+    selected_engine = 'core' if legacy_fs else rule.get('engine_web' if web else 'engine', rule.get('engine', engine))
     ref = load(expected / cid / f'{oracle}.json')
     got = load(out / cid / f'{selected_engine}-{backend}.json')
     if got is None or got.get('runner_error'):
@@ -1024,7 +1085,7 @@ def score_target(target: dict, statuses: dict[str, dict[str, tuple[str, str]]], 
             fails += verdict.startswith(('STALE', 'FAIL'))
             cells.append(f'{status}{"*" if source == "recorded" else ""}{"" if verdict == "ok" else f" {verdict}"}')
         detail.append(f'| {cid} | {row["area"]} | ' + ' | '.join(cells) + ' |')
-    lines += ['The M3 parity target (shown; `--assert-target` makes a FAIL fatal). `*` = the status is the recorded baseline '
+    lines += [f'The {target.get("name", "M3")} parity target (shown; `--assert-target` makes a FAIL fatal). `*` = the status is the recorded baseline '
               '(the row has no parity case this run), not a measurement.', '',
               '| area | rows | ' + ' | '.join(f'{b} PRESENT' for b in backends) + ' |', '|---|---|' + '---|' * len(backends)]
     for area, a in per_area.items():
@@ -1117,12 +1178,22 @@ def record_current(previous: dict, arch: str, measured: dict) -> dict:
             else:
                 # Other architectures may inherit the old shared value. Pin it
                 # before replacing it with this architecture's measurement.
-                if key in base and base[key] != value:
+                if base.get(key) != value:
                     for p in other_overrides:
-                        p.setdefault(key, copy.deepcopy(base[key]))
+                        p.setdefault(key, copy.deepcopy(base.get(key)))
                 base[key] = copy.deepcopy(value)
                 override.pop(key, None)  # a stale override must not shadow the write
 
+    # Explicit None preserves the absence of a cell on an unmeasured architecture,
+    # and removes a backend's old cell when cases_web no longer selects it.
+    measured = copy.deepcopy(measured)
+    selected = set(measured['present'])
+    for row, old_cells in doc.get('cells', {}).items():
+        if row not in measured['cells']:
+            continue
+        for cid in old_cells:
+            for backend in selected:
+                measured['cells'][row].setdefault(cid, {}).setdefault(backend, None)
     for field, depth in [('rows', 2), ('cells', 3), ('present', 1), ('totals', 1)]:
         update(doc.setdefault(field, {}), current.setdefault(field, {}),
                [p.setdefault(field, {}) for p in others], measured[field], depth)
@@ -1145,6 +1216,7 @@ def main() -> int:
     ap.add_argument('--assert-current', type=Path)
     ap.add_argument('--write-current', type=Path,
                     help='refresh selected backends for the measured architecture (keeps `deltas`)')
+    ap.add_argument('--record-note', help='append measurement provenance when writing the current baseline')
     ap.add_argument('--assert-e0', type=Path, nargs='?', const=ROOT / 'tool/parity/e0.json',
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     ap.add_argument('--assert-worker', action='store_true',
@@ -1183,8 +1255,12 @@ def main() -> int:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     all_rules = json.loads(RULES.read_text())['rows']
     check_exceptions(all_rules)
+    if historical:
+        all_rules = {row: rule.get('historical', rule) for row, rule in all_rules.items()
+                     if rule.get('historical', rule) is not None}
+    check_rule_evidence(all_rules, historical=historical)
     # A row with only a `worker` block has no core-engine cases: its recorded status stands.
-    rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule}
+    rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule or 'allowed' in rule}
     backends = a.backends.split(',')
     with MANIFEST.open() as manifest_file:
         manifest = list(csv.DictReader(manifest_file, delimiter='\t'))
@@ -1201,20 +1277,22 @@ def main() -> int:
 
     result: dict = {'backends': backends, 'arch': arch, 'rows': {}}
     mismatches = []
+    indexed_cases = case_index()
     for row, rule in rules.items():
         result['rows'][row] = {}
         for b in backends:
-            if 'probes' in rule:
-                status, cells = probe_status(row, rule, b, a.outcomes, a.expected)
-            else:
-                cells = []
-                for cid in rule['cases']:
-                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=historical)
-                    cells.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
-                status = row_status([c['class'] for c in cells])
+            cells = probe_status(row, rule, b, a.outcomes, a.expected)[1] if 'probes' in rule else []
+            for cid in cases_for(rule, b, historical=historical):
+                cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=historical)
+                cells.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
+            status = row_status([c['class'] for c in cells]) if cells else ('REFUSED' if rule.get('allowed') == 'REFUSED-as-upstream' else 'UNVERIFIED')
             expect = (rule.get('expect') or {}).get('web' if b != 'vm' else 'ffi')
             expect = plat.get('rows', {}).get(row, {}).get(b, expect)
             result['rows'][row][b] = {'status': status, 'expect': expect, 'cells': cells}
+            if b != 'vm' and not historical:
+                controls = web_controls(rule, b, a.outcomes, a.expected, indexed_cases)
+                if controls:
+                    result['rows'][row][b]['controls'] = controls
             if expect and status != expect:
                 mismatches.append((row, b, status, expect))
 
@@ -1239,7 +1317,10 @@ def main() -> int:
         for b in backends:
             r = result['rows'][row][b]
             mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (historical {r['expect']})"
-            cells.append(r['status'] + mark)
+            controls = r.get('controls', [])
+            control_mark = (f"; controls {sum(c['class'] == c['expected'] for c in controls)}/{len(controls)} satisfied"
+                            if controls else '')
+            cells.append(r['status'] + mark + control_mark)
         lines.append(f'| {row} | ' + ' | '.join(cells) + ' |')
     lines.append('')
     for b in backends:
@@ -1255,16 +1336,42 @@ def main() -> int:
 
     measured = {row: {b: result['rows'][row][b]['status'] for b in backends} for row in rules}
     present = {b: totals[b]['all_rows'].get('PRESENT', 0) for b in backends}
-    cells = {row: {c['case']: {b: next(x['class'] for x in result['rows'][row][b]['cells'] if x['case'] == c['case'])
-                                for b in backends}
-                   for c in result['rows'][row][backends[0]]['cells']} for row in rules}
-    if a.write_current:
+    cells = {row: {cid: {b: cell['class'] for b in backends
+                               for cell in result['rows'][row][b]['cells'] if cell['case'] == cid}
+                   for cid in sorted({cell['case'] for b in backends for cell in result['rows'][row][b]['cells']})}
+             for row in rules}
+    rc = 0
+    for row, by_backend in result['rows'].items():
+        for b, verdict in by_backend.items():
+            for control in verdict.get('controls', []):
+                if control['class'] != control['expected']:
+                    print(f"FAIL web control {control['case']} (row {row}) on {b}: "
+                          f"{control['class']} {control['differs']}")
+                    rc = 1
+    if a.write_current and rc == 0:
         prev = json.loads(a.write_current.read_text()) if a.write_current.exists() else {}
         doc = record_current(prev, arch, {
             'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
             'rows': measured, 'cells': cells})
+        if a.record_note:
+            doc['subject'] += '\n' + a.record_note
+            old_platform = prev.get('platforms', {}).get(arch, {})
+            for row, by_backend in measured.items():
+                for b, status in by_backend.items():
+                    old_status = old_platform.get('rows', {}).get(row, {}).get(
+                        b, prev.get('rows', {}).get(row, {}).get(b, in_scope[row].get(
+                            'baseline_ffi' if b == 'vm' else 'baseline_web')))
+                    changed = []
+                    for cid, values in cells[row].items():
+                        old_cell = old_platform.get('cells', {}).get(row, {}).get(cid, {}).get(
+                            b, prev.get('cells', {}).get(row, {}).get(cid, {}).get(b))
+                        if old_cell != values.get(b):
+                            changed.append({'case': cid, 'from': old_cell, 'to': values.get(b)})
+                    if old_status != status or changed:
+                        doc['deltas'].append({'row': row, 'backends': [b], 'arch': arch,
+                                              'from': old_status, 'to': status,
+                                              'why': a.record_note, 'cells': changed})
         a.write_current.write_text(json.dumps(doc, indent=1) + '\n')
-    rc = 0
     if a.assert_current:
         cur = json.loads(a.assert_current.read_text())
         cplat = cur.get('platforms', {}).get(arch)
@@ -1303,7 +1410,7 @@ def main() -> int:
         if problems:
             sys.exit(f'{a.target}: ' + '; '.join(problems))
         col = {'vm': 'baseline_ffi'}
-        statuses = {cid: {b: ((result['rows'][cid][b]['status'], 'measured') if cid in result['rows']
+        statuses = {cid: {b: ((result['rows'][cid][b]['status'], 'measured' if result['rows'][cid][b]['cells'] else 'recorded') if cid in result['rows']
                               else (in_scope[cid][col.get(b, 'baseline_web')], 'recorded')) for b in backends}
                     for cid in target['rows']}
         if a.target_engines:

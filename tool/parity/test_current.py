@@ -33,35 +33,37 @@ class RepositoryBaselineTest(unittest.TestCase):
                       for case, values in cases.items()}
                 for row, cases in self.doc['cells'].items()}
 
-    def test_architecture_independent_rows_agree(self):
-        # All current core rows are architecture-independent in the F-1 window,
-        # including mount refusals and cwd forwarding, on every backend.
-        arm64, x86 = self.rows('arm64'), self.rows('x86_64')
-        for row in arm64:
-            self.assertEqual(x86[row], arm64[row], row)
+    def test_recorded_statuses_are_known(self):
+        # A partial backend/architecture recording explicitly leaves new rows
+        # unmeasured elsewhere, rather than copying the new VM measurement.
+        for arch in self.doc['platforms']:
+            for row, values in self.rows(arch).items():
+                self.assertFalse(set(values.values()) - {None, 'PRESENT', 'PARTIAL', 'ABSENT', 'REFUSED', 'UNVERIFIED'}, row)
 
-    def test_architecture_independent_cells_agree(self):
-        # Row aggregates alone miss DIVERGE -> UNSUPPORTED or MATCH changes.
-        arm64, x86 = self.cells('arm64'), self.cells('x86_64')
-        for row in arm64:
-            for case in arm64[row]:
-                self.assertEqual(x86[row][case], arm64[row][case], f'{row}/{case}')
+    def test_recorded_present_rows_have_only_matching_cells(self):
+        for arch in self.doc['platforms']:
+            cells = self.cells(arch)
+            for row, values in self.rows(arch).items():
+                for backend, status in values.items():
+                    if status == 'PRESENT':
+                        recorded = [c[backend] for c in cells.get(row, {}).values() if c.get(backend) is not None]
+                        self.assertTrue(recorded, (arch, row, backend))
+                        self.assertEqual(set(recorded), {'MATCH'}, (arch, row, backend))
 
     def test_platform_totals_include_unmeasured_manifest_rows(self):
         with score.MANIFEST.open() as source:
             manifest = [r for r in csv.DictReader(source, delimiter='\t')
                         if r['in_scope'] == 'yes']
         rules = json.loads(score.RULES.read_text())['rows']
-        measured = {row for row, rule in rules.items() if 'cases' in rule or 'probes' in rule}
+        measured = {row for row, rule in rules.items() if 'cases' in rule or 'probes' in rule or 'allowed' in rule}
         for arch, platform in self.doc['platforms'].items():
             rows = self.rows(arch)
-            self.assertEqual(set(rows), measured)
+            self.assertFalse(set(rows) - measured)
             for backend in BACKENDS:
                 # Match score.main: measured rows replace manifest statuses;
                 # unmeasured (including worker-only) rows retain the manifest.
                 column = 'baseline_ffi' if backend == 'vm' else 'baseline_web'
-                counts = Counter(rows[r['cap_id']][backend] if r['cap_id'] in measured
-                                 else r[column] for r in manifest)
+                counts = Counter(rows.get(r['cap_id'], {}).get(backend) or r[column] for r in manifest)
                 with self.subTest(arch=arch, backend=backend):
                     self.assertEqual(platform['present'][backend], counts['PRESENT'])
                     self.assertEqual(platform['totals'][backend], dict(counts))
@@ -102,6 +104,7 @@ class CurrentBaselineTest(unittest.TestCase):
         output = io.StringIO()
         with mock.patch.object(score, 'RULES', self.rules), \
              mock.patch.object(score, 'MANIFEST', self.manifest), \
+             mock.patch.object(score, 'case_index', return_value={**score.case_index(), 'a': {}, 'b': {}, 'c': {'fs': {'mounts': [{}]}}}), \
              mock.patch.object(sys, 'argv', ['score.py', str(self.out), '--expected', str(self.expected), *flags]), \
              contextlib.redirect_stdout(output):
             rc = score.main()
@@ -174,6 +177,33 @@ class CurrentBaselineTest(unittest.TestCase):
         (self.out / 'platform.json').write_text('{"arch": "arm64"}')
         (self.out / 'c/core-vm.json').write_text('{"steps": [{"value": 1}]}')
         self.assert_current()
+
+    def test_backend_specific_cases_round_trip_and_remove_stale_cells(self):
+        before = self.write()
+        rules = json.loads(self.rules.read_text())
+        rules['rows']['measured']['cases_web'] = ['a', 'b']
+        self.rules.write_text(json.dumps(rules))
+        for backend in ('dart2js', 'dart2wasm'):
+            (self.out / f'c/core-{backend}.json').write_text(json.dumps(
+                {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}}))
+        after = self.write()
+        self.assert_current()
+        self.assertEqual(after['rows']['measured'], {'vm': 'PARTIAL', 'dart2js': 'PRESENT', 'dart2wasm': 'PRESENT'})
+        self.assertEqual(after['cells']['measured']['c'], {'vm': 'DIVERGE', 'dart2js': None, 'dart2wasm': None})
+        self.assertEqual(before['cells']['measured']['c']['dart2js'], 'DIVERGE')
+
+    def test_new_row_does_not_invent_other_architecture_measurements(self):
+        self.write()
+        (self.out / 'platform.json').write_text('{"arch": "x86_64"}')
+        self.write()
+        (self.out / 'platform.json').write_text('{"arch": "arm64"}')
+        rules = json.loads(self.rules.read_text())
+        rules['rows']['unmeasured'] = {'cases': ['a'], 'compare': ['V']}
+        self.rules.write_text(json.dumps(rules))
+        after = self.write('--backends', 'vm')
+        self.assert_current('--backends', 'vm')
+        self.assertIsNone(after['platforms']['x86_64']['rows']['unmeasured']['vm'])
+        self.assertIsNone(after['platforms']['x86_64']['cells']['unmeasured']['a']['vm'])
 
     def test_missing_outcome_fails_even_if_row_and_total_stay_the_same(self):
         self.write()

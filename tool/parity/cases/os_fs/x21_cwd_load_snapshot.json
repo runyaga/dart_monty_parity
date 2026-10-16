@@ -1,0 +1,42 @@
+{
+ "id": "x21_cwd_load_snapshot",
+ "code": "1",
+ "feeds": [
+  {
+   "code": "ext()",
+   "cwd": "/saved",
+   "restore_snapshot_at": "ext",
+   "restore_mount": false
+  },
+  {
+   "code": "import os\nos.getcwd()",
+   "mount_indices": [
+    2
+   ]
+  }
+ ],
+ "restore_before": [],
+ "externals": {
+  "ext": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/first"
+   },
+   {
+    "virtual": "/second"
+   },
+   {
+    "virtual": "/other"
+   }
+  ],
+  "files": {}
+ }
+}

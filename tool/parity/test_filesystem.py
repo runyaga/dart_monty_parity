@@ -32,27 +32,28 @@ class FilesystemScoreTest(unittest.TestCase):
         folder.mkdir(exist_ok=True)
         (folder / f'{engine}-{backend}.json').write_text(json.dumps(doc))
 
-    def test_b1_and_memory_rows_use_refmem_on_every_backend(self):
+    def test_b1_vm_uses_host_and_web_and_memory_rows_use_refmem(self):
         target = json.loads(score.TARGET.read_text())
         rows = [row for row, ex in target['excluded'].items() if ex['clause'] == 'B1']
         self.assertEqual(len(rows), 10)
         for row in rows + ['memory_filesystem']:
             rule = self.rules[row]
             for cid in rule['cases']:
-                ref = score.load(EXPECTED / cid / 'refmem-py.json')
-                self.assertIsNotNone(ref, cid)
                 for backend in BACKENDS:
+                    memory = row == 'memory_filesystem' or backend != 'vm'
+                    ref = score.load(EXPECTED / cid / ('refmem-py.json' if memory else 'ref-py.json'))
+                    self.assertIsNotNone(ref, cid)
                     with self.subTest(row=row, cid=cid, backend=backend):
-                        self.write(cid, 'core', backend, {'runner_error': 'wrong column'})
+                        self.write(cid, 'core' if memory else 'refmem', backend, {'runner_error': 'wrong column'})
                         got = copy.deepcopy(ref)
                         for step in got['steps']:
                             step['host_calls'] = []  # The shared Dart runner's step schema.
-                        self.write(cid, 'refmem', backend, got)
+                        self.write(cid, 'refmem' if memory else 'core', backend, got)
                         self.assertEqual(score.classify_case(cid, backend, rule, self.out, EXPECTED)[0], 'MATCH')
 
     def test_refmem_missing_does_not_fall_back_to_core(self):
         cid = 'b11fs_read_text'
-        for backend in BACKENDS:
+        for backend in BACKENDS[1:]:
             with self.subTest(backend=backend):
                 self.write(cid, 'core', backend, score.load(EXPECTED / cid / 'ref-py.json'))
                 self.assertEqual(score.classify_case(cid, backend, self.rules['os_file_reads'],
@@ -60,7 +61,7 @@ class FilesystemScoreTest(unittest.TestCase):
 
     def test_historical_filesystem_uses_core_and_host_oracle(self):
         for row, rule in self.rules.items():
-            if rule.get('engine') != 'refmem':
+            if rule.get('engine') != 'refmem' and rule.get('engine_web') != 'refmem':
                 continue
             for cid in rule['cases']:
                 for backend in BACKENDS:

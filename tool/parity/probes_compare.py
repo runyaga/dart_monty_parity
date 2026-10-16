@@ -40,6 +40,8 @@ def judge(pid: str, ref: dict | None, got: dict | None, rule: dict) -> tuple[str
     """-> (class, what differs, names of the exceptions that changed the verdict)."""
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!'], []
+    if got.get('refused') == {'where': 'MountDir', 'type': 'UnsupportedError'}:
+        return 'REFUSED', [], []
     if rule.get('refusal') and any(e.get('ev') == 'refused' for e in got.get('events') or []):
         return 'REFUSED', [], []
     if ref is None or ref.get('runner_error'):

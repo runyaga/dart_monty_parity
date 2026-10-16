@@ -24,6 +24,7 @@ import 'package:dart_monty_core/src/worker/proto_session.dart';
 import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:dart_monty_core/unsafe_callback_file.dart';
 import 'package:monty_parity/src/host_probes.dart';
+import 'package:monty_parity/src/mount_fixture.dart';
 import 'package:monty_parity/src/telemetry_probes.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
@@ -82,10 +83,7 @@ Future<Map<String, Object?>> runSessionProbe(
     'events': const <Object?>[],
     'runner_error': null,
   };
-  if (_mountBudgets.contains(id)) {
-    return out
-      ..['unsupported'] = {'fs.mounts': 'host mount budgets await P-F2'};
-  }
+
   if (_pending[id] case final String why) return out..['unimplemented'] = why;
   final body = _probes[id];
   if (body == null) {
@@ -94,6 +92,13 @@ Future<Map<String, Object?>> runSessionProbe(
   final t = _T();
   try {
     await body(t, shared, start);
+    // A real MountDir constructor refusal on browser backends.
+  } on BrowserMountRefused catch (e, st) {
+    if (backend != 'vm' && _mountBudgets.contains(id)) {
+      out['refused'] = {'where': 'MountDir', 'type': 'UnsupportedError'};
+    } else {
+      out['runner_error'] = '$e\n$st';
+    }
   } on Object catch (e, st) {
     out['runner_error'] = '$e\n$st';
   }
@@ -106,6 +111,8 @@ Set<String> get sessionProbeIds => {..._probes.keys, ..._pending.keys};
 
 final Map<String, Future<void> Function(_T t, Monty shared, StartPool start)>
 _probes = {
+  for (final id in _mountBudgets)
+    id: (t, shared, _) => _mountBudget(id, t, shared),
   for (final id in telemetryProbeIds)
     id: (t, shared, start) => runTelemetryProbe(
       id,
@@ -2177,3 +2184,69 @@ CallbackFile _callbackFile(_T transcript, Map<String, String> store) =>
         store['v'] = 'callback-saw:$content';
       },
     );
+
+/// The same per-feed budgets and byte counts as the Python oracle.
+Future<void> _mountBudget(String id, _T t, Monty pool) async {
+  final memory = id == 'api_memory_budget';
+  final fixture = buildMountFixture({
+    'id': id,
+    'fs': {
+      'mounts': [
+        {
+          'virtual': '/data',
+          'mode': 'overlay',
+          if (memory) 'memory_usage_limit': 1000 else 'write_bytes_limit': 10,
+        },
+      ],
+    },
+  });
+  try {
+    if (fixture.error case final Object error) {
+      Error.throwWithStackTrace(error, StackTrace.current);
+    }
+    await pool.withSession((session) async {
+      for (var feed = 1; feed <= (memory ? 1 : 2); feed++) {
+        final value = await session.feedRun(
+          memory ? _memoryCode : _writeCode,
+          mount: fixture.mounts,
+        );
+        if (memory || id.endsWith('$feed')) {
+          t.add({'ev': 'complete', 'value': identityCanon(value)});
+        }
+      }
+    });
+  } finally {
+    fixture.close();
+  }
+}
+
+const _writeCode =
+    'from pathlib import Path\n'
+    'res = []\n'
+    "for n in ('a', 'b'):\n"
+    '    try:\n'
+    "        Path('/data/' + n + '.txt').write_text('xxxxxx')\n"
+    "        res.append('ok')\n"
+    '    except Exception as e:\n'
+    "        res.append(type(e).__name__ + ': ' + str(e))\n"
+    'res';
+const _memoryCode =
+    'from pathlib import Path\n'
+    'res = []\n'
+    'def w(n):\n'
+    '    try:\n'
+    "        Path('/data/' + n).write_text('y' * 300)\n"
+    "        res.append('ok')\n"
+    '    except Exception as e:\n'
+    "        res.append(type(e).__name__ + ': ' + str(e))\n"
+    "w('a')\n"
+    "w('b')\n"
+    "w('c')\n"
+    "w('d')\n"
+    'try:\n'
+    "    Path('/data/a').unlink()\n"
+    "    res.append('unlinked')\n"
+    'except Exception as e:\n'
+    "    res.append(type(e).__name__ + ': ' + str(e))\n"
+    "w('d')\n"
+    'res';

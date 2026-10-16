@@ -1,0 +1,42 @@
+{
+ "id": "x21_cwd_invalid_before_overlap",
+ "code": "1",
+ "feeds": [
+  {
+   "code": "1",
+   "cwd": "relative",
+   "mount_indices": [
+    0,
+    1
+   ]
+  },
+  {
+   "code": "1",
+   "cwd": "/valid",
+   "mount_indices": [
+    0,
+    1
+   ]
+  },
+  {
+   "code": "import os\nos.getcwd()",
+   "mount_indices": [
+    2
+   ]
+  }
+ ],
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/first"
+   },
+   {
+    "virtual": "/first"
+   },
+   {
+    "virtual": "/second"
+   }
+  ],
+  "files": {}
+ }
+}

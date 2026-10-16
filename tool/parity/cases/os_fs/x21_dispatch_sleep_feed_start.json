@@ -1,0 +1,16 @@
+{
+ "id": "x21_dispatch_sleep_feed_start",
+ "code": "import time\ntime.sleep(0)\n7",
+ "feed_start": true,
+ "record_dispatch": true,
+ "dispatch": "auto",
+ "os": {
+  "system.sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ }
+}

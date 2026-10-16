@@ -1,0 +1,18 @@
+{
+ "id": "x21_dispatch_sleep_feed_start_async_access",
+ "code": "import asyncio\nawait asyncio.sleep(0.001)\n7",
+ "feed_start": true,
+ "record_dispatch": true,
+ "dispatch": "auto",
+ "os": {
+  "system.async_sleep": [
+   {
+    "return": {
+     "t": "none"
+    }
+   }
+  ]
+ },
+ "sleep_access": true,
+ "expect_os_snapshot": "system.async_sleep"
+}

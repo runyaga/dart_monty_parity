@@ -96,7 +96,7 @@ void _mountTests() {
       expect(await handler('os.environ', [], {}), const MontyDict([]));
     },
   );
-  test('mount requests stay unsupported until P-F2', () {
+  test('raw worker memory handler does not emulate host mounts', () {
     final unsupported = <String, Object?>{};
     buildFsHandler(
       {
@@ -136,6 +136,59 @@ void _mountTests() {
 }
 
 void _caseTests() {
+  test(
+    'runner StateError is never a host refusal, even for local_refusal',
+    () async {
+      final failure = StateError('runner invariant');
+      final session = _RecordingSession()..failure = failure;
+      await expectLater(
+        runEngineCase(
+          {'id': 'invariant', 'code': '1', 'local_refusal': true},
+          'vm',
+          engine: 'core',
+          engineVersion: 'test',
+          open: (_, _) async => session,
+        ),
+        throwsA(same(failure)),
+      );
+      expect(session.closed, isTrue);
+    },
+  );
+  test(
+    'raw worker reports per-feed dispatch controls as unsupported',
+    () async {
+      final result = await runEngineCase(
+        {
+          'id': 'controls',
+          'feeds': [
+            {
+              'code': '1',
+              'dispatch': 'manual',
+              'expect_os_snapshot': 'x',
+              'record_dispatch': true,
+              'sleep_access': true,
+              'mount_indices': [0],
+            },
+          ],
+        },
+        'vm',
+        engine: 'worker',
+        engineVersion: 'test',
+        open: (_, _) async => _RecordingSession(),
+      );
+      expect(
+        (result['unsupported']! as Map).keys,
+        containsAll([
+          'dispatch',
+          'expect_os_snapshot',
+          'record_dispatch',
+          'sleep_access',
+          'mount_indices',
+        ]),
+      );
+    },
+  );
+
   test('case cwd is forwarded on every feed without unsupported cwd', () async {
     final session = _RecordingSession();
     final result = await runEngineCase(
@@ -157,6 +210,13 @@ void _caseTests() {
     final original = <String, Object?>{
       'id': 'sample',
       'refmem': true,
+      'mount_indices': [0],
+      'feeds': [
+        {
+          'code': '1',
+          'mount_indices': [0],
+        },
+      ],
       'fs': {
         'mounts': [
           {'virtual': '/data', 'mode': 'read-only'},
@@ -167,6 +227,11 @@ void _caseTests() {
       },
     };
     final memory = refmemCase(original);
+    expect(memory.containsKey('mount_indices'), isFalse);
+    expect(
+      ((memory['feeds']! as List).single as Map).containsKey('mount_indices'),
+      isFalse,
+    );
     expect((memory['fs']! as Map).containsKey('mounts'), isFalse);
     expect((original['fs']! as Map).containsKey('mounts'), isTrue);
     expect((memory['fs']! as Map)['files'], (original['fs']! as Map)['files']);
@@ -182,6 +247,7 @@ MontyValue _fallback(
 final class _RecordingSession implements CaseSession {
   final directories = <String?>[];
   bool closed = false;
+  StateError? failure;
 
   @override
   Future<MontyValue> feed(
@@ -191,8 +257,11 @@ final class _RecordingSession implements CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
     String? cwd,
+    Map<String, Object?> options = const {},
+    List<Object?>? observations,
   }) async {
     directories.add(cwd);
+    if (failure case final StateError error) throw error;
 
     return const MontyNone();
   }

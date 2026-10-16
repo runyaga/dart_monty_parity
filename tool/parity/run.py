@@ -50,8 +50,8 @@ the VM, and exits 1 if the runner fails. It runs no crash tests.
 
 Every selected `refmem: true` case additionally runs through the public session
 with OSAccess and writes OUTDIR/<case>/refmem-<backend>.json, independently of
-its ordinary mount outcome. B1 and memory_filesystem score this column on all
-three backends until P-F2. --check checks the existing temporary cases.g.dart
+its ordinary mount outcome. memory_filesystem scores it everywhere; B1 scores it
+on web and the host-mount core column on VM. --check checks the existing temporary cases.g.dart
 against the selected cases/probes without running Dart (no --core/--out needed).
 """
 
@@ -340,6 +340,7 @@ def main() -> int:
     ap.add_argument('--out', type=Path)
     ap.add_argument('--engine', choices=ENGINES, default='core')
     ap.add_argument('--cases', nargs='*', default=[])
+    ap.add_argument('--offline', action='store_true', help='resolve Dart dependencies from the local cache')
     ap.add_argument('--no-crash-tests', action='store_true', help='--engine worker: skip the crash tests')
     ap.add_argument('--check', action='store_true', help='check existing baked cases.g.dart without running Dart')
     a = ap.parse_args()
@@ -364,7 +365,7 @@ def main() -> int:
     override = PKG / 'pubspec_overrides.yaml'
     override.write_text(f'dependency_overrides:\n  dart_monty_core:\n    path: {core}\n')
     try:
-        if sh(['dart', 'pub', 'get'], log) != 0:
+        if sh(['dart', 'pub', 'get', *(['--offline'] if a.offline else [])], log) != 0:
             sys.exit(f'dart pub get failed; see {log}')
         rc = run_selected(a, cases, out, log, core)
         if rc != 0:

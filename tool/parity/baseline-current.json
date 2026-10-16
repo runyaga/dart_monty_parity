@@ -1,31 +1,31 @@
 {
  "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.",
  "present": {
-  "vm": 83,
-  "dart2js": 82,
-  "dart2wasm": 82
+  "vm": 94,
+  "dart2js": 84,
+  "dart2wasm": 84
  },
  "totals": {
   "vm": {
-   "ABSENT": 44,
-   "PRESENT": 83,
-   "PARTIAL": 31,
+   "ABSENT": 35,
+   "PRESENT": 94,
+   "PARTIAL": 28,
    "N/A": 26,
-   "REFUSED": 1
+   "REFUSED": 2
   },
   "dart2js": {
-   "ABSENT": 40,
-   "PRESENT": 82,
-   "PARTIAL": 34,
+   "ABSENT": 31,
+   "PRESENT": 84,
+   "PARTIAL": 31,
    "N/A": 27,
-   "REFUSED": 2
+   "REFUSED": 12
   },
   "dart2wasm": {
-   "ABSENT": 40,
-   "PRESENT": 82,
-   "PARTIAL": 34,
+   "ABSENT": 31,
+   "PRESENT": 84,
+   "PARTIAL": 31,
    "N/A": 27,
-   "REFUSED": 2
+   "REFUSED": 12
   }
  },
  "platforms": {
@@ -33,66 +33,76 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 83,
-    "dart2js": 82,
-    "dart2wasm": 82
+    "vm": 94,
+    "dart2js": 84,
+    "dart2wasm": 84
    },
    "cells": {},
    "totals": {
     "vm": {
-     "ABSENT": 44,
-     "PRESENT": 83,
-     "PARTIAL": 31,
+     "ABSENT": 35,
+     "PRESENT": 94,
+     "PARTIAL": 28,
      "N/A": 26,
-     "REFUSED": 1
+     "REFUSED": 2
     },
     "dart2js": {
-     "ABSENT": 40,
-     "PRESENT": 82,
-     "PARTIAL": 34,
+     "ABSENT": 31,
+     "PRESENT": 84,
+     "PARTIAL": 31,
      "N/A": 27,
-     "REFUSED": 2
+     "REFUSED": 12
     },
     "dart2wasm": {
-     "ABSENT": 40,
-     "PRESENT": 82,
-     "PARTIAL": 34,
+     "ABSENT": 31,
+     "PRESENT": 84,
+     "PARTIAL": 31,
      "N/A": 27,
-     "REFUSED": 2
+     "REFUSED": 12
     }
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
-   "rows": {},
-   "present": {
-    "vm": 83,
-    "dart2js": 82,
-    "dart2wasm": 82
+   "rows": {
+    "os_entry_removal": {
+     "vm": "PRESENT"
+    }
    },
-   "cells": {},
-   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured. The four telemetry rows and their cases inherit the arm64 PRESENT/MATCH expectations on all three backends; this is an unverified assumption for Linux CI to confirm.",
+   "present": {
+    "vm": 95,
+    "dart2js": 84,
+    "dart2wasm": 84
+   },
+   "cells": {
+    "os_entry_removal": {
+     "b11fs_unlink_dir": {
+      "vm": "MATCH"
+     }
+    }
+   },
+   "note": "Reconstructed from baseline 71eed4d223e1735a61a6d1e16baa12b306f0f4cb (CI run 38878154793; ci-x86-fail.txt sha256 274132b7f4603b9c7fdb6f0d75c8fc939e60f7a3c8b671df00a8014a2b02aa73). Retains the surviving os_entry_removal/b11fs_unlink_dir VM difference; drops the two deleted length-before-NUL case overrides. All surviving non-telemetry arm64 expectations are unchanged from that baseline. The four telemetry rows and their cells inherit current arm64 values, confirmed by R-P2 CI on main. Totals are recomputed from current rows. score.record_current records x86_64, then restores arm64 as the shared base. No additional unconfirmed cells inherit arm64; this is a reconstruction from prior CI evidence, not a new Linux measurement.",
    "totals": {
     "vm": {
-     "ABSENT": 44,
-     "PRESENT": 83,
-     "PARTIAL": 31,
+     "ABSENT": 35,
+     "PRESENT": 95,
+     "PARTIAL": 27,
      "N/A": 26,
-     "REFUSED": 1
+     "REFUSED": 2
     },
     "dart2js": {
-     "ABSENT": 40,
-     "PRESENT": 82,
-     "PARTIAL": 34,
+     "ABSENT": 31,
+     "PRESENT": 84,
+     "PARTIAL": 31,
      "N/A": 27,
-     "REFUSED": 2
+     "REFUSED": 12
     },
     "dart2wasm": {
-     "ABSENT": 40,
-     "PRESENT": 82,
-     "PARTIAL": 34,
+     "ABSENT": 31,
+     "PRESENT": 84,
+     "PARTIAL": 31,
      "N/A": 27,
-     "REFUSED": 2
+     "REFUSED": 12
     }
    }
   }
@@ -1423,7 +1433,7 @@
    "dart2wasm": "PRESENT"
   },
   "os_entry_removal": {
-   "vm": "PRESENT",
+   "vm": "PARTIAL",
    "dart2js": "PRESENT",
    "dart2wasm": "PRESENT"
   },
@@ -1433,34 +1443,34 @@
    "dart2wasm": "PRESENT"
   },
   "os_environment": {
-   "vm": "PARTIAL",
+   "vm": "PRESENT",
    "dart2js": "PARTIAL",
    "dart2wasm": "PARTIAL"
   },
   "mount_table": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "mount_modes": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "mount_errors": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "mount_feed_lifecycle": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "mount_close": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "async_os_sleep": {
    "vm": "PRESENT",
@@ -1488,9 +1498,9 @@
    "dart2wasm": "PRESENT"
   },
   "working_directory": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
   },
   "clock_source": {
    "vm": "PRESENT",
@@ -1628,14 +1638,14 @@
    "dart2wasm": "PRESENT"
   },
   "mount_write_budget": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "mount_memory_budget": {
-   "vm": "ABSENT",
-   "dart2js": "ABSENT",
-   "dart2wasm": "ABSENT"
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   },
   "callback_files": {
    "vm": "PRESENT",
@@ -1731,6 +1741,26 @@
    "vm": "PRESENT",
    "dart2js": "PRESENT",
    "dart2wasm": "PRESENT"
+  },
+  "mount_root_capability": {
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
+  },
+  "mount_dispatch_and_fallback": {
+   "vm": "PRESENT",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
+  },
+  "virtual_path_validation_normalization": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
+  "mount_usage_inspection": {
+   "vm": "REFUSED",
+   "dart2js": "REFUSED",
+   "dart2wasm": "REFUSED"
   }
  },
  "cells": {
@@ -2447,7 +2477,7 @@
     "dart2wasm": "MATCH"
    },
    "b11fs_unlink_dir": {
-    "vm": "MATCH",
+    "vm": "DIVERGE",
     "dart2js": "MATCH",
     "dart2wasm": "MATCH"
    },
@@ -2776,124 +2806,204 @@
     "dart2wasm": "MATCH"
    },
    "x21_fallback_nonfs": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_table": {
    "x21_two_mounts": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_nested_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_trailing_slash_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_dup_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_relative_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_bad_mode": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_missing_host": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_negative_limit": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_negative_memory_limit": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_relative_virtual": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_modes": {
    "x21_ro_read_ok": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_ro_write": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_overlay_same_feed": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_abs_symlink": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_cross_mount_rename": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_rel_symlink": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_errors": {
    "x21_write_limit": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_ro_write": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_ro_mkdir": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_ro_open_w": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_ro_unlink": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_dup_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_relative_virtual": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "g19_close_then_feed": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_bad_mode": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_missing_host": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_negative_limit": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_negative_memory_limit": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_ctor_relative_virtual": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_feed_lifecycle": {
    "x21_lifecycle_read-write": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_lifecycle_delete_read-write": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_lifecycle_overlay": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "x21_write_limit_per_feed": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_overlay_across_suspension": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_restore_with_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_restore_without_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_close": {
    "g19_close_then_feed": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "async_os_sleep": {
@@ -2983,19 +3093,79 @@
     "dart2wasm": "MATCH"
    },
    "x21_cwd_feed": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_default_mount": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
    },
    "x21_cwd_relative_fallback": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_feed_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_first_typing_rejected": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_first_typing_rejected_established": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_first_typing_rejected_established_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_first_typing_rejected_explicit": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_first_typing_rejected_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_load_session": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_load_session_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_load_snapshot": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_load_snapshot_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_syntax_error_establishes": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_syntax_error_establishes_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    }
   },
   "clock_source": {
@@ -6334,21 +6504,26 @@
   },
   "mount_write_budget": {
    "api_write_budget_feed1": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    },
    "api_write_budget_feed2": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "mount_memory_budget": {
    "api_memory_budget": {
-    "vm": "UNSUPPORTED",
-    "dart2js": "UNSUPPORTED",
-    "dart2wasm": "UNSUPPORTED"
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_memory_read_transient": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
    }
   },
   "callback_files": {
@@ -6608,6 +6783,263 @@
     "dart2js": "MATCH",
     "dart2wasm": "MATCH"
    }
-  }
+  },
+  "mount_root_capability": {
+   "x21_root_canonical_host_path": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_root_rename_host": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   }
+  },
+  "mount_dispatch_and_fallback": {
+   "x21_dispatch_getenv_with_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_in_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_missing_in_mount_no_fallback": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_outside_not_handled": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_outside_to_os": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_distinct_mounts": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_invalid_dst": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_invalid_dst_no_table": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_rename_invalid_dst_nul": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_invalid_dst_nul_no_table": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_rename_mounted_to_unmounted": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_neither_mounted": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_same_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_rename_unmounted_to_mounted": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_access": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_access_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_access": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_access_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_auto": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_auto_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_call_host": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_call_host_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_call_host_run": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_call_host_run_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_manual": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_manual_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_async_run": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_async_run_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_auto_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_call_host": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_call_host_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_call_host_run": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_call_host_run_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_manual": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_manual_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   },
+   "x21_dispatch_sleep_feed_start_run": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_dispatch_sleep_feed_start_run_mount": {
+    "vm": "MATCH",
+    "dart2js": "REFUSED",
+    "dart2wasm": "REFUSED"
+   }
+  },
+  "virtual_path_validation_normalization": {
+   "x21_cwd_feed": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_feed_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_invalid": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_invalid_before_overlap": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_cwd_invalid_empty": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_invalid_nul": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_cwd_invalid_web": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "x21_normalise_inside": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_virtual_normalised": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   },
+   "x21_virtual_normalised_trailing": {
+    "vm": "MATCH",
+    "dart2js": null,
+    "dart2wasm": null
+   }
+  },
+  "mount_usage_inspection": {}
  }
 }

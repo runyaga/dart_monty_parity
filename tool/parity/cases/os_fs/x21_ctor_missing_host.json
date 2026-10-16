@@ -1,0 +1,20 @@
+{
+ "id": "x21_ctor_missing_host",
+ "code": "1",
+ "ctor_only": true,
+ "local_refusal": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay",
+    "host_missing": true
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

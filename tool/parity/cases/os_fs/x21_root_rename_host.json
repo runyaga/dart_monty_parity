@@ -1,0 +1,18 @@
+{
+ "id": "x21_root_rename_host",
+ "code": "from pathlib import Path\nPath('/data/a.txt').read_text()",
+ "rename_host_before_feed": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay"
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

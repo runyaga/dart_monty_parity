@@ -1,0 +1,976 @@
+{
+ "about": "DRAFT single M6 target: 24 A1/B1 filesystem rows from P-F2 and four telemetry rows from R-P2. Pending owner approval; no CI assertion. telemetry_flush is excluded because the Python binding has no flush; core delivers synchronously. cli_telemetry remains N/A.",
+ "status": "DRAFT",
+ "clauses": {
+  "outside-F": {
+   "text": "Outside the 24 M6 F filesystem A1/B1 rows and four R-P2 telemetry rows",
+   "owner": "other milestones"
+  },
+  "upstream-no-flush": {
+   "text": "the Python binding has no flush; core delivers synchronously",
+   "owner": "upstream binding surface"
+  },
+  "not-applicable": {
+   "text": "cli_telemetry remains N/A: no corresponding binding CLI telemetry surface",
+   "owner": "binding scope"
+  }
+ },
+ "rows": {
+  "os_path_predicates": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_file_reads": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_file_writes": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_rename": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_path_resolution": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_open_file": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_stat_results": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_directory_listing": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_directory_creation": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "os_entry_removal": {
+   "area": "os_calls",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "mount_table": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_modes": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_root_capability": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_dispatch_and_fallback": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_write_budget": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_memory_budget": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_usage_inspection": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "no binding API (P13)",
+    "cite": "monty-js/ts/node.ts:3-4; P13"
+   }
+  },
+  "mount_errors": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "working_directory": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "virtual_path_validation_normalization": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "memory_filesystem": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "callback_files": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "mount_feed_lifecycle": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "mount_close": {
+   "area": "filesystem",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "allowed": {
+    "kind": "refused-as-upstream",
+    "status": "REFUSED",
+    "backends": [
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "MountDir requires host directories and is unavailable in browser builds",
+    "cite": "monty-js/ts/node.ts:3-4"
+   }
+  },
+  "telemetry_adapter": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_context": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_metrics": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_instrumentation_lifecycle": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  }
+ },
+ "excluded": {
+  "compile_program": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "run_blocking": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "start_program": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "assert_annotations": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "source_nesting_guard": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "compiled_source": {
+   "area": "compile_run",
+   "clause": "outside-F"
+  },
+  "feed_repl_suspendable": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "feed_checked_source": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "call_python_function": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "discover_python_functions": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "interactive_continuation": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "create_repl": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "inspect_repl_compile_options": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "recover_repl_after_error": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "feed_repl_to_completion": {
+   "area": "repl",
+   "clause": "outside-F"
+  },
+  "run_progress_variants": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "suspension_source_position": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "resume_name_lookup": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "resume_os_call": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "abort_suspension": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "abandon_suspended_feed": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "snapshot_auto_resume": {
+   "area": "progress",
+   "clause": "outside-F"
+  },
+  "external_function_value": {
+   "area": "external_functions",
+   "clause": "outside-F"
+  },
+  "external_call_result": {
+   "area": "external_functions",
+   "clause": "outside-F"
+  },
+  "external_call_arguments": {
+   "area": "external_functions",
+   "clause": "outside-F"
+  },
+  "host_class_value": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_instance_value": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_eager_attributes": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_lazy_attributes": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_method_dispatch": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_constructor_policy": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_value_conversion_hook": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_object_identity_lifecycle": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "host_class_type_proxy": {
+   "area": "host_objects",
+   "clause": "outside-F"
+  },
+  "register_pending_future": {
+   "area": "async",
+   "clause": "outside-F"
+  },
+  "resolve_pending_futures": {
+   "area": "async",
+   "clause": "outside-F"
+  },
+  "eager_coroutine_completion": {
+   "area": "async",
+   "clause": "outside-F"
+  },
+  "async_os_sleep": {
+   "area": "async",
+   "clause": "outside-F"
+  },
+  "async_host_driver": {
+   "area": "async",
+   "clause": "outside-F"
+  },
+  "configure_os_policy": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "clock_source": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "sandbox_timezone": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "sleep_policy": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "process_clock_policy": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "random_initialization": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "timezone_database": {
+   "area": "os_policy",
+   "clause": "outside-F"
+  },
+  "os_environment": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_calendar_calls": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_entropy": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "file_mode_inspection": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_clock_reads": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_sync_sleep": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_request_inspection": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "os_callback_adapter": {
+   "area": "os_calls",
+   "clause": "outside-F"
+  },
+  "boundary_value_graph": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "singleton_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "boolean_integer_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "big_integer_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "float_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "complex_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "text_and_bytes": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "sequence_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "set_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "dictionary_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "named_tuple_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "calendar_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "time_duration_zone_values": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "borrowed_value_access": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "shared_value_batches": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "unstable_graph_access": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "boundary_uuid": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "path_value_conversion": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "file_handle_value_conversion": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "exception_value_conversion": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "builtin_type_function_handles": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "lossy_output_placeholders": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "value_formatting": {
+   "area": "values",
+   "clause": "outside-F"
+  },
+  "raised_exception": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "exception_taxonomy": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "traceback_frames": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "structured_exception_data": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "resource_failure_semantics": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "rust_projection_errors": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "execution_input_errors": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "worker_failure_reporting": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "pool_operation_errors": {
+   "area": "errors",
+   "clause": "outside-F"
+  },
+  "feed_execution_limit": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "turn_execution_limit": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "allocator_memory_limit": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "recursion_limit": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "garbage_collection_interval": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "host_suspension_budget": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "host_sleep_budget": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "global_allocator": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "hard_memory_ceiling": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "resource_accounting": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "live_resource_limits": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "memory_baseline_accounting": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "memory_limit_headroom": {
+   "area": "resource_limits",
+   "clause": "outside-F"
+  },
+  "dump_session": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "load_session": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "snapshot_state_kinds": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "snapshot_version_window": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "snapshot_errors": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "snapshot_trust": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "snapshot_host_state_reconstruction": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "load_suspended_snapshot": {
+   "area": "snapshots",
+   "clause": "outside-F"
+  },
+  "fork_session": {
+   "area": "sessions",
+   "clause": "outside-F"
+  },
+  "type_check_source": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "type_check_stubs": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "type_check_diagnostics": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "reset_type_checker": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "persistent_type_check_state": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "skip_feed_type_check": {
+   "area": "type_checking",
+   "clause": "outside-F"
+  },
+  "print_stream_routing": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "collect_print_string": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "collect_print_streams": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "print_callback": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "print_flush_interval": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "pool_async_print_delivery": {
+   "area": "print",
+   "clause": "outside-F"
+  },
+  "telemetry_flush": {
+   "area": "telemetry",
+   "clause": "upstream-no-flush"
+  },
+  "cli_telemetry": {
+   "area": "telemetry",
+   "clause": "not-applicable"
+  },
+  "create_worker_pool": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "checkout_worker": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "worker_recycling": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "finish_checkout": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "close_worker_pool": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "pool_capacity": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "worker_diagnostics": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "checkout_acquisition_timeout": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "request_deadline": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "execution_watchdogs": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "pool_raw_driving": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "pool_cancellation_disposal": {
+   "area": "pool",
+   "clause": "outside-F"
+  },
+  "protocol_value_arena": {
+   "area": "protocol",
+   "clause": "outside-F"
+  },
+  "protocol_frame_io": {
+   "area": "protocol",
+   "clause": "outside-F"
+  },
+  "protocol_worker_state_machine": {
+   "area": "protocol",
+   "clause": "outside-F"
+  },
+  "wire_domain_conversion": {
+   "area": "protocol",
+   "clause": "outside-F"
+  },
+  "protocol_version_compatibility_check": {
+   "area": "protocol",
+   "clause": "outside-F"
+  },
+  "cli_run_modes": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "subprocess_worker_entry": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "cli_type_checking": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "cli_filesystem": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "cli_execution_limits": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "cli_host_limits": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "cli_exit_status": {
+   "area": "runtime_cli",
+   "clause": "outside-F"
+  },
+  "wasm_worker_backend": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "runtime_version": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "rust_toolchain_requirement": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "reference_count_diagnostics": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "runtime_binary_discovery": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "worker_only_build": {
+   "area": "deployment",
+   "clause": "outside-F"
+  },
+  "binding_exposure_policy": {
+   "area": "binding_helpers",
+   "clause": "outside-F"
+  },
+  "cpython_value_adapter": {
+   "area": "binding_helpers",
+   "clause": "outside-F"
+  },
+  "resource_failure_disposal": {
+   "area": "security",
+   "clause": "outside-F"
+  },
+  "host_callback_authority": {
+   "area": "security",
+   "clause": "outside-F"
+  },
+  "install_dependencies": {
+   "area": "pool",
+   "clause": "outside-F"
+  }
+ },
+ "name": "M6 DRAFT"
+}

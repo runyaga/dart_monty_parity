@@ -1,0 +1,19 @@
+{
+ "id": "x21_root_canonical_host_path",
+ "code": "1",
+ "ctor_only": true,
+ "fs": {
+  "mounts": [
+   {
+    "virtual": "/data",
+    "mode": "overlay",
+    "host_noncanonical": true
+   }
+  ],
+  "files": {
+   "/data/a.txt": {
+    "text": "A"
+   }
+  }
+ }
+}

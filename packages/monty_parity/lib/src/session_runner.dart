@@ -18,10 +18,14 @@
 // handed to the public `Monty.checkout` field by field.
 // ignore_for_file: implementation_imports
 
+import 'dart:async';
+
 import 'package:dart_monty_core/dart_monty_core.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
+import 'package:monty_parity/src/canon.dart';
 import 'package:monty_parity/src/case_runner.dart';
 import 'package:monty_parity/src/host_world.dart';
+import 'package:monty_parity/src/mount_fixture.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// The engines this driver runs, by the name their outcomes carry.
@@ -29,7 +33,22 @@ const sessionEngines = {'core', 'session', 'refmem'};
 
 /// What the driver applies that the raw worker engine cannot: the case's
 /// snapshot/restore points and its assert-message setting.
-const _applies = {'restore_before', 'assert_message_annotations'};
+const _applies = {
+  'restore_before',
+  'assert_message_annotations',
+  'fs.mounts',
+  'close_mount_before_feed',
+  'ctor_only',
+  'rename_host_before_feed',
+  'restore_snapshot_at',
+  'feed_start',
+  'dispatch',
+  'expect_os_snapshot',
+  'record_dispatch',
+  'sleep_access',
+  'mount_indices',
+  'restore_mount',
+};
 
 /// Runs case [c] on [backend] through a session checked out of [pool], as
 /// [engine] (`session`, `core` or the mount-free `refmem` column).
@@ -42,6 +61,57 @@ Future<Map<String, Object?>> runSessionCase(
   if (!sessionEngines.contains(engine)) {
     throw ArgumentError.value(engine, 'engine', 'not a session engine');
   }
+  final fixture = engine == 'refmem' ? MountFixture([]) : _fixture(c, backend);
+  if (fixture == null) {
+    return newOutcome(c['id']! as String, engine, backend)
+      ..['refused'] = {'where': 'MountDir', 'type': 'UnsupportedError'};
+  }
+  try {
+    if (fixture.error != null || c['ctor_only'] == true) {
+      final step = newStep();
+      final error = fixture.error;
+      if (error == null) {
+        step['value'] = fixture.attributes;
+      } else {
+        step['exception'] = {
+          'type': error.runtimeType.toString(),
+          'message': '$error',
+          'traceback': <Object?>[],
+        };
+        step['thrown'] = 'host';
+      }
+      return (fixture.stable(
+                newOutcome(c['id']! as String, engine, backend)
+                  ..['steps'] = [step],
+              )!
+              as Map)
+          .cast<String, Object?>();
+    }
+    return (fixture.stable(await _run(c, backend, pool, engine, fixture))!
+            as Map)
+        .cast<String, Object?>();
+  } finally {
+    fixture.close();
+  }
+}
+
+MountFixture? _fixture(Map<String, Object?> c, String backend) {
+  try {
+    return buildMountFixture(c);
+    // Core's browser constructor is the refusal being measured.
+  } on BrowserMountRefused {
+    if (backend == 'vm') rethrow;
+    return null;
+  }
+}
+
+Future<Map<String, Object?>> _run(
+  Map<String, Object?> c,
+  String backend,
+  Monty pool,
+  String engine,
+  MountFixture fixture,
+) async {
   final proxies = engine == 'core'
       ? await _sandboxProxies(pool, sandboxProxyNames(c))
       : const <String, MontyValue>{};
@@ -56,6 +126,7 @@ Future<Map<String, Object?>> runSessionCase(
       config,
       host,
       await _checkout(pool, config),
+      fixture,
       // By hand only where the suspension point shows in the outcome: a
       // host world's call and lookup transcript, and a host refusal of an OS
       // answer. Under feedStart core hands system.sleep to the OS callback,
@@ -80,7 +151,19 @@ Map<String, Object?> refmemCase(Map<String, Object?> c) {
   final fs = (c['fs']! as Map).cast<String, Object?>();
 
   return {
-    ...c,
+    for (final entry in c.entries)
+      if (entry.key != 'mount_indices') entry.key: entry.value,
+    if (c['feeds'] case final List<Object?> feeds)
+      'feeds': [
+        for (final feed in feeds)
+          if (feed is Map)
+            {
+              for (final entry in feed.entries)
+                if (entry.key != 'mount_indices') entry.key: entry.value,
+            }
+          else
+            feed,
+      ],
     'fs': {
       for (final entry in fs.entries)
         if (entry.key != 'mounts') entry.key: entry.value,
@@ -153,6 +236,7 @@ SessionConfig sessionConfig(
   final base = worker.limits;
 
   return SessionConfig(
+    typeCheck: c['type_check'] == true,
     osPolicy: worker.osPolicy,
     assertMessageAnnotations: annotations,
     // No limit set sends no limits, as upstream's checkout without `limits`.
@@ -177,13 +261,15 @@ final class _PoolCaseSession implements CaseSession {
     this._pool,
     this._config,
     this._host,
-    this._session, {
+    this._session,
+    this._fixture, {
     required this.byHand,
   });
 
   /// Whether [feed] resumes each suspension by hand; else it runs `feedRun`.
   final bool byHand;
 
+  final MountFixture _fixture;
   final Monty _pool;
   final SessionConfig _config;
   final CoreHost _host;
@@ -207,31 +293,129 @@ final class _PoolCaseSession implements CaseSession {
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
     String? cwd,
+    Map<String, Object?> options = const {},
+    List<Object?>? observations,
   }) async {
-    if (!byHand) {
+    final selected = (options['mount_indices'] as List?)?.cast<int>();
+    final mounts = selected == null
+        ? _fixture.mounts
+        : [for (final i in selected) _fixture.mounts[i]];
+    if (options['close_mount_before_feed'] == options['feed_index']) {
+      for (final m in mounts) {
+        m.close();
+      }
+    }
+    final sleepAccess = options['sleep_access'] == true
+        ? OSAccess(maxSleep: Duration.zero)
+        : null;
+    var handlerCalls = 0;
+    FutureOr<MontyValue> handler(
+      String name,
+      List<MontyValue> args,
+      Map<String, MontyValue> kwargs,
+    ) {
+      handlerCalls++;
+      if (sleepAccess == null) return onOsCall(name, args, kwargs);
+      observations?.add({'ev': 'handler', 'name': name});
+      return sleepAccess(name, args, kwargs);
+    }
+
+    if (!byHand &&
+        options['feed_start'] != true &&
+        options['restore_snapshot_at'] == null &&
+        options['expect_os_snapshot'] == null &&
+        options['dispatch'] != 'manual' &&
+        options['sleep_access'] != true &&
+        options['close_mount_before_feed'] == null) {
       return _session.feedRun(
         code,
         inputs: inputs,
         externalLookup: hostFunctions(externals),
-        os: onOsCall,
+        os: handler,
+        mount: mounts,
         printCallback: onPrint,
         cwd: cwd,
+        skipTypeCheck: options['skip_type_check'] == true,
       );
     }
     // An OS answer built before its suspension resumes, replayed to core.
-    final answer = _OsAnswer(onOsCall);
-    final snap = await _session.feedStart(
-      code,
-      inputs: inputs,
-      externalLookup: hostFunctions(externals),
-      os: answer.call,
-      printCallback: onPrint,
-      cwd: cwd,
-    );
-    return _resume(snap, answer);
+    final answer = _OsAnswer(handler);
+    final MontySnapshot initial;
+    try {
+      initial = await _session.feedStart(
+        code,
+        inputs: inputs,
+        externalLookup: hostFunctions(externals),
+        os: answer.call,
+        mount: mounts,
+        printCallback: onPrint,
+        cwd: cwd,
+        skipTypeCheck: options['skip_type_check'] == true,
+      );
+      // A deliberate closed-mount fixture is the only StateError measured as
+      // a host refusal. Guards and unrelated internal failures must escape.
+      // ignore: avoid_catching_errors
+    } on StateError catch (error) {
+      if (options['close_mount_before_feed'] == options['feed_index'] &&
+          mounts.any(
+            (mount) =>
+                error.message == "mount '${mount.virtualPath}' is closed",
+          )) {
+        throw ClosedMountRefused(error);
+      }
+      rethrow;
+    }
+    var snap = initial;
+    final expectedOs = options['expect_os_snapshot'];
+    if (expectedOs != null &&
+        (snap is! FunctionSnapshot ||
+            !snap.isOsFunction ||
+            snap.functionName != expectedOs)) {
+      throw StateError('OS suspension $expectedOs not reached');
+    }
+    if (options['record_dispatch'] == true && snap is FunctionSnapshot) {
+      observations?.add({
+        'ev': 'start',
+        'name': snap.functionName,
+        'is_os': snap.isOsFunction,
+        'handler_calls': handlerCalls,
+      });
+    }
+    final restoreAt = options['restore_snapshot_at'];
+    if (restoreAt != null) {
+      while (snap is FunctionSnapshot && snap.functionName != restoreAt) {
+        snap = await snap.resumeAuto();
+      }
+      if (snap is! FunctionSnapshot || snap.functionName != restoreAt) {
+        throw StateError('restore suspension $restoreAt not reached');
+      }
+      final state = await snap.dump();
+      await _replace();
+      snap = await _session.loadSnapshot(
+        state,
+        mount: options['restore_mount'] == false ? [] : mounts,
+        externalLookup: hostFunctions(externals),
+        os: answer.call,
+        printCallback: onPrint,
+      );
+    }
+    if (options['dispatch'] == 'manual' &&
+        snap is FunctionSnapshot &&
+        snap.isOsFunction) {
+      snap = await snap.resume(
+        ExternalReturnValue(
+          await handler(snap.functionName, snap.args, snap.kwargs),
+        ),
+      );
+    }
+    return _resume(snap, answer, prepareOs: byHand && mounts.isEmpty);
   }
 
-  Future<MontyValue> _resume(MontySnapshot initial, _OsAnswer answer) async {
+  Future<MontyValue> _resume(
+    MontySnapshot initial,
+    _OsAnswer answer, {
+    required bool prepareOs,
+  }) async {
     var snap = initial;
     while (true) {
       switch (snap) {
@@ -247,7 +431,7 @@ final class _PoolCaseSession implements CaseSession {
           // The answer first: a value core refuses to build is the host's
           // refusal, and the suspension is abandoned unresumed.
           try {
-            await answer.prepare(f);
+            if (prepareOs) await answer.prepare(f);
           } on HostAnswerRefused {
             await _replace();
             rethrow;
@@ -288,15 +472,15 @@ final class _OsAnswer {
   final OsHandler _handler;
   MontyValue Function()? _built;
 
-  Future<MontyValue> call(
+  FutureOr<MontyValue> call(
     String name,
     List<MontyValue> args,
     Map<String, MontyValue> kwargs,
-  ) async {
+  ) {
     final answer = _built;
     _built = null;
 
-    return answer == null ? await _handler(name, args, kwargs) : answer();
+    return answer == null ? _handler(name, args, kwargs) : answer();
   }
 
   Future<void> prepare(FunctionSnapshot snapshot) async {
