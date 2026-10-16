@@ -30,11 +30,13 @@ import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:monty_parity/monty_parity.dart';
 import 'package:monty_parity/src/session_probes.dart';
 import 'package:monty_parity/src/session_runner.dart';
+import 'package:monty_parity/src/telemetry_recorder.dart';
 import 'package:test/test.dart';
 
 import 'cases.g.dart';
 
 void main() {
+  installParityTelemetry();
   test('parity cases through the session (web)', () async {
     const backend = identical(1, 1.0) ? 'dart2js' : 'dart2wasm';
     final opened = <MontyChannel>[];

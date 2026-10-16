@@ -25,6 +25,7 @@ import 'package:dart_monty_core/src/worker/worker_pool.dart';
 import 'package:dart_monty_core/unsafe_callback_file.dart';
 import 'package:monty_parity/src/host_probes.dart';
 import 'package:monty_parity/src/mount_fixture.dart';
+import 'package:monty_parity/src/telemetry_probes.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// Starts a pool with [options] for one probe; the probe closes it.
@@ -113,6 +114,12 @@ final Map<String, Future<void> Function(_T t, Monty shared, StartPool start)>
 _probes = {
   for (final id in _mountBudgets)
     id: (t, shared, _) => _mountBudget(id, t, shared),
+  for (final id in telemetryProbeIds)
+    id: (t, shared, start) => runTelemetryProbe(
+      id,
+      () => start(const PoolOptions(maxProcesses: 1)),
+      t.add,
+    ),
   // ------------------------------------------- host objects (host_probes.dart)
   for (final id in hostProbeIds)
     id: (t, shared, start) => runHostProbe(id, start, t.add),

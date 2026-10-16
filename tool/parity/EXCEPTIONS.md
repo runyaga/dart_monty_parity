@@ -186,3 +186,44 @@ answers (`expected/host_wrapper_eq`). No sandbox code reaches a wrapper's `==` o
 the gate can differ on it; it is in no gate and core's own tests (`host_objects_test.dart`, group
 `host-wrapper-identity-eq`) hold the Dart side. Removed when: never (a Dart object cannot be both equal by
 fields and unhashable); the divergence stands.
+
+## R-P2 telemetry normalization
+
+These are measurement rules, not tolerated divergences. The six `telemetry_*`
+probes feed `telemetry_adapter`, `telemetry_context`, `telemetry_metrics` and
+`telemetry_instrumentation_lifecycle`. Installation is once per process/isolate;
+scenario resets clear buffers, preserving the installed adapter. All existing
+probes also run instrumented.
+
+- Spans retain creation order and parent indices (the external host parent is
+  `app-request`), names and attributes. `monty_version` must be `"1.1.0"` and
+  `code.language` is compared. The default assertion annotation setting is
+  supplied explicitly as 120 in both bindings.
+- The timing attributes `total_execution_micros` and `feed_execution_micros`,
+  `call_id` and `state_bytes` have masked values with their original types
+  retained (`int`, `str`, etc.). Each dump/load `state_bytes` is checked against
+  that run's actual dumped/loaded length before masking. `worker_pid` is
+  omitted (Web Workers have no pid), together with `logfire.*`,
+  `code.file.path`, `code.line.number`, `code.module.name`, `thread.*`,
+  `busy_ns` and `idle_ns`.
+- Span start/end and log timestamps must be epoch nanoseconds inside the run.
+  Starts precede ends, child spans and logs lie inside their parents, and log
+  timestamps are ordered. Their absolute values are then masked. Log body,
+  attributes, parent, severity text and numeric severity remain compared.
+- Metrics are sorted as a **multiset of raw measurements**, preserving every
+  count and duplicate, kind, unit, description and attribute. Scheduling can
+  interleave instruments; no SDK aggregation or deduplication is used. Seconds
+  are masked. Print bytes and counter/up-down-counter increments are exact.
+  Snapshot/frame byte values are masked because execution times change their
+  varint lengths; counts and attributes are exact. Snapshot bytes must equal
+  the run's own `dump()` length. Exact wire frame lengths remain core unit
+  tests, since the public API cannot observe the frames. Every metric must
+  explicitly use empty context even under the ambient host span.
+
+The error-log timing type is **not** normalized away. Unlike tracing span
+attributes, the `logfire::error!` SDK log path preserves this integer. Core
+`4ea9741` corrects its error-log timing construction: all six telemetry probes
+now MATCH and all four telemetry rows are PRESENT on vm. See
+[the source-cited finding and resolution](../../.gate-logs/R-P2-core-findings.md).
+OTel dependencies live in the parity-only oracle lock; the shared upstream
+lock matches core.

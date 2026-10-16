@@ -1,10 +1,18 @@
 {
- "about": "DRAFT M6 filesystem target, P-F2: 24 A1/B1 rows. Pending owner approval; no CI assertion. Standalone from the R-P2 telemetry target.",
+ "about": "DRAFT single M6 target: 24 A1/B1 filesystem rows from P-F2 and four telemetry rows from R-P2. Pending owner approval; no CI assertion. telemetry_flush is excluded because the Python binding has no flush; core delivers synchronously. cli_telemetry remains N/A.",
  "status": "DRAFT",
  "clauses": {
   "outside-F": {
-   "text": "Outside the 24 M6 F filesystem A1/B1 rows",
+   "text": "Outside the 24 M6 F filesystem A1/B1 rows and four R-P2 telemetry rows",
    "owner": "other milestones"
+  },
+  "upstream-no-flush": {
+   "text": "the Python binding has no flush; core delivers synchronously",
+   "owner": "upstream binding surface"
+  },
+  "not-applicable": {
+   "text": "cli_telemetry remains N/A: no corresponding binding CLI telemetry surface",
+   "owner": "binding scope"
   }
  },
  "rows": {
@@ -300,6 +308,38 @@
     "reason": "MountDir requires host directories and is unavailable in browser builds",
     "cite": "monty-js/ts/node.ts:3-4"
    }
+  },
+  "telemetry_adapter": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_context": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_metrics": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
+  },
+  "telemetry_instrumentation_lifecycle": {
+   "area": "telemetry",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ]
   }
  },
  "excluded": {
@@ -783,29 +823,13 @@
    "area": "print",
    "clause": "outside-F"
   },
-  "telemetry_adapter": {
-   "area": "telemetry",
-   "clause": "outside-F"
-  },
-  "telemetry_context": {
-   "area": "telemetry",
-   "clause": "outside-F"
-  },
-  "telemetry_metrics": {
-   "area": "telemetry",
-   "clause": "outside-F"
-  },
   "telemetry_flush": {
    "area": "telemetry",
-   "clause": "outside-F"
-  },
-  "telemetry_instrumentation_lifecycle": {
-   "area": "telemetry",
-   "clause": "outside-F"
+   "clause": "upstream-no-flush"
   },
   "cli_telemetry": {
    "area": "telemetry",
-   "clause": "outside-F"
+   "clause": "not-applicable"
   },
   "create_worker_pool": {
    "area": "pool",
@@ -948,5 +972,5 @@
    "clause": "outside-F"
   }
  },
- "name": "M6 F DRAFT"
+ "name": "M6 DRAFT"
 }

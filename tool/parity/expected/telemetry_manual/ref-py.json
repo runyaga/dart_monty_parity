@@ -1,0 +1,352 @@
+{
+ "probe": "telemetry_manual",
+ "engine": "ref",
+ "backend": "py",
+ "events": [
+  {
+   "ev": "trace_context",
+   "name": "call {function_name}"
+  },
+  {
+   "ev": "value",
+   "value": 42
+  },
+  {
+   "ev": "context_after_resume",
+   "refused": true
+  },
+  {
+   "ev": "telemetry",
+   "spans": [
+    {
+     "name": "session {script_name}",
+     "parent": "app-request",
+     "attributes": {
+      "assert_message_annotations": "120",
+      "max_memory_bytes": "50000000",
+      "max_recursion_depth": "1000",
+      "max_suspensions": "1000",
+      "monty_version": "1.1.0",
+      "script_name": "main.py",
+      "type_check": false
+     },
+     "timestamps_valid": true
+    },
+    {
+     "name": "run code",
+     "parent": 0,
+     "attributes": {
+      "code": "ext(21)",
+      "code.language": "python",
+      "output": 42,
+      "sandbox.execution.code.attribute": "code",
+      "sandbox.execution.language": "python",
+      "skip_type_check": false,
+      "total_execution_micros": {
+       "type": "int",
+       "masked": true
+      }
+     },
+     "timestamps_valid": true
+    },
+    {
+     "name": "call {function_name}",
+     "parent": 1,
+     "attributes": {
+      "args": "[21]",
+      "call_id": {
+       "type": "str",
+       "masked": true
+      },
+      "function_name": "ext",
+      "return_value": 42,
+      "sandbox.code.file.path": "<python-input-0>",
+      "sandbox.code.offset.end": 7,
+      "sandbox.code.offset.start": 0,
+      "total_execution_micros": {
+       "type": "str",
+       "masked": true
+      }
+     },
+     "timestamps_valid": true
+    }
+   ],
+   "logs": [],
+   "metrics": [
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "received"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "received"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "received"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "received"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "sent"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "sent"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "sent"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "sent"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.wire.frame.bytes",
+     "kind": "histogram",
+     "unit": "By",
+     "description": "Size of one protocol frame, by direction.",
+     "value": "<bytes>",
+     "attributes": {
+      "direction": "sent"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.ext.call.duration",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Time the host took to answer a suspension, by kind.",
+     "value": "<seconds>",
+     "attributes": {
+      "kind": "function",
+      "outcome": "value"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.run.suspensions",
+     "kind": "counter",
+     "unit": "{suspension}",
+     "description": "Suspensions the sandbox raised for the host to answer, by kind.",
+     "value": 1,
+     "attributes": {
+      "kind": "function"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.run.duration",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Wall time of one feed, including time spent waiting on the host.",
+     "value": "<seconds>",
+     "attributes": {
+      "outcome": "complete"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.checkout.wait",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Time spent acquiring a worker for a checkout.",
+     "value": "<seconds>",
+     "attributes": {
+      "outcome": "idle"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.turn.duration",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Wall time of one non-execution turn, by kind.",
+     "value": "<seconds>",
+     "attributes": {
+      "turn": "configure",
+      "outcome": "ok"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.turn.duration",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Wall time of one non-execution turn, by kind.",
+     "value": "<seconds>",
+     "attributes": {
+      "turn": "reset",
+      "outcome": "ok"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.session.duration",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Lifetime of a checked-out session.",
+     "value": "<seconds>",
+     "attributes": {
+      "outcome": "ok"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.worker.terminated",
+     "kind": "counter",
+     "unit": "{worker}",
+     "description": "Workers discarded by the pool, by reason.",
+     "value": 1,
+     "attributes": {
+      "reason": "closed"
+     },
+     "empty_context": true
+    },
+    {
+     "name": "monty.run.execution_time",
+     "kind": "histogram",
+     "unit": "s",
+     "description": "Sandbox execution time of one feed, excluding host round-trips.",
+     "value": "<seconds>",
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.suspended",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers blocked waiting for the host to answer a suspension.",
+     "value": -1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.suspended",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers blocked waiting for the host to answer a suspension.",
+     "value": 1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.idle",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers immediately available for checkout.",
+     "value": -1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.idle",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers immediately available for checkout.",
+     "value": -1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.idle",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers immediately available for checkout.",
+     "value": 1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.idle",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers immediately available for checkout.",
+     "value": 1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.live",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers the pool is keeping alive: pooled, checked out, or being spawned.",
+     "value": -1,
+     "attributes": {},
+     "empty_context": true
+    },
+    {
+     "name": "monty.pool.workers.live",
+     "kind": "up_down_counter",
+     "unit": "{worker}",
+     "description": "Workers the pool is keeping alive: pooled, checked out, or being spawned.",
+     "value": 1,
+     "attributes": {},
+     "empty_context": true
+    }
+   ],
+   "sizes_valid": true
+  }
+ ],
+ "runner_error": null
+}
