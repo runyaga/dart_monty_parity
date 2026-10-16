@@ -42,6 +42,11 @@ the architecture (re-measured rows from this run, the rest as recorded), and
 on arm64 when the FFI count differs from the manifest's frozen baseline other
 than by the rows rows.json lists under `rescored` (rows whose status these
 scoring rules decide differently from the manifest's method).
+Either historical assertion explicitly selects runner-0.23's core filesystem
+outcomes against ref-py, including memory_filesystem. That runner has no refmem
+column. Other scoring requires the rule's refmem output and oracle; missing
+refmem never falls back to core. Historical assertions cannot join current
+baseline recording/assertions or target/other engine scoring.
 
 Expectations are per CPU architecture. The baseline was measured on arm64;
 `platforms` in rows.json (and in the current-baseline file) lists, per other
@@ -55,6 +60,11 @@ current tree (tool/parity/baseline-current.json): every case's class within
 every re-measured row, every row's status, on every backend, and the PRESENT
 totals. A change that moves a case or a row updates that file, with the move
 listed under `deltas`.
+
+--write-current FILE refreshes the selected backends (all three by default),
+including the measured architecture's overrides and totals. Other architectures'
+expectations, unselected backends, subject and deltas are preserved. Row-table
+annotations labelled `historical` refer to rows.json, not the current baseline.
 
 --target [FILE] (default tool/parity/m3-target.json) also scores the M3 parity target: the in-scope
 manifest rows M3 owns, each with the backends it must be PRESENT on (the rest of the 185 are `excluded`,
@@ -189,7 +199,6 @@ def expand(codes: list[str]) -> list[str]:
 # actually present: `ignore` (case rows: field codes) or `ignore_keys` (probe
 # rows: event keys).
 KEPT_EXCEPTIONS = {
-    'rename-missing-message': 'ignore',
     'payload-host-type': 'ignore_keys',
     'no-suspension-position': 'ignore_keys',
 }
@@ -246,16 +255,25 @@ def load(p: Path):
 
 
 def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
-                  engine: str = 'core') -> tuple[str, list[str], list[str]]:
+                  engine: str = 'core', *, historical: bool = False) -> tuple[str, list[str], list[str]]:
     """-> (class, differing codes, names of the exceptions that changed the verdict)."""
-    ref = load(expected / cid / f"{rule.get('oracle', 'ref-py')}.json")
-    got = load(out / cid / f'{engine}-{backend}.json')
+    # runner-0.23 measured these cases through its ordinary filesystem column
+    # against ref-py. It predates the independent refmem run (and its oracle's
+    # rename wording). Select that instrument explicitly, never by file presence:
+    # a missing current refmem outcome must still be NO-OUTCOME.
+    legacy_fs = historical and rule.get('engine') == 'refmem'
+    oracle = 'ref-py' if legacy_fs else rule.get('oracle', 'ref-py')
+    selected_engine = 'core' if legacy_fs else rule.get('engine', engine)
+    ref = load(expected / cid / f'{oracle}.json')
+    got = load(out / cid / f'{selected_engine}-{backend}.json')
     if got is None or got.get('runner_error'):
         return 'NO-OUTCOME', ['!'], []
     if is_refusal(got, rule):
         return 'REFUSED', [], []
     if ref is None or ref.get('runner_error'):
         return 'NO-ORACLE', ['?'], []
+    if 'fs.mounts' in (got.get('unsupported') or {}):
+        return 'UNSUPPORTED', ['fs.mounts'], []
     codes = expand(rule.get('compare', ALL_CODES))
     applied = []
     for ex in rule.get('exceptions', []):
@@ -1079,6 +1097,41 @@ def platform_arch(outcomes: Path) -> str:
     return json.loads(p.read_text())['arch']
 
 
+def record_current(previous: dict, arch: str, measured: dict) -> dict:
+    """Refresh selected backends, including platform overrides, without changing other measurements."""
+    doc = copy.deepcopy(previous)
+    doc.setdefault('subject', '')
+    doc.setdefault('deltas', [])
+    platforms = doc.setdefault('platforms', {})
+    current = platforms.setdefault(arch, {})
+    others = [p for name, p in platforms.items() if name != arch]
+
+    def update(base, override, other_overrides, values, depth):
+        for key, value in values.items():
+            if depth > 1:
+                update(base.setdefault(key, {}), override.setdefault(key, {}),
+                       [p.setdefault(key, {}) for p in other_overrides], value, depth - 1)
+                for p in [override, *other_overrides]:
+                    if not p[key]:
+                        del p[key]
+            else:
+                # Other architectures may inherit the old shared value. Pin it
+                # before replacing it with this architecture's measurement.
+                if key in base and base[key] != value:
+                    for p in other_overrides:
+                        p.setdefault(key, copy.deepcopy(base[key]))
+                base[key] = copy.deepcopy(value)
+                override.pop(key, None)  # a stale override must not shadow the write
+
+    for field, depth in [('rows', 2), ('cells', 3), ('present', 1), ('totals', 1)]:
+        update(doc.setdefault(field, {}), current.setdefault(field, {}),
+               [p.setdefault(field, {}) for p in others], measured[field], depth)
+    # PRESENT totals are required explicitly by --assert-current for each arch.
+    current['present'].update(measured['present'])
+    current['totals'].update(measured['totals'])
+    return doc
+
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -1090,7 +1143,8 @@ def main() -> int:
     ap.add_argument('--assert-rows', action='store_true')
     ap.add_argument('--assert-baseline', action='store_true')
     ap.add_argument('--assert-current', type=Path)
-    ap.add_argument('--write-current', type=Path, help='write the measured rows and totals (keeps `deltas`)')
+    ap.add_argument('--write-current', type=Path,
+                    help='refresh selected backends for the measured architecture (keeps `deltas`)')
     ap.add_argument('--assert-e0', type=Path, nargs='?', const=ROOT / 'tool/parity/e0.json',
                     help='score the E0 suite through the worker engine instead (default tool/parity/e0.json)')
     ap.add_argument('--assert-worker', action='store_true',
@@ -1106,6 +1160,9 @@ def main() -> int:
     ap.add_argument('--engine', choices=['worker', 'session'],
                     help="--assert-e0: the engine whose outcomes to score (default: the spec's `engine`)")
     a = ap.parse_args()
+    historical = a.assert_rows or a.assert_baseline
+    if historical and (a.assert_current or a.write_current or a.target or a.assert_e0 or a.assert_gate or a.assert_worker):
+        ap.error('--assert-rows/--assert-baseline select runner-0.23; they cannot join current or other engine scoring')
     if a.assert_target and not a.target:
         sys.exit('--assert-target needs --target')
     if a.core and not a.target:
@@ -1129,7 +1186,8 @@ def main() -> int:
     # A row with only a `worker` block has no core-engine cases: its recorded status stands.
     rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule}
     backends = a.backends.split(',')
-    manifest = list(csv.DictReader(MANIFEST.open(), delimiter='\t'))
+    with MANIFEST.open() as manifest_file:
+        manifest = list(csv.DictReader(manifest_file, delimiter='\t'))
     in_scope = {r['cap_id']: r for r in manifest if r['in_scope'] == 'yes'}
     unknown = sorted(set(all_rules) - set(in_scope))
     if unknown:
@@ -1151,7 +1209,7 @@ def main() -> int:
             else:
                 cells = []
                 for cid in rule['cases']:
-                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected)
+                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=historical)
                     cells.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
                 status = row_status([c['class'] for c in cells])
             expect = (rule.get('expect') or {}).get('web' if b != 'vm' else 'ffi')
@@ -1180,7 +1238,7 @@ def main() -> int:
         cells = []
         for b in backends:
             r = result['rows'][row][b]
-            mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (recorded {r['expect']})"
+            mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (historical {r['expect']})"
             cells.append(r['status'] + mark)
         lines.append(f'| {row} | ' + ' | '.join(cells) + ' |')
     lines.append('')
@@ -1202,9 +1260,9 @@ def main() -> int:
                    for c in result['rows'][row][backends[0]]['cells']} for row in rules}
     if a.write_current:
         prev = json.loads(a.write_current.read_text()) if a.write_current.exists() else {}
-        doc = {'subject': prev.get('subject', ''), 'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
-               'platforms': prev.get('platforms', {}), 'deltas': prev.get('deltas', []),
-               'rows': measured, 'cells': cells}
+        doc = record_current(prev, arch, {
+            'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
+            'rows': measured, 'cells': cells})
         a.write_current.write_text(json.dumps(doc, indent=1) + '\n')
     rc = 0
     if a.assert_current:

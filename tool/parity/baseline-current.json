@@ -1,29 +1,29 @@
 {
- "subject": "dart_monty_core with the session surface (core #255, head 32a3c19, on main 301182c with the value family: Monty / MontySession on the worker, externalLookup and inputs as Map<String, MontyValue>, the public coroutine and host classes), measured through its public API; rows the harness does not re-measure carry their 5873ec5 status from the capability manifest",
+ "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.",
  "present": {
-  "vm": 81,
-  "dart2js": 80,
-  "dart2wasm": 80
+  "vm": 79,
+  "dart2js": 78,
+  "dart2wasm": 78
  },
  "totals": {
   "vm": {
-   "ABSENT": 42,
-   "PRESENT": 81,
-   "PARTIAL": 35,
+   "ABSENT": 48,
+   "PRESENT": 79,
+   "PARTIAL": 31,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 38,
-   "PRESENT": 80,
-   "PARTIAL": 38,
+   "ABSENT": 44,
+   "PRESENT": 78,
+   "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 38,
-   "PRESENT": 80,
-   "PARTIAL": 38,
+   "ABSENT": 44,
+   "PRESENT": 78,
+   "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
   }
@@ -33,18 +33,67 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 81,
-    "dart2js": 80,
-    "dart2wasm": 80
+    "vm": 79,
+    "dart2js": 78,
+    "dart2wasm": 78
+   },
+   "cells": {},
+   "totals": {
+    "vm": {
+     "ABSENT": 48,
+     "PRESENT": 79,
+     "PARTIAL": 31,
+     "N/A": 26,
+     "REFUSED": 1
+    },
+    "dart2js": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    },
+    "dart2wasm": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    }
    }
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 81,
-    "dart2js": 80,
-    "dart2wasm": 80
+    "vm": 79,
+    "dart2js": 78,
+    "dart2wasm": 78
+   },
+   "cells": {},
+   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured.",
+   "totals": {
+    "vm": {
+     "ABSENT": 48,
+     "PRESENT": 79,
+     "PARTIAL": 31,
+     "N/A": 26,
+     "REFUSED": 1
+    },
+    "dart2js": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    },
+    "dart2wasm": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
+    }
    }
   }
  },
@@ -887,6 +936,324 @@
    "commit": "2b7d431",
    "pr": null,
    "why": "the session driver builds an OS call's answer on the host, and a value core refuses to build (ArgumentError) is the host's refusal, outside the sandbox, as upstream's host raises ValueError or OverflowError; the case is marked `local_refusal` (EXCEPTIONS.md); x8hostmode_neg now MATCHes (dart2js and dart2wasm stay PARTIAL: x8handle_pos2p53 and x8handle_pos2p63m1 on the wasm32 worker)"
+  },
+  {
+   "row": "os_environment",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PRESENT",
+   "to": "PARTIAL",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "The mount-free getenv case still MATCHes; the fallback case requests a mount, which F-1 cannot supply. The row becomes PARTIAL until P-F2.",
+   "cells": [
+    {
+     "case": "x21_fallback_nonfs",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_fallback_nonfs requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_table",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "F-1 OSAccess has no host mount table. All mount table cases are explicitly unsupported until P-F2.",
+   "cells": [
+    {
+     "case": "x21_two_mounts",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_two_mounts requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_nested_virtual",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_nested_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_trailing_slash_virtual",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_trailing_slash_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_dup_virtual",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_dup_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_relative_virtual",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_relative_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_modes",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "F-1 OSAccess has no host read-only/read-write/overlay mount modes. All mount-mode cases are unsupported until P-F2.",
+   "cells": [
+    {
+     "case": "x21_ro_read_ok",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_read_ok requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_ro_write",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_write requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_overlay_same_feed",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_overlay_same_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_errors",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "F-1 cannot construct mounts or exercise their validation, policy errors or close lifecycle. Every case is unsupported until P-F2.",
+   "cells": [
+    {
+     "case": "x21_write_limit",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_write_limit requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_ro_write",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_write requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_ro_mkdir",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_mkdir requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_ro_open_w",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_open_w requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_ro_unlink",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_ro_unlink requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_dup_virtual",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_dup_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_relative_virtual",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_relative_virtual requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "g19_close_then_feed",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "g19_close_then_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_feed_lifecycle",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "F-1 has no host mounts to persist, overlay or budget across feeds. All lifecycle cases are unsupported until P-F2.",
+   "cells": [
+    {
+     "case": "x21_lifecycle_read-write",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_lifecycle_read-write requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_lifecycle_delete_read-write",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "x21_lifecycle_delete_read-write requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_lifecycle_overlay",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_lifecycle_overlay requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_write_limit_per_feed",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_write_limit_per_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_close",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "ABSENT",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "Closing a host mount cannot be exercised in F-1. The cell changes from DIVERGE to UNSUPPORTED; the row stays ABSENT until P-F2.",
+   "cells": [
+    {
+     "case": "g19_close_then_feed",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "g19_close_then_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "working_directory",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "PARTIAL",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "cwd is now forwarded to feedRun/feedStart. Both mount-free getcwd cases MATCH; the three mount cases remain unsupported until P-F2, so the whole row stays PARTIAL rather than claiming PRESENT.",
+   "cells": [
+    {
+     "case": "b14_getcwd_set",
+     "from": "DIVERGE",
+     "to": "MATCH",
+     "why": "The case cwd is passed to the public feed; os.getcwd() now returns the requested directory, matching upstream."
+    },
+    {
+     "case": "x21_cwd_feed",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_cwd_feed requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_cwd_default_mount",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_cwd_default_mount requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    },
+    {
+     "case": "x21_cwd_relative_fallback",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "x21_cwd_relative_fallback requests fs.mounts; F-1 has only OSAccess memory files, so the runner records unsupported fs.mounts before running a feed until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_write_budget",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PARTIAL",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "Mount write budgets are explicitly unsupported in F-1; neither probe runs a feed. The row becomes ABSENT until P-F2.",
+   "cells": [
+    {
+     "case": "api_write_budget_feed1",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "api_write_budget_feed1 requests a mount budget absent from F-1 OSAccess; the probe records unsupported fs.mounts until P-F2."
+    },
+    {
+     "case": "api_write_budget_feed2",
+     "from": "DIVERGE",
+     "to": "UNSUPPORTED",
+     "why": "api_write_budget_feed2 requests a mount budget absent from F-1 OSAccess; the probe records unsupported fs.mounts until P-F2."
+    }
+   ],
+   "arch": "arm64"
+  },
+  {
+   "row": "mount_memory_budget",
+   "backends": [
+    "vm",
+    "dart2js",
+    "dart2wasm"
+   ],
+   "from": "PRESENT",
+   "to": "ABSENT",
+   "commit": "58106a7c5807691b6fc2c82664229a3bd3680276",
+   "pr": "P-F1",
+   "why": "The host mount memory budget is explicitly unsupported in F-1; the probe runs no feed. The row becomes ABSENT until P-F2.",
+   "cells": [
+    {
+     "case": "api_memory_budget",
+     "from": "MATCH",
+     "to": "UNSUPPORTED",
+     "why": "api_memory_budget requests a mount budget absent from F-1 OSAccess; the probe records unsupported fs.mounts until P-F2."
+    }
+   ],
+   "arch": "arm64"
   }
  ],
  "rows": {
@@ -1066,29 +1433,29 @@
    "dart2wasm": "PRESENT"
   },
   "os_environment": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "PARTIAL",
+   "dart2js": "PARTIAL",
+   "dart2wasm": "PARTIAL"
   },
   "mount_table": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_modes": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_errors": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_feed_lifecycle": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_close": {
    "vm": "ABSENT",
@@ -1261,14 +1628,14 @@
    "dart2wasm": "PRESENT"
   },
   "mount_write_budget": {
-   "vm": "PARTIAL",
-   "dart2js": "PARTIAL",
-   "dart2wasm": "PARTIAL"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "mount_memory_budget": {
-   "vm": "PRESENT",
-   "dart2js": "PRESENT",
-   "dart2wasm": "PRESENT"
+   "vm": "ABSENT",
+   "dart2js": "ABSENT",
+   "dart2wasm": "ABSENT"
   },
   "callback_files": {
    "vm": "PRESENT",
@@ -2389,124 +2756,124 @@
     "dart2wasm": "MATCH"
    },
    "x21_fallback_nonfs": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_table": {
    "x21_two_mounts": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_nested_virtual": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_trailing_slash_virtual": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_dup_virtual": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_relative_virtual": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_modes": {
    "x21_ro_read_ok": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_write": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_overlay_same_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_errors": {
    "x21_write_limit": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_write": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_mkdir": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_open_w": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_ro_unlink": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_dup_virtual": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_relative_virtual": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "g19_close_then_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_feed_lifecycle": {
    "x21_lifecycle_read-write": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_lifecycle_delete_read-write": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_lifecycle_overlay": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_write_limit_per_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_close": {
    "g19_close_then_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "async_os_sleep": {
@@ -2591,24 +2958,24 @@
     "dart2wasm": "MATCH"
    },
    "b14_getcwd_set": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
    },
    "x21_cwd_feed": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_cwd_default_mount": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "x21_cwd_relative_fallback": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "clock_source": {
@@ -5947,21 +6314,21 @@
   },
   "mount_write_budget": {
    "api_write_budget_feed1": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    },
    "api_write_budget_feed2": {
-    "vm": "DIVERGE",
-    "dart2js": "DIVERGE",
-    "dart2wasm": "DIVERGE"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "mount_memory_budget": {
    "api_memory_budget": {
-    "vm": "MATCH",
-    "dart2js": "MATCH",
-    "dart2wasm": "MATCH"
+    "vm": "UNSUPPORTED",
+    "dart2js": "UNSUPPORTED",
+    "dart2wasm": "UNSUPPORTED"
    }
   },
   "callback_files": {

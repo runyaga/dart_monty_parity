@@ -16,6 +16,13 @@ current baseline against every pull request.
 CI's `current` job reproduces it there. A core commit that does not change parity behaviour passes too,
 as long as its `tool/upstream` files equal the copies here (`tool/check_core_upstream.py`).
 
+P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
+`CallbackFile`), pinned by `CORE_REF` to `58106a7c5807691b6fc2c82664229a3bd3680276`.
+The P-F1 baseline records VM, dart2js and dart2wasm from the macOS arm64 host run
+with real Chrome: 79, 78 and 78 PRESENT rows respectively out of 185.
+Linux x86_64 applies the same architecture-independent F-1 window changes, with
+the same PRESENT totals; a Linux measurement remains pending.
+
 ## Layout
 
 | Path | What |
@@ -61,6 +68,19 @@ python3 -I tool/parity/score.py /tmp/parity --markdown /tmp/parity/score.md \
 `--core` is required. `run.py` points the runner at it with a `pubspec_overrides.yaml` written for the
 run and removed afterwards. `--cases GLOB ...` limits a run to some cases. One output directory holds one
 architecture's outcomes; `score.py` reads the architecture from `platform.json` in it.
+
+Every selected case marked `refmem: true` also runs independently through the public
+session with `OSAccess(files: [MemoryFile(...)])` and writes
+`OUTDIR/<case>/refmem-<backend>.json`. The VM, dart2js and dart2wasm all produce this
+column. Stale memory outcomes are removed before the run. B1 rows and
+`memory_filesystem` score it against `refmem-py.json`; until P-F2 this applies to the
+VM too. The ordinary case outcome records `unsupported: fs.mounts` for mount
+requests. Mount write and memory budget probes also remain unsupported until P-F2.
+The case's `cwd` is passed to each feed, including manually resumed feeds.
+
+`run.py` generates the temporary browser input `packages/monty_parity/test/cases.g.dart`.
+After baking it, `run.py BACKEND --check --engine ENGINE [--cases GLOB ...]` checks
+its bytes without launching Dart or a browser (no `--core` or `--out` needed).
 
 ### E0 through the worker
 
@@ -157,6 +177,13 @@ expectations in `EXCEPTIONS.md`). The manifest's frozen FFI number, 37, was scor
 `rows.json` `rescored` lists the rows that account for the difference. That core needs `npm ci` in its `js/` for the browser WASI worker, and on a toolchain
 without its cross targets `RUSTUP_TOOLCHAIN=stable`.
 
+Either historical assertion explicitly selects `runner-0.23`'s filesystem
+measurement: `core-<backend>.json` against `ref-py.json` for B1 and
+`memory_filesystem`. That runner writes no independent refmem outcomes. Current
+scoring still requires `refmem-<backend>.json` against `refmem-py.json`, and a
+missing file is `NO-OUTCOME`. Historical assertions cannot be combined with
+`--assert-current`, `--write-current`, target or other engine scoring.
+
 ## Checks (CI)
 
 - **`manifest`** (`ci.yaml`, every change): `tool/check_parity_manifest.py` fails if a case changed
@@ -209,8 +236,11 @@ moves):
 
 1. Here: run the suite against the core change on all three backends and re-record with
    `score.py OUT --write-current tool/parity/baseline-current.json`. `rows`, `cells`, `present` and
-   `totals` are recorded as measured on **arm64**; per-architecture differences live under
-   `platforms` (`--write-current` keeps `platforms`, `subject` and `deltas`). Add the move to `deltas`
+   `totals` are refreshed for the architecture in `OUT/platform.json`, including its
+   `platforms` overrides. Other architectures' expectations and unselected backends are
+   preserved, as are `subject` and `deltas`. All three backends are selected by default;
+   a subset uses comma-separated `--backends vm,dart2js`. Re-run with `--assert-current`
+   on the same artifacts to verify the recording. Add the move to `deltas`
    (row, backends, from, to, the core commit or PR, why), set `CORE_REF` to the core change's commit, and merge.
 2. In dart_monty_core: bump the pinned commit of this repository in the same pull request as the change.
    Its `parity` job then asserts the new baseline.

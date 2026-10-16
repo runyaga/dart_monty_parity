@@ -1,6 +1,6 @@
 // The value conversions and the case's host world shared by every engine:
 // canonical form <-> [MontyValue], and a case's `fs` block as core's
-// memory-mounted handler. The engines themselves are worker_runner.dart
+// OSAccess handler. The engines themselves are worker_runner.dart
 // (the raw worker) and session_runner.dart (`Monty` / `MontySession`, the
 // `core` and `session` engines). Web-safe.
 //
@@ -10,8 +10,6 @@
 import 'dart:typed_data';
 
 import 'package:dart_monty_core/dart_monty_core.dart';
-import 'package:dart_monty_core/src/mount/vfs_limits.dart'
-    show defaultMemoryUsageLimit;
 import 'package:dart_monty_core/src/platform/monty_value.dart'
     show montyClassProxy, montyClassTypeProxy, montyStdTypeProxy;
 import 'package:monty_parity/src/canon.dart';
@@ -447,9 +445,7 @@ class CoreHost {
   MontyValue wrapperValue(String name) {
     final ws = (wspecs[name]! as Map).cast<String, Object?>();
     if (ws['kind'] != 'instance') {
-      throw const Inexpressible(
-        'core: this engine builds no host class value',
-      );
+      throw const Inexpressible('core: this engine builds no host class value');
     }
     final label = ws['obj']! as String;
     final o = (objects[label]! as Map).cast<String, Object?>();
@@ -491,53 +487,47 @@ class CoreHost {
 
 // ------------------------------------------------------------ filesystem
 
-/// Builds core's memory-mounted handler from a case `fs` spec (mounts and
-/// seeded files). Throws whatever core throws at construction.
+/// Builds OSAccess from the seeded files, preserving the scripted fallback.
+/// Host mounts are unavailable until P-F2; refmem cases omit that request.
 OsHandler buildFsHandler(
   Map<String, Object?> fs,
   OsHandler fallthrough,
-  Map<String, Object?> unsupported,
-) {
-  final mounts = <MountDir>[];
-  for (final m in (fs['mounts']! as List).cast<Map<String, Object?>>()) {
-    final mode = m['mode'] as String? ?? 'read-write';
-    if (mode == 'overlay') {
-      unsupported['fs.mode'] =
-          'core MountMode has no overlay; ran as readWrite';
-    }
-    mounts.add(
-      MountDir(
-        virtualPath: m['virtual']! as String,
-        mode: mode == 'read-only' ? MountMode.readOnly : MountMode.readWrite,
-        writeBytesLimit: m['write_bytes_limit'] as int?,
-        memoryUsageLimit:
-            (m['memory_usage_limit'] as int?) ?? defaultMemoryUsageLimit,
+  Map<String, Object?> unsupported, {
+  bool scriptedEnvironment = true,
+}) {
+  if (fs['mounts'] case final List<Object?> mounts when mounts.isNotEmpty) {
+    unsupported['fs.mounts'] = 'host mounts are unavailable until P-F2';
+  }
+  final files = <MemoryFile>[];
+  for (final entry in ((fs['files'] as Map?) ?? const {}).entries) {
+    final path = entry.key as String;
+    // The refmem oracle also skips explicit empty directory seeds.
+    if (path.endsWith('/')) continue;
+    final content = (entry.value as Map).cast<String, Object?>();
+    files.add(
+      MemoryFile(
+        path,
+        content.containsKey('hex')
+            ? Uint8List.fromList(bytesOfHex(content['hex']! as String))
+            : content['text']! as String,
       ),
     );
   }
-  final files = <VfsFile>[];
-  for (final e in ((fs['files'] as Map?) ?? const {}).entries) {
-    final k = e.key as String;
-    if (k.endsWith('/')) {
-      unsupported['fs.empty_dir_seed'] =
-          'core seeds directories only through files';
-      continue;
+  final access = OSAccess(files: files);
+
+  return (name, args, kwargs) async {
+    // Mount-backed oracle cases delegate environment calls to their script.
+    // OSAccess also handles these names, so it must not swallow that script.
+    // The refmem oracle uses OSAccess's own environment instead.
+    if (scriptedEnvironment && (name == 'os.getenv' || name == 'os.environ')) {
+      return fallthrough(name, args, kwargs);
     }
-    final v = (e.value as Map).cast<String, Object?>();
-    files.add(
-      v.containsKey('hex')
-          ? MontyMemoryFile(
-              k,
-              Uint8List.fromList(bytesOfHex(v['hex']! as String)),
-            )
-          : MontyMemoryFile(k, v['text']! as String),
-    );
-  }
-  return memoryMountedOsHandler(
-    mounts: mounts,
-    files: files,
-    fallthrough: fallthrough,
-  );
+    try {
+      return await access(name, args, kwargs);
+    } on OsCallNotHandledException {
+      return fallthrough(name, args, kwargs);
+    }
+  };
 }
 
 /// The names of the builtin types and functions case [c] returns or passes

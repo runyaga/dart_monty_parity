@@ -527,7 +527,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_file_reads": {
    "cases": [
@@ -541,7 +551,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_file_writes": {
    "cases": [
@@ -554,7 +574,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_rename": {
    "cases": [
@@ -566,7 +596,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_path_resolution": {
    "cases": [
@@ -575,7 +615,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_open_file": {
    "cases": [
@@ -601,7 +651,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_stat_results": {
    "cases": [
@@ -612,7 +672,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_directory_listing": {
    "cases": [
@@ -624,7 +694,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_directory_creation": {
    "cases": [
@@ -638,7 +718,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "os_entry_removal": {
    "cases": [
@@ -652,7 +742,17 @@
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "oracle": "refmem-py",
+   "engine": "refmem",
+   "compare": [
+    "V",
+    "E",
+    "P",
+    "O",
+    "X",
+    "C"
+   ]
   },
   "memory_filesystem": {
    "cases": [
@@ -722,20 +822,11 @@
     "Et",
     "Em"
    ],
-   "exceptions": [
-    {
-     "name": "rename-missing-message",
-     "reason": "renaming a missing file: upstream names the source path, core names source and destination",
-     "case": "b11fs_rename_missing",
-     "ignore": [
-      "Em"
-     ]
-    }
-   ],
    "expect": {
     "ffi": "PRESENT",
     "web": "PRESENT"
-   }
+   },
+   "engine": "refmem"
   },
   "os_environment": {
    "cases": [
@@ -1986,7 +2077,7 @@
    "exceptions": [
     {
      "name": "payload-host-type",
-     "reason": "the write payload's host-side type name differs (Python str vs core VfsText); path and text compared",
+     "reason": "the write payload host type differs (Python str vs Dart String); path and text compared",
      "ignore_keys": [
       "type"
      ]

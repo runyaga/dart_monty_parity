@@ -31,6 +31,8 @@ def judge(pid: str, ref: dict | None, got: dict | None, rule: dict) -> tuple[str
         return 'REFUSED', [], []
     if ref is None or ref.get('runner_error'):
         return 'NO-ORACLE', ['?'], []
+    if got.get('unsupported'):
+        return 'UNSUPPORTED', sorted(got['unsupported']), []
     ignore: set[str] = set()
     applied = []
     for ex in rule.get('exceptions', []):

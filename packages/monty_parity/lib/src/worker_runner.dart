@@ -22,6 +22,7 @@ import 'package:dart_monty_core/dart_monty_core.dart'
     hide MontyError, MontySyntaxError, MontyTypingError;
 import 'package:dart_monty_core/src/platform/monty_value.dart'
     show montyClassProxy, montyClassTypeProxy;
+import 'package:dart_monty_core/src/worker/host_answers.dart' show HostAnswers;
 import 'package:dart_monty_core/src/worker/monty_channel.dart';
 import 'package:dart_monty_core/src/worker/monty_error.dart';
 import 'package:dart_monty_core/src/worker/proto_session.dart';
@@ -34,8 +35,6 @@ typedef ChannelFactory = Future<MontyChannel> Function();
 /// The case keys this engine has no way to apply. Each one present is
 /// recorded under `unsupported` and the case runs without it.
 const _inexpressible = {
-  'cwd': 'no per-feed cwd in the worker driver; ran without it',
-  'fs': 'no mounts in the worker driver; ran without them',
   'host': 'no host objects in the worker driver; ran without them',
   'restore_before': 'no snapshot/restore in the worker driver',
   'close_mount_before_feed': 'no mounts in the worker driver',
@@ -60,6 +59,7 @@ abstract interface class CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
+    String? cwd,
   });
 
   /// Moves the session's state to a fresh session (dump, then load into a
@@ -88,7 +88,10 @@ final class HostAnswerRefused implements Exception {
 
 /// Opens a session configured as [config] says.
 typedef OpenCaseSession =
-    Future<CaseSession> Function(SessionConfig config, CoreHost host);
+    Future<CaseSession> Function(
+      SessionConfig config,
+      CoreHost host,
+    );
 
 /// A case's settings as an engine's session takes them; a setting the engine
 /// cannot apply is recorded in the second argument, `unsupported`.
@@ -202,9 +205,14 @@ Future<Map<String, Object?>> runEngineCase(
   OsHandler? fsHandler;
   Object? fsError;
   final fs = (c['fs'] as Map?)?.cast<String, Object?>();
-  if (fs != null && applies.contains('fs')) {
+  if (fs != null) {
     try {
-      fsHandler = buildFsHandler(fs, scriptedOs, unsupported);
+      fsHandler = buildFsHandler(
+        fs,
+        scriptedOs,
+        unsupported,
+        scriptedEnvironment: engine != 'refmem',
+      );
     } on Object catch (e) {
       fsError = e;
     }
@@ -272,6 +280,7 @@ Future<Map<String, Object?>> runEngineCase(
       try {
         final value = await session.feed(
           feeds[n],
+          cwd: c['cwd'] as String?,
           inputs: n == 0 ? inputs : const {},
           externals: {
             for (final name in script.externals.keys)
@@ -370,13 +379,18 @@ final class _ProtoCaseSession implements CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
+    String? cwd,
   }) async {
-    final result = await _session.feed(
+    final result = await _session.drive(
       code,
+      HostAnswers(
+        externalLookup: hostFunctions(externals),
+        os: onOsCall,
+        objects: _session.objects,
+      ),
       inputs: inputs,
-      externalLookup: hostFunctions(externals),
-      onOsCall: onOsCall,
       onPrint: onPrint,
+      cwd: cwd,
     );
 
     return result.value;
@@ -679,11 +693,7 @@ List<Object?> identityCanonBatch(
         out['type'] = typeName;
         out['fields'] = fieldNames;
         out['items'] = [for (final i in values) enc(i)];
-      case MontyClassProxy(
-        :final classType,
-        :final instanceId,
-        :final attrs,
-      ):
+      case MontyClassProxy(:final classType, :final instanceId, :final attrs):
         out['t'] = 'proxy';
         out['class'] = classType.name;
         out['dataclass'] = classType.isDataclass;

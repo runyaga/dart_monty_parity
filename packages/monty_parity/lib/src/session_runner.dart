@@ -25,14 +25,14 @@ import 'package:monty_parity/src/host_world.dart';
 import 'package:monty_parity/src/worker_runner.dart';
 
 /// The engines this driver runs, by the name their outcomes carry.
-const sessionEngines = {'core', 'session'};
+const sessionEngines = {'core', 'session', 'refmem'};
 
 /// What the driver applies that the raw worker engine cannot: the case's
-/// mounts, its snapshot/restore points and its assert-message setting.
-const _applies = {'fs', 'restore_before', 'assert_message_annotations'};
+/// snapshot/restore points and its assert-message setting.
+const _applies = {'restore_before', 'assert_message_annotations'};
 
 /// Runs case [c] on [backend] through a session checked out of [pool], as
-/// [engine] (`session` or `core`).
+/// [engine] (`session`, `core` or the mount-free `refmem` column).
 Future<Map<String, Object?>> runSessionCase(
   Map<String, Object?> c,
   String backend,
@@ -47,7 +47,7 @@ Future<Map<String, Object?>> runSessionCase(
       : const <String, MontyValue>{};
 
   return runEngineCase(
-    c,
+    engine == 'refmem' ? refmemCase(c) : c,
     backend,
     engine: engine,
     engineVersion: 'dart_monty_core (public API: Monty / MontySession)',
@@ -73,6 +73,19 @@ Future<Map<String, Object?>> runSessionCase(
         : SessionHost.new,
     applies: _applies,
   );
+}
+
+/// The oracle's memory column seeds files without applying mount policy.
+Map<String, Object?> refmemCase(Map<String, Object?> c) {
+  final fs = (c['fs']! as Map).cast<String, Object?>();
+
+  return {
+    ...c,
+    'fs': {
+      for (final entry in fs.entries)
+        if (entry.key != 'mounts') entry.key: entry.value,
+    },
+  };
 }
 
 /// The builtin types and functions [names], as a feed on a session of its own
@@ -193,6 +206,7 @@ final class _PoolCaseSession implements CaseSession {
     required Map<String, ProtoExternalFunction> externals,
     required OsHandler onOsCall,
     required ProtoPrintCallback onPrint,
+    String? cwd,
   }) async {
     if (!byHand) {
       return _session.feedRun(
@@ -201,22 +215,24 @@ final class _PoolCaseSession implements CaseSession {
         externalLookup: hostFunctions(externals),
         os: onOsCall,
         printCallback: onPrint,
+        cwd: cwd,
       );
     }
     // An OS answer built before its suspension resumes, replayed to core.
-    MontyValue Function()? built;
-    var snap = await _session.feedStart(
+    final answer = _OsAnswer(onOsCall);
+    final snap = await _session.feedStart(
       code,
       inputs: inputs,
       externalLookup: hostFunctions(externals),
-      os: (name, args, kwargs) {
-        final answer = built;
-        built = null;
-
-        return answer == null ? onOsCall(name, args, kwargs) : answer();
-      },
+      os: answer.call,
       printCallback: onPrint,
+      cwd: cwd,
     );
+    return _resume(snap, answer);
+  }
+
+  Future<MontyValue> _resume(MontySnapshot initial, _OsAnswer answer) async {
+    var snap = initial;
     while (true) {
       switch (snap) {
         case MontyComplete(:final output):
@@ -231,13 +247,10 @@ final class _PoolCaseSession implements CaseSession {
           // The answer first: a value core refuses to build is the host's
           // refusal, and the suspension is abandoned unresumed.
           try {
-            final value = await onOsCall(f.functionName, f.args, f.kwargs);
-            built = () => value;
+            await answer.prepare(f);
           } on HostAnswerRefused {
             await _replace();
             rethrow;
-          } on Object catch (e, st) {
-            built = () => Error.throwWithStackTrace(e, st);
           }
           snap = await f.resumeAuto();
         case final FunctionSnapshot f:
@@ -266,4 +279,38 @@ final class _PoolCaseSession implements CaseSession {
 
   @override
   Future<void> close() => _session.close();
+}
+
+/// One OS answer prepared before resuming, as the oracle's manual path does.
+final class _OsAnswer {
+  _OsAnswer(this._handler);
+
+  final OsHandler _handler;
+  MontyValue Function()? _built;
+
+  Future<MontyValue> call(
+    String name,
+    List<MontyValue> args,
+    Map<String, MontyValue> kwargs,
+  ) async {
+    final answer = _built;
+    _built = null;
+
+    return answer == null ? await _handler(name, args, kwargs) : answer();
+  }
+
+  Future<void> prepare(FunctionSnapshot snapshot) async {
+    try {
+      final value = await _handler(
+        snapshot.functionName,
+        snapshot.args,
+        snapshot.kwargs,
+      );
+      _built = () => value;
+    } on HostAnswerRefused {
+      rethrow;
+    } on Object catch (error, stack) {
+      _built = () => Error.throwWithStackTrace(error, stack);
+    }
+  }
 }

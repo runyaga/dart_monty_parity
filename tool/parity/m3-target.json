@@ -1,5 +1,5 @@
 {
- "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends. An `allowed` entry may carry `evidenced_by`: the core tests that evidence a row no binding exposes ({path, tests, exercises}; score.py --target --core DIR checks each file and test title exists). The owner's P-t decisions (PT1, 2026-10-14) are applied: J08's host_callback_authority and cpython_value_adapter are allowed N/A; J10's four protocol rows are allowed N/A, each evidenced by core's worker-channel tests and E0; protocol_value_arena, unstable_graph_access and timezone_database are mapped to worker cases (tool/parity/rows.json, `worker`). The owner's TGT1 decisions (2026-10-15) are applied: snapshot_trust, resource_accounting and resource_failure_disposal are allowed N/A (PT1 J01 keeps them IN), exception_value_conversion is allowed PARTIAL for the oracle's Unicode version, and file_handle_value_conversion (large positions on the wasm32 worker) and worker_diagnostics (no process id in a Web Worker) are browser divergences on dart2js and dart2wasm.",
+ "about": "The in-scope capability-manifest rows dart_monty_core's M3 owns, each with the backends it must be PRESENT on (tool/parity/score.py --target; shown, not asserted, until --assert-target lands at the cut). Every in-scope manifest row is in `rows` or in `excluded` with the clause that excludes it; `judgement` ids point at the rows the rule did not decide mechanically (the owner-reviewed list). An `allowed` entry names why a target row may be non-PRESENT; it is valid only as the approved rule or an owner-approved exception says, and is stale (fails) once its row is PRESENT on those backends. An `allowed` entry may carry `evidenced_by`: the core tests that evidence a row no binding exposes ({path, tests, exercises}; score.py --target --core DIR checks each file and test title exists). The owner's P-t decisions (PT1, 2026-10-14) are applied: J08's host_callback_authority and cpython_value_adapter are allowed N/A; J10's four protocol rows are allowed N/A, each evidenced by core's worker-channel tests and E0; protocol_value_arena, unstable_graph_access and timezone_database are mapped to worker cases (tool/parity/rows.json, `worker`). The owner's TGT1 decisions (2026-10-15) are applied: snapshot_trust, resource_accounting and resource_failure_disposal are allowed N/A (PT1 J01 keeps them IN), exception_value_conversion is allowed PARTIAL for the oracle's Unicode version, and file_handle_value_conversion (large positions on the wasm32 worker) and worker_diagnostics (no process id in a Web Worker) are browser divergences on dart2js and dart2wasm. The owner's P-F1 F-1-window exception (FAST1(4) delegated) allows os_environment PARTIAL on vm, dart2js and dart2wasm only for x21_fallback_nonfs until F-2 restores host mounts; every other cell must MATCH, and PRESENT makes the entry stale (tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception).",
  "clauses": {
   "A1": {
    "text": "area filesystem: mounts and the memory filesystem are M6 (C0a)",
@@ -366,7 +366,21 @@
    ],
    "judgement": [
     "J02"
-   ]
+   ],
+   "allowed": {
+    "kind": "owner-exception",
+    "status": "PARTIAL",
+    "backends": [
+     "vm",
+     "dart2js",
+     "dart2wasm"
+    ],
+    "reason": "F-1 window (M6 F design, PR P-F1/F-1; owner FAST1(4) delegated): F-1 removes the memory-backed MountDir and F-2 restores host-directory mounts, so the one case of this row that requests a host mount, x21_fallback_nonfs, reads unsupported until F-2. Every other cell matches the oracle (b14_env MATCH). Scoped to that case; stale (and therefore failing) as soon as F-2 makes the row PRESENT, which forces its removal.",
+    "cells": [
+     "x21_fallback_nonfs"
+    ],
+    "cite": "tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception; owner P-F1 F-1-window approval (FAST1(4) delegated)"
+   }
   },
   "os_calendar_calls": {
    "area": "os_calls",
