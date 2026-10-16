@@ -263,8 +263,8 @@ jobs:
   # ---------------------------------------------------------------------------
   # Each target row is judged over every cell that measures it: its core-engine
   # cases and probes (the `current` job's outcomes) and its session and worker
-  # cases and probes (the `e0` job's). Shown, not asserted: `--assert-target`
-  # is asserted at the TAG gate.
+  # cases and probes (the `e0` job's). Asserted (`--assert-target`) from the
+  # TAG gate on: every row PRESENT or accepted by its `allowed` entry.
   target:
     name: M3 parity target (shown)
     needs: [core-ref, current, e0]
@@ -293,7 +293,7 @@ jobs:
         run: |
           python3 -I tool/parity/score.py /tmp/parity \
             --markdown /tmp/target.md \
-            --target tool/parity/m3-target.json --core core --target-engines /tmp/e0
+            --target tool/parity/m3-target.json --core core --target-engines /tmp/e0 --assert-target
       - name: Publish the target table
         if: success() || failure()
         run: '[ -f /tmp/target.md ] && cat /tmp/target.md >> "$GITHUB_STEP_SUMMARY" || true'
