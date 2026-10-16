@@ -34,6 +34,10 @@ reason. Only the exceptions in KEPT_EXCEPTIONS exist, each ignoring one named
 field where the difference is actually present; a rows.json that names any
 other fails. Nothing else is tolerated.
 
+`controls_web` lists portable controls that must MATCH on each selected web
+backend, independently of the row's mount-capability status. A missing,
+refused or divergent control always fails scoring, including baseline recording.
+
 --assert-rows fails when a re-measured row's status differs from the status
 recorded for it in rows.json under the backend's `expect` (the baseline
 measured at dart_monty_core 5873ec5); --assert-baseline fails when a PRESENT
@@ -1232,6 +1236,12 @@ def main() -> int:
             expect = (rule.get('expect') or {}).get('web' if b != 'vm' else 'ffi')
             expect = plat.get('rows', {}).get(row, {}).get(b, expect)
             result['rows'][row][b] = {'status': status, 'expect': expect, 'cells': cells}
+            if b != 'vm' and rule.get('controls_web'):
+                controls = []
+                for cid in rule['controls_web']:
+                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=False)
+                    controls.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
+                result['rows'][row][b]['controls'] = controls
             if expect and status != expect:
                 mismatches.append((row, b, status, expect))
 
@@ -1256,7 +1266,10 @@ def main() -> int:
         for b in backends:
             r = result['rows'][row][b]
             mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (historical {r['expect']})"
-            cells.append(r['status'] + mark)
+            controls = r.get('controls', [])
+            control_mark = (f"; controls {sum(c['class'] == 'MATCH' for c in controls)}/{len(controls)} MATCH"
+                            if controls else '')
+            cells.append(r['status'] + mark + control_mark)
         lines.append(f'| {row} | ' + ' | '.join(cells) + ' |')
     lines.append('')
     for b in backends:
@@ -1276,7 +1289,15 @@ def main() -> int:
                                for cell in result['rows'][row][b]['cells'] if cell['case'] == cid}
                    for cid in sorted({cell['case'] for b in backends for cell in result['rows'][row][b]['cells']})}
              for row in rules}
-    if a.write_current:
+    rc = 0
+    for row, by_backend in result['rows'].items():
+        for b, verdict in by_backend.items():
+            for control in verdict.get('controls', []):
+                if control['class'] != 'MATCH':
+                    print(f"FAIL web control {control['case']} (row {row}) on {b}: "
+                          f"{control['class']} {control['differs']}")
+                    rc = 1
+    if a.write_current and rc == 0:
         prev = json.loads(a.write_current.read_text()) if a.write_current.exists() else {}
         doc = record_current(prev, arch, {
             'present': present, 'totals': {b: totals[b]['all_rows'] for b in backends},
@@ -1300,7 +1321,6 @@ def main() -> int:
                                               'from': old_status, 'to': status,
                                               'why': a.record_note, 'cells': changed})
         a.write_current.write_text(json.dumps(doc, indent=1) + '\n')
-    rc = 0
     if a.assert_current:
         cur = json.loads(a.assert_current.read_text())
         cplat = cur.get('platforms', {}).get(arch)

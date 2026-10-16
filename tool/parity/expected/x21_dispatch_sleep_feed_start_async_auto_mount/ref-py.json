@@ -11,10 +11,29 @@
    },
    "exception": null,
    "prints": [],
-   "os_calls": [],
+   "os_calls": [
+    {
+     "name": "system.async_sleep",
+     "args": [
+      {
+       "t": "float",
+       "v": "0.001",
+       "bits": "3f50624dd2f1a9fc"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
    "ext_calls": [],
    "name_lookups": [],
-   "host_calls": [],
+   "host_calls": [
+    {
+     "ev": "start",
+     "name": "system.async_sleep",
+     "is_os": true,
+     "handler_calls": 0
+    }
+   ],
    "usage": null
   }
  ],

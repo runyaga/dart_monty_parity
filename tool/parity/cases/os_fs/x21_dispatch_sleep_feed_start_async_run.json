@@ -1,6 +1,6 @@
 {
  "id": "x21_dispatch_sleep_feed_start_async_run",
- "code": "import asyncio\nawait asyncio.sleep(0)\n7",
+ "code": "import asyncio\nawait asyncio.sleep(0.001)\n7",
  "feed_start": false,
  "record_dispatch": true,
  "dispatch": "auto",

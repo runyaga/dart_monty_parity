@@ -59,6 +59,49 @@ void main() {
     'mount budget probes measure host mount limits on the VM',
     _budgetProbes,
   );
+  for (final delay in ['0', '0.001']) {
+    test('async dispatch requires an OS snapshot (delay=$delay)', () async {
+      final pool = await startMonty(const PoolOptions(maxProcesses: 1));
+      addTearDown(pool.close);
+      final result = await runSessionCase(
+        {
+          'id': 'async_dispatch_snapshot',
+          'code': 'import asyncio\nawait asyncio.sleep($delay)\n7',
+          'feed_start': true,
+          'record_dispatch': true,
+          'expect_os_snapshot': 'system.async_sleep',
+          'sleep_access': true,
+        },
+        'vm',
+        pool,
+        engine: 'core',
+      );
+      final steps = (result['steps']! as List).cast<Map<String, Object?>>();
+      final step = steps.single;
+      if (delay == '0') {
+        expect(step['value'], isNull);
+        expect(
+          step['exception'],
+          containsPair(
+            'message',
+            'OS suspension system.async_sleep not reached',
+          ),
+        );
+      } else {
+        expect(step['exception'], isNull);
+        expect(step['value'], {'t': 'int', 'v': '7'});
+        expect(step['host_calls'], [
+          {
+            'ev': 'start',
+            'name': 'system.async_sleep',
+            'is_os': true,
+            'handler_calls': 0,
+          },
+          {'ev': 'handler', 'name': 'system.async_sleep'},
+        ]);
+      }
+    });
+  }
 }
 
 Future<void> _callbackProbe() async {

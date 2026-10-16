@@ -1,8 +1,8 @@
 {
  "generator": {
-  "sha256": "85bbb627e5ce520d5e8d95b81576bcb1bd7b8bcc812f83a05bf49f4ed16248cc",
+  "sha256": "bb6be34a1dbb97662b3172f616f01cb7d0a3300ffd8be1cfafb620e6fdef04b9",
   "files": {
-   "tool/parity/oracle/run_cases.py": "125fb79d4fe176904e1bf5c0f56cb730ad596eced665eb76ed6ee8a97e72135b",
+   "tool/parity/oracle/run_cases.py": "f289bf2f70fe71f21f7a2749d9ba5d9d99dda12a3fe8a2bf0c4c9ca569a308a6",
    "tool/parity/oracle/run_probes.py": "acbe65cf1b0cdb49aa70f77e70fc0dbcb0c5a42727ae0079603da3ec890dc4b1",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
@@ -3223,20 +3223,6 @@
     "ref-py": "b9a11f4c41e2ed2e80ea75ecf63d9596f8f37361e18615803b4aecf43e00dbbc"
    }
   },
-  "x21_dispatch_rename_invalid_dst_length_before_nul": {
-   "suite": "os_fs",
-   "case": "497cb069ccf1fbc72cca47a0bb8cfc4e0a9e2673138c4f96c10acfb59487a553",
-   "outcomes": {
-    "ref-py": "72bbd0216638ec7f44dd232723ec957c38adbfd311d9afdcca0e73b64a127e84"
-   }
-  },
-  "x21_dispatch_rename_invalid_dst_length_before_nul_no_table": {
-   "suite": "os_fs",
-   "case": "5454e0d656dba6a0d218eb0fc9faef9a9fa62ec3a42770fcd8dbc6c7ed0e9904",
-   "outcomes": {
-    "ref-py": "d5d88090084a0d432148b444591aa055709586e0f4fe87723c25a08e6337d39b"
-   }
-  },
   "x21_dispatch_rename_invalid_dst_no_table": {
    "suite": "os_fs",
    "case": "895ee22831def3e883eabc4f564614c949eb890f39d5e1deb514fe431c147a62",
@@ -3309,84 +3295,84 @@
   },
   "x21_dispatch_sleep_feed_start_async_access": {
    "suite": "os_fs",
-   "case": "7e24c0c72571ab622916128bc1127aee47d8858025ab59fb0dc2531be9c63e17",
+   "case": "bb1ca020df7ed957775544d43887bb1f81b0d0dbf221ed3a6748b11070f31d85",
    "outcomes": {
-    "ref-py": "b8e53d23275ee83280b9740d9b49271d89b9fa3655a5455335a5fa1a334aa551"
+    "ref-py": "77cccd27637ed6a099d83ec136b98be01175520bdbf327b096d51fe3551aa22a"
    }
   },
   "x21_dispatch_sleep_feed_start_async_access_mount": {
    "suite": "os_fs",
-   "case": "f4dac0b1cfe1f5e902dc66b179ba7bb8b23492407301083337bc8ef2ca9d2d6a",
+   "case": "b91901fd2fb1108cfad13fcf16025e6dd73d518dfbd0aa13b8d7d2b4d572eb58",
    "outcomes": {
-    "ref-py": "b7cbb1112c95738e44e25d4856bda544992f0ce13cf92c5f924b4d222b31bff4"
+    "ref-py": "a0a08244d266e09f468c988fb013696112e19dc5dd8ebc0fac9ebf3b0b55ced9"
    }
   },
   "x21_dispatch_sleep_feed_start_async_auto": {
    "suite": "os_fs",
-   "case": "311c1e290afdf17c87ec9012b5978e1248dfb186540322cca8db9987c9e8de87",
+   "case": "5dbbe2833277de81424295e8a59c58b79bf2cf331fcb18ac334ecdf4e5d8bd5b",
    "outcomes": {
-    "ref-py": "47e1efbe43d288f63fe785f661cd470cef18128f2b39106df12b2d2e0baa86f3"
+    "ref-py": "849fbea369c7f0d836ad5141f30188db24a6f8c0a3aed9ba7c83f27d536830a2"
    }
   },
   "x21_dispatch_sleep_feed_start_async_auto_mount": {
    "suite": "os_fs",
-   "case": "59ce0b4a63e8e363e04eff8d317133b7fb5f88e1ffe8b8cc56350e79c393d1a5",
+   "case": "3c1b4baa4398ec9251bb9014e42ee0743f9a8b494c61d77dfe7fed29c04807f5",
    "outcomes": {
-    "ref-py": "9eda70f619845060d459fc91271520832eef98610ce86c829ea8b233b1ec2e27"
+    "ref-py": "a42baba3a36f111a3a5ad8b74d9d1c133e393edd1696e190952a8fc7e46e93f4"
    }
   },
   "x21_dispatch_sleep_feed_start_async_call_host": {
    "suite": "os_fs",
-   "case": "0801ac032491e660be1bad6c236064e304662fe7acbb471119891395e6ff5237",
+   "case": "95e5554e80a06576ab84c9b465ae65a0a63758b153af4f1a8c8ee8377368b52c",
    "outcomes": {
-    "ref-py": "6d996d8730f1fe2a3802c9490547f736460fc9805c98c170a5dadc68792edc51"
+    "ref-py": "c895ad22f8f72bf3778a46c03a5cfc7e88664b97478f1f09d296e0b58d53bd1b"
    }
   },
   "x21_dispatch_sleep_feed_start_async_call_host_mount": {
    "suite": "os_fs",
-   "case": "be5ff1267fc3c3cae23321ccfee63c6c55ff1cd038ce38d1b1dfc7ee867744d9",
+   "case": "9345e12848e43aa5c02d6fd7dbf72702ec2a308031206859aac2c7a2f89d5c0d",
    "outcomes": {
-    "ref-py": "e51265f9eccd0f9966af9eb0c05c2d5a50c04399019c9192b0b4f6f624684505"
+    "ref-py": "d475bdb4f7988f09a3631a4a64a90dd6d0df58a1ac0c86248952df9fb51d3378"
    }
   },
   "x21_dispatch_sleep_feed_start_async_call_host_run": {
    "suite": "os_fs",
-   "case": "29b28d08dfefb07930ab918c4f4362ed393e9b611b6091be2e9f50c8236f43bf",
+   "case": "8ba37bb48ce451fde5666a16e90908c61a5c469af9cd8d63423d3275d6770ee4",
    "outcomes": {
-    "ref-py": "7f50baf16648ad9ca21fa84c2426d8916367142c351687bf6d1042226e18414f"
+    "ref-py": "1a70c38ad32fee573496242a6b951899a4b89d5f59e3f8d49db5920c6a609389"
    }
   },
   "x21_dispatch_sleep_feed_start_async_call_host_run_mount": {
    "suite": "os_fs",
-   "case": "d4b677de918a5f80e7d9f1e8d9aba061e666e55f545f5d800aaa9a8d91813201",
+   "case": "b918231e7e1ab8b91b13c506c682b48b3b0f8fd175674f1938fd9eefec7d3d80",
    "outcomes": {
-    "ref-py": "78c96cc200f37e41b049f55f5af6a2a08853696457b2d3167e3626d9ba626efd"
+    "ref-py": "6daf90fee7b0a4e69badad95bd82aa46df7a0f1faf7d7085dd01d55b9d1a67bd"
    }
   },
   "x21_dispatch_sleep_feed_start_async_manual": {
    "suite": "os_fs",
-   "case": "f7d6a2237d1fde03c741d9f11b1a0355198f6d51976c316eeb1d7b85d91bbf7c",
+   "case": "6735c70591af942815f7fe88aacd6a5779620a156e69697285d26623e43b5296",
    "outcomes": {
-    "ref-py": "10d7fa6fa8b4205ee7b89b0e1977a805d0b11a3ffe924fd35e61272e42bdf516"
+    "ref-py": "b5b7cfdf760261f908b5333aacb3f4cf0158120f79da37979022b8ddcec10c79"
    }
   },
   "x21_dispatch_sleep_feed_start_async_manual_mount": {
    "suite": "os_fs",
-   "case": "9368cc1c1c3e4b6fa01f7e24acf9b3f015ac6a268c10a346fdd52795929ca878",
+   "case": "f6462e1c1797d2b298dd4a790b9bae8f1fe33eceecfab2c53f6178cbb6d9f514",
    "outcomes": {
-    "ref-py": "d4d0316f46f13737102bcfded39bb35228c697b8e89113c06abf5cb68da849bb"
+    "ref-py": "0066195b30b6d419ef29efbca28fbf1676d386681a7a8d34d7f0c6afd23665a6"
    }
   },
   "x21_dispatch_sleep_feed_start_async_run": {
    "suite": "os_fs",
-   "case": "be1d3d6b94edd43a5ca022d959da30bcf1bff53c65db3e8119ae49552d87f3dc",
+   "case": "42e8495f9fb44913663e2a29322e4f205bc97d54ddd29f50ab4ad6a991db9390",
    "outcomes": {
     "ref-py": "d575e402b159ce6157a882774a7943c456f941e8bb37fec329cdfc6be414a87a"
    }
   },
   "x21_dispatch_sleep_feed_start_async_run_mount": {
    "suite": "os_fs",
-   "case": "324914d60ff13afd292f59778b0ed5ece367df9576940535af09a7cfdba85cbc",
+   "case": "6e35f148386a71f2baff0074e6955f6639766f2e463e30cf4f6a97786a8d072e",
    "outcomes": {
     "ref-py": "22913610a43df24f332b9e43905edcabd6323a0c437ce270c0aa14980132e41b"
    }

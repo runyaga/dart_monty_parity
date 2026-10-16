@@ -89,6 +89,7 @@ The scripted `os` handler receives only calls the mount table did not handle.
 Cases can use string `feeds` or dictionaries containing `code` and per-feed
 options: `cwd`, `mount_indices`, `skip_type_check`, `feed_start`, `dispatch`
 (`auto` or `manual`), `record_dispatch`, `sleep_access` (zero-delay `OSAccess`),
+`expect_os_snapshot` (requires the first snapshot to be the named OS call),
 `restore_snapshot_at` (an external function name), and `restore_mount` (false to
 restore without mounts). `type_check` configures the checkout. Type rejections
 record the actual diagnostics. Dispatch observations live in `host_calls`,
@@ -102,8 +103,12 @@ accept `host_index` for shared roots, `host_missing` for constructor refusals, a
 are passed through to core; the runner never emulates cwd establishment.
 
 `rows.json` uses `cases_web` to select mount-free cwd/path cases on browsers and
-mount-dependent dispatch cases for the browser mount-refusal row. The portable
-sleep controls still execute on every backend. Mixed case/probe rows score both.
+mount-dependent dispatch cases for the browser mount-refusal row. Every portable
+dispatch control also has a mandatory `controls_web` verdict: a non-MATCH fails
+scoring and prevents baseline recording even when the mount row is REFUSED.
+Async dispatch cases request a positive delay so they reach an OS snapshot;
+scripted handlers return immediately and `sleep_access` still caps the wait at zero.
+Mixed case/probe rows score both.
 Explicit historical assertions use each changed row's `historical` rule, keeping
 the original runner-0.23 measurement and original cwd cases intact.
 

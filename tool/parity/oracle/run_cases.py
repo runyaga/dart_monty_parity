@@ -852,6 +852,10 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     out['steps'].append(step)
                     continue
                 snap = session.feed_start(code, **kw)
+                expected_os = options.get('expect_os_snapshot')
+                if expected_os is not None and (not isinstance(snap, pm.FunctionSnapshot)
+                        or not snap.is_os_function or str(snap.function_name) != expected_os):
+                    raise RuntimeError(f'OS suspension {expected_os} not reached')
                 if options.get('record_dispatch') and isinstance(snap, pm.FunctionSnapshot):
                     step['host_calls'].append({'ev': 'start', 'name': str(snap.function_name), 'is_os': snap.is_os_function, 'handler_calls': len(step['os_calls']) + len(step['host_calls'])})
                 restore_at = options.get('restore_snapshot_at')

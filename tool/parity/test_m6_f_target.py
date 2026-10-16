@@ -73,6 +73,76 @@ class M6FilesystemTargetTest(unittest.TestCase):
         got['steps'][0]['host_calls'][0]['handler_calls'] = 1
         self.assertIn('H', score.compare_steps(ref, got, score.expand(score.ALL_CODES)))
 
+    def test_portable_dispatch_mutations_fail_web_scorer(self):
+        rules = json.loads(score.RULES.read_text())['rows']
+        cases = score.case_index()
+        expected = score.ROOT / 'tool/parity/expected'
+        rule = rules['mount_dispatch_and_fallback']
+        portable = [cid for cid in rule['cases'] if not cases[cid].get('fs', {}).get('mounts')]
+        self.assertTrue(portable)
+        self.assertEqual(set(rule['controls_web']), set(portable))
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / 'platform.json').write_text('{"arch": "arm64"}')
+            for cid in rule['cases']:
+                folder = out / cid
+                folder.mkdir()
+                got = (score.load(expected / cid / 'ref-py.json') if cid in portable else
+                       {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}})
+                for backend in ('dart2js', 'dart2wasm'):
+                    (folder / f'core-{backend}.json').write_text(json.dumps(got))
+            # Run the real CLI selection, classification and enforced verdict.
+            # Restrict unrelated rules so this test cannot fail for missing data.
+            doc = json.loads(score.RULES.read_text())
+            doc['rows'] = {'mount_dispatch_and_fallback': rule}
+            rules_path = out / 'rows.json'
+            rules_path.write_text(json.dumps(doc))
+            baseline = out / 'baseline.json'
+            def run_scorer(backend, flag='--assert-current'):
+                with mock.patch.object(score, 'RULES', rules_path), \
+                     mock.patch.object(sys, 'argv', ['score.py', str(out), '--backends', backend, flag, str(baseline)]), \
+                     contextlib.redirect_stdout(io.StringIO()) as output:
+                    return score.main(), output.getvalue()
+            for backend in ('dart2js', 'dart2wasm'):
+                self.assertEqual(run_scorer(backend, '--write-current')[0], 0)
+                self.assertEqual(run_scorer(backend)[0], 0)
+                for cid in portable:
+                    path = out / cid / f'core-{backend}.json'
+                    original = path.read_text()
+                    ref = json.loads(original)
+                    mutations = {'missing': None, 'refused': {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}}}
+                    for field, value in [('value', {'t': 'int', 'v': '999'}),
+                                         ('os_calls', [{'name': 'unexpected'}]),
+                                         ('host_calls', [{'ev': 'unexpected'}])]:
+                        got = copy.deepcopy(ref)
+                        got['steps'][0][field] = value
+                        mutations[field] = got
+                    for mutation, got in mutations.items():
+                        with self.subTest(backend=backend, case=cid, mutation=mutation):
+                            if got is None:
+                                path.unlink()
+                            else:
+                                path.write_text(json.dumps(got))
+                            rc, output = run_scorer(backend)
+                            self.assertEqual(rc, 1, output)
+                            self.assertIn(cid, output)
+                            if cid == 'x21_dispatch_sleep_feed_start' and mutation == 'value':
+                                recorded = baseline.read_bytes()
+                                self.assertEqual(run_scorer(backend, '--write-current')[0], 1)
+                                self.assertEqual(baseline.read_bytes(), recorded)
+                            path.write_text(original)
+
+    def test_async_dispatch_records_os_suspension(self):
+        for path in sorted((score.CASES / 'os_fs').glob('x21_dispatch_sleep*async*.json')):
+            case = json.loads(path.read_text())
+            if not case['feed_start']:
+                continue
+            with self.subTest(case=case['id']):
+                ref = score.load(score.ROOT / 'tool/parity/expected' / case['id'] / 'ref-py.json')
+                name = 'asyncio.sleep' if case.get('os_policy') else 'system.async_sleep'
+                self.assertIn({'ev': 'start', 'name': name, 'is_os': True,
+                               'handler_calls': 0}, ref['steps'][0]['host_calls'])
+
     def test_draft_partition_and_allowances(self):
         target = json.loads((score.ROOT / 'tool/parity/m6-target.json').read_text())
         scope = {r['cap_id']: r for r in csv.DictReader(score.MANIFEST.read_text().splitlines(), delimiter='\t') if r['in_scope']=='yes'}

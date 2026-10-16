@@ -1,5 +1,5 @@
 {
- "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.\nP-F2: macOS arm64 VM measured against core F-2 966d71fe764cc897cef6262e880999569576d345, using the existing worker and native service. Host MountDir, scripted dispatch/restores and cwd transitions are measured; b11fs_unlink_dir retains the Linux oracle and diverges by macOS errno. Browser measurements and the final CORE_REF integration remain pending.\nP-F2: recorded on core 99c65a8 (F-2 head), macOS arm64, vm + dart2js + dart2wasm (Chrome)",
+ "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.\nP-F2: macOS arm64 VM measured against core F-2 966d71fe764cc897cef6262e880999569576d345, using the existing worker and native service. Host MountDir, scripted dispatch/restores and cwd transitions are measured; b11fs_unlink_dir retains the Linux oracle and diverges by macOS errno. Browser measurements and the final CORE_REF integration remain pending.\nP-F2: recorded on core 99c65a8 (F-2 head), macOS arm64, vm + dart2js + dart2wasm (Chrome)\nP-F2 review: VM measured at core 99c65a833868c06c1b123a122fe8945833a8a2c5. Removed two interpreter-only length-before-NUL cases; positive async delays now assert OS suspensions. Linux and browser measurements are unchanged and pending orchestrator refresh.",
  "present": {
   "vm": 90,
   "dart2js": 80,
@@ -33,19 +33,12 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 90,
     "dart2js": 80,
-    "dart2wasm": 80
+    "dart2wasm": 80,
+    "vm": 90
    },
    "cells": {},
    "totals": {
-    "vm": {
-     "ABSENT": 39,
-     "PRESENT": 90,
-     "PARTIAL": 28,
-     "N/A": 26,
-     "REFUSED": 2
-    },
     "dart2js": {
      "ABSENT": 35,
      "PRESENT": 80,
@@ -59,6 +52,13 @@
      "PARTIAL": 31,
      "N/A": 27,
      "REFUSED": 12
+    },
+    "vm": {
+     "ABSENT": 39,
+     "PRESENT": 90,
+     "PARTIAL": 28,
+     "N/A": 26,
+     "REFUSED": 2
     }
    }
   },
@@ -9125,12 +9125,12 @@
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_rename_invalid_dst_length_before_nul": {
-    "vm": "MATCH",
+    "vm": null,
     "dart2js": "REFUSED",
     "dart2wasm": "REFUSED"
    },
    "x21_dispatch_rename_invalid_dst_length_before_nul_no_table": {
-    "vm": "MATCH",
+    "vm": null,
     "dart2wasm": null,
     "dart2js": null
    },

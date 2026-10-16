@@ -28,7 +28,7 @@ when a matching core file exists; B1 on VM uses the host-mount column.
 ## P-F1 F-1-window owner exception
 
 Owner approval: P-F1, under FAST1(4)'s delegated F-1 work. This temporary
-`m3-target.json` allowance accepts `os_environment` as PARTIAL on `vm`,
+`m3-target.json` allowance now accepts `os_environment` as PARTIAL on
 `dart2js` and `dart2wasm`, scoped solely to `x21_fallback_nonfs`. F-1 removes
 the memory-backed MountDir; that case requests a host mount and is unsupported
 until F-2 restores host-directory mounts. Every other cell of the row must
@@ -40,9 +40,9 @@ The existing target gate rejects any nonmatching cell outside that scope and
 rejects the allowance as STALE as soon as the row becomes PRESENT on a covered
 backend. F-2 must remove the allowance for each restored backend, and remove
 the entry when none remain. `test_target.py` registers this approval and checks
-the exact scope and the failure on PRESENT. P-F2 deliberately leaves `m3-target.json`
-unchanged: VM `os_environment` now becomes PRESENT, making that allowance STALE.
-The integration owner must update it with the final F-2 pin and browser evidence.
+the exact scope and the failure on PRESENT. P-F2 removes `vm` from the allowance:
+both VM cases now MATCH and `os_environment` is PRESENT. The browser allowances
+remain pending browser evidence; the integration owner will retire them when restored.
 
 ## Rule choices
 
@@ -57,7 +57,7 @@ Not exceptions, but they decide statuses:
 | B1 filesystem OS rows (all ten) | `core-vm.json` against `ref-py.json` on VM; `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; the VM uses the same host-directory mount as the Python oracle |
 | cases with nonempty `fs.mounts`; mount budget probes | real `MountDir` on VM; `refused: {where: 'MountDir', type: 'UnsupportedError'}` on web scores REFUSED | upstream only exports MountDir from `monty-js/ts/node.ts:3-4`; the separate refmem run applies no mount mode or cap |
 | `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects only mount-free cases on web | mount refusal must not hide portable cwd/path behavior |
-| `mount_dispatch_and_fallback` | web scores mount-dependent cases; portable sleep/no-table controls still execute | the mount capability is refused on web; the portable controls verify dispatch independently |
+| `mount_dispatch_and_fallback` | web scores mount-dependent cases as the capability verdict; every mount-free sleep/no-table case is also a mandatory `controls_web` verdict | each portable control must MATCH or `score.py` fails, even when the capability row is accepted as REFUSED; missing outcomes, refusals and transcript/value mutations fail |
 | `mount_usage_inspection` | declared REFUSED, `allowed: REFUSED-as-upstream`, no synthetic probe | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
@@ -67,6 +67,27 @@ Not exceptions, but they decide statuses:
 | mount constructor and closed-mount cases marked `local_refusal` | the same host-refusal comparison as above; both sides must refuse before a sandbox value/traceback | Python TypeError/ValueError/OverflowError and Dart ArgumentError/RangeError/StateError are each binding's programming-error family |
 | `os_entry_removal` | no exception | its one cross-platform difference (`b11fs_unlink_dir`) is upstream `MountDir` following the macOS errno; on the committed Linux expectations core matches |
 | `boolean_integer_values` | no exception | core's own cases match |
+
+## Host-boundary rename validation coverage
+
+The parity runner executes Python source through a real interpreter and can resume
+only OS snapshots that interpreter emits. It cannot inject a raw `Path.rename`
+snapshot into either binding's mount dispatcher. The interpreter rejects a NUL in
+the destination before dispatch, including when that path also exceeds the length
+limit. Therefore the two `x21_dispatch_rename_invalid_dst_length_before_nul*`
+cases were removed: both produced `ValueError: rename: embedded null character in dst`
+and zero handler calls, so neither measured mount-table validation order or no-table
+fallback. The retained NUL-only source cases measure interpreter rejection, not
+host-boundary validation.
+
+The core companion `test/integration/worker/mount_io_test.dart` covers the host
+boundary with `P08 rename invalid destination length no fallback`,
+`P08 rename invalid destination NUL no fallback`, and
+`P08 rename invalid destination length before NUL no fallback`. Each scripts
+`FakeMontySession.willCallOs('Path.rename', args: [MontyPath('/else/a'), MontyPath(dst)])`.
+With a mount table, length wins over NUL (`OSError`, errno 36), NUL alone raises
+`ValueError`, and the fallback handler is never called. With no table, the same raw
+call reaches the handler exactly once. These are core tests, not parity measurements.
 
 ## Rows rescored by these rules
 

@@ -327,6 +327,13 @@ final class _PoolCaseSession implements CaseSession {
       cwd: cwd,
       skipTypeCheck: options['skip_type_check'] == true,
     );
+    final expectedOs = options['expect_os_snapshot'];
+    if (expectedOs != null &&
+        (snap is! FunctionSnapshot ||
+            !snap.isOsFunction ||
+            snap.functionName != expectedOs)) {
+      throw StateError('OS suspension $expectedOs not reached');
+    }
     if (options['record_dispatch'] == true && snap is FunctionSnapshot) {
       observations?.add({
         'ev': 'start',

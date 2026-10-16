@@ -14,7 +14,18 @@
    "os_calls": [],
    "ext_calls": [],
    "name_lookups": [],
-   "host_calls": [],
+   "host_calls": [
+    {
+     "ev": "start",
+     "name": "system.async_sleep",
+     "is_os": true,
+     "handler_calls": 0
+    },
+    {
+     "ev": "handler",
+     "name": "system.async_sleep"
+    }
+   ],
    "usage": null
   }
  ],
