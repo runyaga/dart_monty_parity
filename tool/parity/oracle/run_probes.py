@@ -570,7 +570,7 @@ def sp_sync_sleep_waited(pool: pm.Monty, t: T) -> None:
 def sp_print_kill_after_print(pool: pm.Monty, t: T) -> None:
     """R-P1/P2: a print reaches the callback before a non-yielding turn is killed by the request timeout."""
     with pm.Monty(max_processes=1, checkout_timeout=10, request_timeout=1.5) as p:
-        with p.checkout() as s:
+        with p.checkout(print_flush_interval=0) as s:
             def cb(stream: str, text: str) -> None:
                 t.add({'ev': 'print', 'stream': stream, 'text': text})
 
@@ -587,7 +587,7 @@ def sp_print_kill_after_print(pool: pm.Monty, t: T) -> None:
 def sp_print_volume_under_limit(pool: pm.Monty, t: T) -> None:
     """R-P1/P5: 4,020,000 printed bytes do not consume the worker's 2 MB memory limit."""
     with pm.Monty(max_processes=1, checkout_timeout=10) as p:
-        with p.checkout(limits={'max_memory': 2_000_000}) as s:
+        with p.checkout(limits={'max_memory': 2_000_000}, print_flush_interval=0) as s:
             c = pm.CollectString(max_bytes=None)
             limit_error(t, lambda: s.feed_run("for i in range(20000):\n    print('y' * 200)\n'done'",
                                               print_callback=c))
