@@ -213,7 +213,9 @@ differs on macOS):
 
 ```sh
 python3.12 -m venv /tmp/oracle
-/tmp/oracle/bin/pip install --require-hashes --only-binary :all: --no-deps -r tool/upstream/requirements.lock
+/tmp/oracle/bin/pip install --require-hashes --only-binary :all: --no-deps \
+  -r tool/upstream/requirements.lock \
+  -r tool/parity/oracle/otel-requirements.lock
 (cd tool/parity/oracle/rust && cargo build --locked --release)
 
 # check: every committed outcome regenerates byte for byte, and the manifest binds them
@@ -227,7 +229,9 @@ python3.12 -m venv /tmp/oracle
 
 Review the diff and commit the cases, `expected/` and `manifest.json` together. Moving the upstream pin
 starts in dart_monty_core: copy its new `tool/upstream` files here, regenerate, and re-record the
-baseline.
+baseline. The parity-only `tool/parity/oracle/otel-requirements.lock` pins the
+telemetry SDK separately so the mirrored upstream lock stays identical to core.
+Both locks are bound by the parity manifest.
 
 ## Updating the baseline
 
@@ -300,24 +304,26 @@ and run the checker. On macOS keep `expected/b11fs_unlink_dir` from git; its
 committed expectation is Linux's errno. The telemetry helper is included in
 the manifest's generator hash.
 
-R-P2 VM validation against core `597659896f70616960b1c63d5b82ba7f6a438e3a`
-(F-1 merge, including R-2/R-3):
+R-P2 VM validation against core `4ea974136c80fae3d7e1a1bf2117585d9360d2e5`
+(including the error-log integer timing fix):
 
-- The full runner compiles and completes. The oracle lock now includes the
-  orchestrator-supplied OTel hashes, and the parity manifest binds that lock.
-- VM scores 80/185 PRESENT, versus the baseline's 79. Every non-telemetry
-  row and cell retains its baseline status. All 46 non-telemetry probe
-  transcripts are identical with instrumentation installed or absent.
-- Five telemetry scenarios MATCH. `telemetry_context` is PRESENT; adapter,
-  metrics and instrumentation lifecycle are PARTIAL because they also compare
-  the complete `telemetry_error` transcript. Its only difference is the
-  error-log `total_execution_micros`: Python `int`, core `str`.
-- This is a core recorder finding, not a normalization exception. The
-  unsigned debug-string rule applies to the upstream tracing span path;
-  the error uses `logfire::error!` and the SDK log path, which preserves an
-  integer. Core's `telemetry_attributes.dart:137` incorrectly reuses the
-  span-oriented timing helper. The exact evidence and proposed correction
-  are in [R-P2-core-findings.md](.gate-logs/R-P2-core-findings.md).
+- The full VM runner completes. All six telemetry scenarios MATCH, and all
+  four telemetry rows are PRESENT. The score is 83/185 PRESENT (83/95
+  re-measured), versus the baseline's 79. Every non-telemetry row and cell
+  retains its baseline status.
+- The three OTel requirements retain their exact committed versions and hashes
+  in the parity-only lock. CI and the setup command above install both locks
+  with hash verification; the manifest binds both. All four shared upstream
+  files match core again.
+- Oracle regeneration matches all 104 Python probes and 672/673 cases; only
+  the documented macOS/Linux `b11fs_unlink_dir` errno differs. Expected
+  outcomes and comparison rules are unchanged.
+- All 13 telemetry Dart tests, analysis, formatting, DCM correctness checks,
+  and offline telemetry/target checks pass. The original integer/string
+  finding and its resolution are in
+  [R-P2-core-findings.md](.gate-logs/R-P2-core-findings.md), with commands in
+  [R-P2-validation.txt](.gate-logs/R-P2-validation.txt).
 
-No baseline was regenerated and `CORE_REF` remains unchanged. Web runs are
-left to the host orchestrator.
+No baseline was regenerated. The branch is rebased on `origin/main` at
+`14e0748`; `CORE_REF` retains main's value. Web runs are left to the host
+orchestrator.

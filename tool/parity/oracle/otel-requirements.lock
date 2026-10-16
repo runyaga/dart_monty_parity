@@ -1,0 +1,14 @@
+# Parity-only OpenTelemetry dependencies for the Python telemetry oracle.
+# Keep these separate from core's mirrored upstream lock: changing both copies
+# would create a circular dependency between core and parity's pinned checks.
+# Install alongside tool/upstream/requirements.lock with --require-hashes
+# --only-binary :all: --no-deps; typing-extensions is pinned in that shared lock.
+opentelemetry-api==1.45.1 \
+    --hash=sha256:b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb \
+    --hash=sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75
+opentelemetry-sdk==1.45.1 \
+    --hash=sha256:c604c11dc429810812348989115fa44bd558772a3d7442afc43d024f2c250ca4 \
+    --hash=sha256:63d24a6ca645019a631e6a51999c73e93adcac1196ca640b8ae78a7cc4762bf3
+opentelemetry-semantic-conventions==0.66b1 \
+    --hash=sha256:d4cddeb4315490b35213f55e2bdc9ac54bb1e4d318927475bed62b35545e581b \
+    --hash=sha256:497ca63bf383723411e8eaf60c8779e9877633c936bb641080adab59d0eb6ec8

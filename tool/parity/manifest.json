@@ -12,10 +12,11 @@
   }
  },
  "pins": {
-  "sha256": "b9f99d39f056d5e15707a369db31ccdc2ffc08835873f7d14a05b05adc3565f6",
+  "sha256": "122e6e5239af5ca6fa879a59ae81a97160aa615afc140cfeda1e05650f33e49a",
   "files": {
-   "tool/upstream/requirements.lock": "c43d455dae373f0fdcb0bc38ed97be9d82733401883338dbded14ce4c768ea72",
-   "tool/upstream/upstream-pin.json": "3745c69e7937f62ec7beb063da5a6d560013c14b99faeeda97f7a70ddd18c2c1"
+   "tool/upstream/requirements.lock": "0791321b7cc6eb7254bbb9dfd4df497b8baa1f1f26f399b18ca2f224e1dd6f5d",
+   "tool/upstream/upstream-pin.json": "3745c69e7937f62ec7beb063da5a6d560013c14b99faeeda97f7a70ddd18c2c1",
+   "tool/parity/oracle/otel-requirements.lock": "bc09fc2dedf4316f02fcc9e36e3328b50885ca16f74a10edcbdc6e356745328b"
   }
  },
  "cases": {

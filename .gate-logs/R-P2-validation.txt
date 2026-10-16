@@ -194,3 +194,84 @@ DCM:
 Not run: dart2js/dart2wasm browser suites; Rust oracle regeneration;
 fresh pip install of the supplied lock (the pinned oracle venv was reused).
 No core, CORE_REF, baseline-current.json or m3-target.json changes.
+
+======================================================================
+Rework, 2026-10-16: parity-only OTel lock and core integer fix
+======================================================================
+
+Read-only core HEAD: 4ea974136c80fae3d7e1a1bf2117585d9360d2e5
+Rebased onto local origin/main: 14e0748 (git rebase origin/main, success).
+Fetching GitHub was blocked by the sandbox domain allowlist; origin/main
+already contained the requested 14e0748. CORE_REF equals main byte-for-byte:
+597659896f70616960b1c63d5b82ba7f6a438e3a. No core edits.
+
+Dependency rework:
+  tool/upstream/requirements.lock equals origin/main and core byte-for-byte.
+  The three OTel blocks in tool/parity/oracle/otel-requirements.lock equal
+  those in original commit 588c6a7 exactly (versions and all hashes).
+  Workflow and README install both using --require-hashes --only-binary
+  :all: --no-deps. check_expected.py documents both prerequisite locks;
+  check_parity_manifest.py binds the new lock in PINS.
+  Supplied read-only ../oracle-venv installed versions verified:
+    pydantic-monty 1.1.0, typing-extensions 4.16.0,
+    opentelemetry-api 1.45.1, opentelemetry-sdk 1.45.1,
+    opentelemetry-semantic-conventions 0.66b1.
+  No fresh venv install performed; the supplied environment was reused.
+
+Same Dart SDK, CI=true, DART_SUPPRESS_ANALYTICS=true and writable PUB_CACHE
+as above. Python oracle uses TMPDIR=$PWD/.gate-logs.
+
+  python3 -I tool/check_core_upstream.py --core ../rp2-core
+  PASS: all 4 shared files identical.
+
+  TMPDIR="$PWD/.gate-logs" ../oracle-venv/bin/python -I tool/parity/oracle/check_expected.py
+  Exit 1: exactly one differing outcome, b11fs_unlink_dir/ref-py.json (the
+  documented macOS/Linux errno). All other 776 Python outcomes match,
+  including all 104 probes and all six telemetry probes. No expected files
+  overwritten; Rust-only probes not regenerated.
+  Evidence: .gate-logs/oracle-vm3-check.txt.
+
+  Rebound manifest with check_parity_manifest.compute(), asserting generator,
+  cases and probes unchanged before writing.
+  python3 -I tool/check_parity_manifest.py
+  PASS: 673 cases, 107 probes, 839 outcomes; pins 122e6e5239af.
+
+  python3 -I tool/parity/run.py vm --core ../rp2-core --out .gate-logs/vm3
+  PASS exit 0: full refmem, batch, isolated cases and all 52 probes.
+  python3 -I tool/parity/score.py .gate-logs/vm3 --backends vm --markdown .gate-logs/vm3/score.md --json .gate-logs/vm3/score.json
+  PASS exit 0: 83/185 PRESENT; 83/95 re-measured PRESENT.
+  All-row totals: PRESENT 83, PARTIAL 31, ABSENT 44, N/A 26, REFUSED 1.
+  Re-measured totals: PRESENT 83, PARTIAL 2, ABSENT 10.
+  telemetry_adapter: PRESENT
+  telemetry_context: PRESENT
+  telemetry_metrics: PRESENT
+  telemetry_instrumentation_lifecycle: PRESENT
+  Every telemetry cell MATCH, including telemetry_error.
+  All 91 non-telemetry rows and cells equal the preceding full VM run and
+  baseline-current with arm64 overrides (asserted independently).
+  Evidence: vm3-run.txt, vm3-score.txt, vm3/score.json and VM outcomes.
+
+  cd packages/monty_parity
+  dart test --reporter expanded test/telemetry_probes_test.dart test/telemetry_recorder_test.dart test/telemetry_vm_test.dart
+  PASS: all 13 tests. Evidence: .gate-logs/telemetry-vm3-tests.txt.
+  An initial invocation from the repo root and an unsupported --no-pub flag
+  failed before tests ran; the corrected package-directory invocation above
+  passed without that flag.
+
+  dart analyze packages/monty_parity
+  PASS: no issues. Evidence: .gate-logs/dart-analyze-vm3.txt.
+  git ls-files -z '*.dart' | xargs -0 dart format --output=none --set-exit-if-changed
+  PASS: 22 tracked files, zero changes.
+  dcm analyze packages/monty_parity --include-rules=avoid-throw-in-finally-block,avoid-missing-completer-stack-trace,avoid-unassigned-late-fields,avoid-duplicate-map-keys,avoid-duplicate-patterns,avoid-passing-async-when-sync-expected,avoid-nested-futures,avoid-future-tostring
+  PASS: 22 files, no issues (local license, without CI=true).
+  Evidence: .gate-logs/dcm-correctness-vm3.txt.
+
+  python3 -I tool/parity/test_telemetry.py: PASS, 7 tests.
+  python3 -I tool/parity/test_m6_target.py: PASS, 3 tests.
+  python3 -I tool/parity/test_target.py: PASS, 28 tests.
+  python3 -I tool/check_action_pins.py: PASS, 36 uses pinned/local.
+  python3 -I tool/check_workflow_tokens.py: PASS, 2 workflows, 14 checkouts.
+  git diff --check: PASS.
+
+No baseline, M3 target, expected outcome, comparison rule or core file changed.
+CORE_REF retains main's value. No browser run or fresh Rust oracle build.

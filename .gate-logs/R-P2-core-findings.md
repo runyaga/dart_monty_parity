@@ -1,5 +1,30 @@
 # R-P2 VM findings, 2026-10-16
 
+## Rework result: resolved on core 4ea9741
+
+Measured core: `4ea974136c80fae3d7e1a1bf2117585d9360d2e5`.
+All six telemetry probes MATCH, including the error-log integer type. All four
+telemetry rows are PRESENT on vm. Full VM score: 83/185 PRESENT (83/95
+re-measured); all 91 non-telemetry measured rows and their cells exactly retain
+baseline statuses. All 13 telemetry Dart tests pass. No expectation or
+normalization was relaxed.
+
+The mirrored-lock proposal below is superseded. Core and parity's shared
+`tool/upstream/requirements.lock` now match main exactly. The same three
+hash-pinned OTel blocks live in `tool/parity/oracle/otel-requirements.lock`,
+which is installed alongside the shared lock and bound in the parity manifest.
+This avoids the circular dependency between the two repositories' pinned
+parity checks. `check_core_upstream.py --core ../rp2-core` passes all four files.
+
+The branch is rebased onto `origin/main` at `14e0748`; `CORE_REF` retains main's
+`597659896f70616960b1c63d5b82ba7f6a438e3a`. Baseline and M3 target are unchanged.
+Oracle regeneration has only the documented macOS errno difference; manifest,
+analysis, formatting, DCM correctness and offline tests pass. Web and Rust-only
+oracle regeneration were not run. See the final section of
+[R-P2-validation.txt](R-P2-validation.txt) for commands and results.
+
+## Historical finding before the core correction
+
 Measured core: `597659896f70616960b1c63d5b82ba7f6a438e3a` (F-1 merge).
 Read-only upstream: `591527397445bf734873252d1ee20c1b6308fe7f`.
 Parity starting point: `7739d193c94e9ff11bf1af18ffa50e7e4f04489c`.
