@@ -368,17 +368,17 @@
     "J02"
    ],
    "allowed": {
-    "kind": "owner-exception",
+    "kind": "refused-as-upstream",
     "status": "PARTIAL",
     "backends": [
      "dart2js",
      "dart2wasm"
     ],
-    "reason": "F-1 window (M6 F design, PR P-F1/F-1; owner FAST1(4) delegated): F-1 removes the memory-backed MountDir and F-2 restores host-directory mounts, so the one case of this row that requests a host mount, x21_fallback_nonfs, reads unsupported until F-2. Every other cell matches the oracle (b14_env MATCH). Scoped to that case; stale (and therefore failing) as soon as F-2 makes the row PRESENT, which forces its removal. P-F2 restores VM host mounts: the VM allowance is retired; browser allowances remain pending host evidence.",
+    "reason": "The row's one host-mount case, x21_fallback_nonfs, asks for a host directory mount, which upstream's browser builds do not have (MountDir is exported only from the node entry), so core's browser legs REFUSE it as upstream does; every other cell matches the oracle (b14_env MATCH), which makes the row PARTIAL on the web. Scoped to that case: any other non-MATCH cell fails, and the entry is stale (and fails) once the row is PRESENT on a covered backend. Retires the P-F1 F-1 window: the VM allowance went with P-F2, and the browser refusal is the owner-approved M6T rule.",
     "cells": [
      "x21_fallback_nonfs"
     ],
-    "cite": "tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception; owner P-F1 F-1-window approval (FAST1(4) delegated)"
+    "cite": "monty-js/ts/node.ts:3-4; PLAN M6T (owner, 2026-10-16); retires tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception"
    }
   },
   "os_calendar_calls": {

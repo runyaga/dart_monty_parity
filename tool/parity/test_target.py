@@ -39,8 +39,8 @@ TGT1 = {
 }
 # The owner's TGT2 allowance (2026-10-15), scoped to the worker engine's one recorded divergence.
 TGT2 = {'unstable_graph_access': ('owner-exception', 'PARTIAL', BACKENDS, ['w_graph_cycle_ret'])}
-# The owner's P-F1 F-1-window allowance (FAST1(4) delegated), until F-2 restores host mounts.
-PF1 = {'os_environment': ('owner-exception', 'PARTIAL', ['dart2js', 'dart2wasm'], ['x21_fallback_nonfs'])}
+# os_environment on the web: its host-mount case is REFUSED as upstream refuses (retires the P-F1 F-1 window).
+PF1 = {'os_environment': ('refused-as-upstream', 'PARTIAL', ['dart2js', 'dart2wasm'], ['x21_fallback_nonfs'])}
 
 
 class TargetTest(unittest.TestCase):
@@ -141,7 +141,7 @@ class TargetTest(unittest.TestCase):
             self.assertEqual((allowed['kind'], allowed['status'], allowed['backends'], allowed['cells']),
                              (kind, status, backends, cells), cid)
             self.assertEqual(row['backends'], BACKENDS)
-            self.assertIn('tool/parity/EXCEPTIONS.md#p-f1-f-1-window-owner-exception', allowed['cite'])
+            self.assertIn('monty-js/ts/node.ts:3-4', allowed['cite'])
             self.assertIn('b14_env', self.rules[cid]['cases'])
             self.assertIn(cells[0], self.rules[cid]['cases'])
             target = {'rows': {cid: row}}
