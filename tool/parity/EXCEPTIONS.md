@@ -159,7 +159,7 @@ the gate can differ on it; it is in no gate and core's own tests (`host_objects_
 `host-wrapper-identity-eq`) hold the Dart side. Removed when: never (a Dart object cannot be both equal by
 fields and unhashable); the divergence stands.
 
-## R-P2 telemetry normalization and draft target
+## R-P2 telemetry normalization
 
 These are measurement rules, not tolerated divergences. The six `telemetry_*`
 probes feed `telemetry_adapter`, `telemetry_context`, `telemetry_metrics` and
@@ -192,17 +192,10 @@ probes also run instrumented.
   tests, since the public API cannot observe the frames. Every metric must
   explicitly use empty context even under the ambient host span.
 
-The separate **draft** `m6-target.json` requires PRESENT for the four rows on
-vm, dart2js and dart2wasm. Its new `U1` upstream clause excludes
-`telemetry_flush`: “the Python binding has no flush; core delivers
-synchronously”. `cli_telemetry` stays N/A as an upstream CLI capability.
-There is no M6 CI assertion or change to the owner's M3 target.
-
 The error-log timing type is **not** normalized away. Unlike tracing span
 attributes, the `logfire::error!` SDK log path preserves this integer. Core
 `4ea9741` corrects its error-log timing construction: all six telemetry probes
 now MATCH and all four telemetry rows are PRESENT on vm. See
 [the source-cited finding and resolution](../../.gate-logs/R-P2-core-findings.md).
 OTel dependencies live in the parity-only oracle lock; the shared upstream
-lock matches core. The baseline is unchanged and `CORE_REF` retains main's
-value. Browser telemetry results remain unmeasured.
+lock matches core.

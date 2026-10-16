@@ -261,7 +261,7 @@ is not listed there is tolerated.
 
 MIT, see `LICENSE`.
 
-## R-P2 telemetry probes (draft M6)
+## R-P2 telemetry probes
 
 `telemetry_plain`, `telemetry_print`, `telemetry_external`, `telemetry_manual`,
 `telemetry_error` and `telemetry_dump_load` compare a recording `MontyTelemetry`
@@ -277,14 +277,10 @@ The records preserve span parentage, attributes and their encodings, numeric
 and text log severity, and every raw metric measurement. Timestamps and
 snapshot sizes are validated within each run before their values are masked.
 `EXCEPTIONS.md` describes the exact normalization. The four telemetry rows are
-probed through the core runner on all backends; `tool/parity/m6-target.json` is
-**only a draft**, containing those four target rows and the upstream flush
-exclusion. It is not wired into CI and does not replace `m3-target.json`.
-Its offline self-test validates the scoped draft; the ordinary `score.py
---target` option requires a complete milestone partition.
+PRESENT on all three backends (vm, dart2js and dart2wasm) in the baseline and
+join the single M6 target owned by P-F2 in P-F3.
 
 ```sh
-python3 -I tool/parity/test_m6_target.py
 python3 -I tool/parity/test_telemetry.py
 # With the runner's core dependency configured:
 (cd packages/monty_parity && dart test test/telemetry_probes_test.dart \
@@ -319,11 +315,9 @@ R-P2 VM validation against core `4ea974136c80fae3d7e1a1bf2117585d9360d2e5`
   the documented macOS/Linux `b11fs_unlink_dir` errno differs. Expected
   outcomes and comparison rules are unchanged.
 - All 13 telemetry Dart tests, analysis, formatting, DCM correctness checks,
-  and offline telemetry/target checks pass. The original integer/string
+  and offline telemetry checks pass. The original integer/string
   finding and its resolution are in
   [R-P2-core-findings.md](.gate-logs/R-P2-core-findings.md), with commands in
   [R-P2-validation.txt](.gate-logs/R-P2-validation.txt).
 
-No baseline was regenerated. The branch is rebased on `origin/main` at
-`14e0748`; `CORE_REF` retains main's value. Web runs are left to the host
-orchestrator.
+The host orchestrator owns baseline re-recording.
