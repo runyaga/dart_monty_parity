@@ -20,7 +20,8 @@ P-F1 requires the F-1 memory filesystem API (`OSAccess`, `MemoryFile`, unsafe
 `CallbackFile`), pinned by `CORE_REF` to `58106a7c5807691b6fc2c82664229a3bd3680276`.
 The P-F1 baseline records VM, dart2js and dart2wasm from the macOS arm64 host run
 with real Chrome: 79, 78 and 78 PRESENT rows respectively out of 185.
-Linux x86_64 retains its prior expectations pending a measurement there.
+Linux x86_64 applies the same architecture-independent F-1 window changes, with
+the same PRESENT totals; a Linux measurement remains pending.
 
 ## Layout
 

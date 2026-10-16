@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import contextlib
+from collections import Counter
+import csv
 import io
 import json
 from pathlib import Path
@@ -14,6 +16,55 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import score
 
 BACKENDS = ('vm', 'dart2js', 'dart2wasm')
+
+
+class RepositoryBaselineTest(unittest.TestCase):
+    def setUp(self):
+        self.doc = json.loads((score.ROOT / 'tool/parity/baseline-current.json').read_text())
+
+    def rows(self, arch):
+        overrides = self.doc['platforms'][arch].get('rows', {})
+        return {row: {**values, **overrides.get(row, {})}
+                for row, values in self.doc['rows'].items()}
+
+    def cells(self, arch):
+        overrides = self.doc['platforms'][arch].get('cells', {})
+        return {row: {case: {**values, **overrides.get(row, {}).get(case, {})}
+                      for case, values in cases.items()}
+                for row, cases in self.doc['cells'].items()}
+
+    def test_architecture_independent_rows_agree(self):
+        # All current core rows are architecture-independent in the F-1 window,
+        # including mount refusals and cwd forwarding, on every backend.
+        arm64, x86 = self.rows('arm64'), self.rows('x86_64')
+        for row in arm64:
+            self.assertEqual(x86[row], arm64[row], row)
+
+    def test_architecture_independent_cells_agree(self):
+        # Row aggregates alone miss DIVERGE -> UNSUPPORTED or MATCH changes.
+        arm64, x86 = self.cells('arm64'), self.cells('x86_64')
+        for row in arm64:
+            for case in arm64[row]:
+                self.assertEqual(x86[row][case], arm64[row][case], f'{row}/{case}')
+
+    def test_platform_totals_include_unmeasured_manifest_rows(self):
+        with score.MANIFEST.open() as source:
+            manifest = [r for r in csv.DictReader(source, delimiter='\t')
+                        if r['in_scope'] == 'yes']
+        rules = json.loads(score.RULES.read_text())['rows']
+        measured = {row for row, rule in rules.items() if 'cases' in rule or 'probes' in rule}
+        for arch, platform in self.doc['platforms'].items():
+            rows = self.rows(arch)
+            self.assertEqual(set(rows), measured)
+            for backend in BACKENDS:
+                # Match score.main: measured rows replace manifest statuses;
+                # unmeasured (including worker-only) rows retain the manifest.
+                column = 'baseline_ffi' if backend == 'vm' else 'baseline_web'
+                counts = Counter(rows[r['cap_id']][backend] if r['cap_id'] in measured
+                                 else r[column] for r in manifest)
+                with self.subTest(arch=arch, backend=backend):
+                    self.assertEqual(platform['present'][backend], counts['PRESENT'])
+                    self.assertEqual(platform['totals'][backend], dict(counts))
 
 
 class CurrentBaselineTest(unittest.TestCase):

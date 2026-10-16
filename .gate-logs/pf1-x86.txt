@@ -1,0 +1,135 @@
+P-F1 x86_64 review fix
+
+Applied the nine architecture-independent P-F1 deltas to Linux x86_64
+expectations by removing stale browser row/cell overrides. There were no
+x86_64 VM row/cell overrides. Mount cases and budget probes inherit
+UNSUPPORTED until P-F2; mount-free cwd forwarding inherits MATCH.
+Recomputed totals using score.py semantics: 91 measured rows replace their
+manifest statuses, and the other 94 in-scope rows retain manifest statuses.
+x86_64 PRESENT: vm 79/185, dart2js 78/185, dart2wasm 78/185.
+All top-level rows/cells/present/totals/deltas and the complete arm64 platform
+entry were verified equal to HEAD before this change.
+Linux x86_64 was not re-measured; host-run is the recorded macOS arm64 run.
+
+Regression control before fixing the baseline:
+$ python3 -I tool/parity/test_current.py RepositoryBaselineTest
+Expected failure: row and cell agreement tests each rejected os_environment;
+the totals test also rejected the missing x86_64 totals (three KeyErrors).
+
+$ python3 -I -m unittest discover -s tool/parity -p 'test_*.py'
+....................refmem vm: 1 cases, 0 probes, exit 1
+.dart2js (refmem): dart test exit 0, 1 case outcomes, 0 probe outcomes
+dart2wasm (refmem): dart test exit 0, 1 case outcomes, 0 probe outcomes
+...................................................................
+----------------------------------------------------------------------
+Ran 88 tests in 4.931s
+
+OK
+
+Exit status: 0
+
+$ python3 -I tool/parity/score.py .gate-logs/host-run --assert-current tool/parity/baseline-current.json
+| row | vm | dart2js | dart2wasm |
+|---|---|---|---|
+| singleton_values | PRESENT | PRESENT | PRESENT |
+| boolean_integer_values | PRESENT | PRESENT | PRESENT |
+| big_integer_values | PRESENT | PRESENT | PRESENT |
+| float_values | PRESENT | PRESENT | PRESENT |
+| complex_values | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| text_and_bytes | PRESENT | PRESENT | PRESENT |
+| sequence_values | PRESENT | PRESENT | PRESENT |
+| set_values | PRESENT | PRESENT | PRESENT |
+| dictionary_values | PRESENT | PRESENT | PRESENT |
+| named_tuple_values | PRESENT | PRESENT | PRESENT |
+| calendar_values | PRESENT | PRESENT | PRESENT |
+| time_duration_zone_values | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| path_value_conversion | PRESENT | PRESENT | PRESENT |
+| exception_value_conversion | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| builtin_type_function_handles | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| lossy_output_placeholders | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| boundary_value_graph | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_eager_attributes | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_instance_value | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| host_class_type_proxy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_lazy_attributes | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_class_value | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_constructor_policy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_value_conversion_hook | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| os_path_predicates | PRESENT | PRESENT | PRESENT |
+| os_file_reads | PRESENT | PRESENT | PRESENT |
+| os_file_writes | PRESENT | PRESENT | PRESENT |
+| os_rename | PRESENT | PRESENT | PRESENT |
+| os_path_resolution | PRESENT | PRESENT | PRESENT |
+| os_open_file | PRESENT | PRESENT | PRESENT |
+| os_stat_results | PRESENT | PRESENT | PRESENT |
+| os_directory_listing | PRESENT | PRESENT | PRESENT |
+| os_directory_creation | PRESENT | PRESENT | PRESENT |
+| os_entry_removal | PRESENT | PRESENT | PRESENT |
+| memory_filesystem | PRESENT | PRESENT | PRESENT |
+| os_environment | PARTIAL (historical PRESENT) | PARTIAL (historical PRESENT) | PARTIAL (historical PRESENT) |
+| mount_table | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) |
+| mount_modes | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) |
+| mount_errors | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) |
+| mount_feed_lifecycle | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) |
+| mount_close | ABSENT | ABSENT | ABSENT |
+| async_os_sleep | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| os_calendar_calls | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| os_entropy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| os_clock_reads | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| os_sync_sleep | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| working_directory | PARTIAL (historical ABSENT) | PARTIAL (historical ABSENT) | PARTIAL (historical ABSENT) |
+| clock_source | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| sleep_policy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| random_initialization | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| configure_os_policy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| file_mode_inspection | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| file_handle_value_conversion | PRESENT (historical PARTIAL) | PARTIAL | PARTIAL |
+| raised_exception | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| traceback_frames | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| recursion_limit | PRESENT | PRESENT (historical REFUSED) | PRESENT (historical REFUSED) |
+| resource_failure_semantics | PRESENT (historical PARTIAL) | PRESENT (historical REFUSED) | PRESENT (historical REFUSED) |
+| feed_execution_limit | PRESENT (historical ABSENT) | PRESENT (historical REFUSED) | PRESENT (historical REFUSED) |
+| turn_execution_limit | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_suspension_budget | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| host_sleep_budget | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| source_nesting_guard | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| garbage_collection_interval | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| exception_taxonomy | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| structured_exception_data | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| process_clock_policy | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| run_blocking | PRESENT | PRESENT | PRESENT |
+| start_program | PRESENT | PRESENT | PRESENT |
+| interactive_continuation | ABSENT (historical PRESENT) | ABSENT (historical PRESENT) | ABSENT (historical PRESENT) |
+| create_repl | PRESENT | PRESENT | PRESENT |
+| recover_repl_after_error | PRESENT | PRESENT | PRESENT |
+| external_call_result | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| external_call_arguments | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| register_pending_future | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| mount_write_budget | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) | ABSENT (historical PARTIAL) |
+| mount_memory_budget | ABSENT (historical PRESENT) | ABSENT (historical PRESENT) | ABSENT (historical PRESENT) |
+| callback_files | PRESENT | PRESENT | PRESENT |
+| boundary_uuid | PRESENT | PRESENT | PRESENT |
+| fork_session | PRESENT | PRESENT | PRESENT |
+| reset_type_checker | PRESENT | PRESENT | PRESENT |
+| compile_program | ABSENT (historical REFUSED) | ABSENT (historical REFUSED) | ABSENT (historical REFUSED) |
+| compiled_source | ABSENT | ABSENT | ABSENT |
+| eager_coroutine_completion | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| run_progress_variants | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| resume_os_call | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| resolve_pending_futures | PRESENT | PRESENT | PRESENT |
+| async_host_driver | PRESENT | PRESENT | PRESENT |
+| snapshot_auto_resume | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| feed_repl_suspendable | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) | PRESENT (historical PARTIAL) |
+| suspension_source_position | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+| abandon_suspended_feed | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) | PRESENT (historical ABSENT) |
+
+vm: re-measured 91 rows {'PRESENT': 79, 'PARTIAL': 2, 'ABSENT': 10}; all 185 in-scope rows {'ABSENT': 48, 'PRESENT': 79, 'PARTIAL': 31, 'N/A': 26, 'REFUSED': 1}
+dart2js: re-measured 91 rows {'PRESENT': 78, 'PARTIAL': 3, 'ABSENT': 10}; all 185 in-scope rows {'ABSENT': 44, 'PRESENT': 78, 'PARTIAL': 34, 'N/A': 27, 'REFUSED': 2}
+dart2wasm: re-measured 91 rows {'PRESENT': 78, 'PARTIAL': 3, 'ABSENT': 10}; all 185 in-scope rows {'ABSENT': 44, 'PRESENT': 78, 'PARTIAL': 34, 'N/A': 27, 'REFUSED': 2}
+
+PASS current (arm64): every case, every re-measured row and the PRESENT totals match baseline-current.json (vm 79/185, dart2js 78/185, dart2wasm 78/185)
+
+Exit status: 0
+
+$ git diff --check
+Exit status: 0

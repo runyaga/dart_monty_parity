@@ -1,5 +1,5 @@
 {
- "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 retains its prior expectations and was not re-measured in this recording.",
+ "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.",
  "present": {
   "vm": 79,
   "dart2js": 78,
@@ -64,179 +64,37 @@
   },
   "x86_64": {
    "measured_on": "Linux x86_64 (CI)",
-   "rows": {
-    "os_environment": {
-     "dart2js": "PRESENT",
-     "dart2wasm": "PRESENT"
-    },
-    "mount_table": {
-     "dart2js": "PARTIAL",
-     "dart2wasm": "PARTIAL"
-    },
-    "mount_modes": {
-     "dart2js": "PARTIAL",
-     "dart2wasm": "PARTIAL"
-    },
-    "mount_errors": {
-     "dart2js": "PARTIAL",
-     "dart2wasm": "PARTIAL"
-    },
-    "mount_feed_lifecycle": {
-     "dart2js": "PARTIAL",
-     "dart2wasm": "PARTIAL"
-    },
-    "mount_write_budget": {
-     "dart2js": "PARTIAL",
-     "dart2wasm": "PARTIAL"
-    },
-    "mount_memory_budget": {
-     "dart2js": "PRESENT",
-     "dart2wasm": "PRESENT"
-    }
-   },
+   "rows": {},
    "present": {
     "vm": 79,
-    "dart2js": 80,
-    "dart2wasm": 80
+    "dart2js": 78,
+    "dart2wasm": 78
    },
-   "cells": {
-    "os_environment": {
-     "x21_fallback_nonfs": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     }
+   "cells": {},
+   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured.",
+   "totals": {
+    "vm": {
+     "ABSENT": 48,
+     "PRESENT": 79,
+     "PARTIAL": 31,
+     "N/A": 26,
+     "REFUSED": 1
     },
-    "mount_table": {
-     "x21_two_mounts": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_nested_virtual": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_trailing_slash_virtual": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_dup_virtual": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_relative_virtual": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
+    "dart2js": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
     },
-    "mount_modes": {
-     "x21_ro_read_ok": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_ro_write": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_overlay_same_feed": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "mount_errors": {
-     "x21_write_limit": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_ro_write": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_ro_mkdir": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_ro_open_w": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_ro_unlink": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_dup_virtual": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_relative_virtual": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "g19_close_then_feed": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "mount_feed_lifecycle": {
-     "x21_lifecycle_read-write": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_lifecycle_delete_read-write": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "x21_lifecycle_overlay": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_write_limit_per_feed": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "mount_close": {
-     "g19_close_then_feed": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "working_directory": {
-     "b14_getcwd_set": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_cwd_feed": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_cwd_default_mount": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     },
-     "x21_cwd_relative_fallback": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "mount_write_budget": {
-     "api_write_budget_feed1": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     },
-     "api_write_budget_feed2": {
-      "dart2js": "DIVERGE",
-      "dart2wasm": "DIVERGE"
-     }
-    },
-    "mount_memory_budget": {
-     "api_memory_budget": {
-      "dart2js": "MATCH",
-      "dart2wasm": "MATCH"
-     }
+    "dart2wasm": {
+     "ABSENT": 44,
+     "PRESENT": 78,
+     "PARTIAL": 34,
+     "N/A": 27,
+     "REFUSED": 2
     }
-   },
-   "note": "Prior expectations retained from the pre-host-run baseline; this arm64 F-1 recording does not re-measure Linux x86_64.",
-   "totals": {}
+   }
   }
  },
  "deltas": [
