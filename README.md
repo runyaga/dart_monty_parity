@@ -213,7 +213,9 @@ differs on macOS):
 
 ```sh
 python3.12 -m venv /tmp/oracle
-/tmp/oracle/bin/pip install --require-hashes --only-binary :all: --no-deps -r tool/upstream/requirements.lock
+/tmp/oracle/bin/pip install --require-hashes --only-binary :all: --no-deps \
+  -r tool/upstream/requirements.lock \
+  -r tool/parity/oracle/otel-requirements.lock
 (cd tool/parity/oracle/rust && cargo build --locked --release)
 
 # check: every committed outcome regenerates byte for byte, and the manifest binds them
@@ -227,7 +229,9 @@ python3.12 -m venv /tmp/oracle
 
 Review the diff and commit the cases, `expected/` and `manifest.json` together. Moving the upstream pin
 starts in dart_monty_core: copy its new `tool/upstream` files here, regenerate, and re-record the
-baseline.
+baseline. The parity-only `tool/parity/oracle/otel-requirements.lock` pins the
+telemetry SDK separately so the mirrored upstream lock stays identical to core.
+Both locks are bound by the parity manifest.
 
 ## Updating the baseline
 
@@ -256,3 +260,64 @@ is not listed there is tolerated.
 ## License
 
 MIT, see `LICENSE`.
+
+## R-P2 telemetry probes
+
+`telemetry_plain`, `telemetry_print`, `telemetry_external`, `telemetry_manual`,
+`telemetry_error` and `telemetry_dump_load` compare a recording `MontyTelemetry`
+with Python's OpenTelemetry SDK span/log exporters and a raw recording meter.
+Each runner installs once at process start, before any cases or probes. Each
+telemetry scenario clears only its buffers and opens and closes a fresh pool
+under an ambient host span. Other probes therefore also run instrumented.
+The six scenarios explicitly use a 50 MB memory limit and 120 assertion
+annotation bytes on both bindings, so differences in API defaults do not
+change their configuration.
+
+The records preserve span parentage, attributes and their encodings, numeric
+and text log severity, and every raw metric measurement. Timestamps and
+snapshot sizes are validated within each run before their values are masked.
+`EXCEPTIONS.md` describes the exact normalization. The four telemetry rows are
+PRESENT on all three backends (vm, dart2js and dart2wasm) in the baseline and
+join the single M6 target owned by P-F2 in P-F3.
+
+```sh
+python3 -I tool/parity/test_telemetry.py
+# With the runner's core dependency configured:
+(cd packages/monty_parity && dart test test/telemetry_probes_test.dart \
+  test/telemetry_recorder_test.dart test/telemetry_vm_test.dart)
+```
+
+To regenerate only these expectations with the supplied Python 3.12 oracle:
+
+```sh
+../oracle-venv/bin/python -I tool/parity/oracle/run_probes.py tool/parity/expected \
+  telemetry_plain telemetry_print telemetry_external telemetry_manual \
+  telemetry_error telemetry_dump_load
+```
+
+Then re-bind `manifest.json` using `tool/check_parity_manifest.py`'s `compute()`
+and run the checker. On macOS keep `expected/b11fs_unlink_dir` from git; its
+committed expectation is Linux's errno. The telemetry helper is included in
+the manifest's generator hash.
+
+R-P2 VM validation against core `4ea974136c80fae3d7e1a1bf2117585d9360d2e5`
+(including the error-log integer timing fix):
+
+- The full VM runner completes. All six telemetry scenarios MATCH, and all
+  four telemetry rows are PRESENT. The score is 83/185 PRESENT (83/95
+  re-measured), versus the baseline's 79. Every non-telemetry row and cell
+  retains its baseline status.
+- The three OTel requirements retain their exact committed versions and hashes
+  in the parity-only lock. CI and the setup command above install both locks
+  with hash verification; the manifest binds both. All four shared upstream
+  files match core again.
+- Oracle regeneration matches all 104 Python probes and 672/673 cases; only
+  the documented macOS/Linux `b11fs_unlink_dir` errno differs. Expected
+  outcomes and comparison rules are unchanged.
+- All 13 telemetry Dart tests, analysis, formatting, DCM correctness checks,
+  and offline telemetry checks pass. The original integer/string
+  finding and its resolution are in
+  [R-P2-core-findings.md](.gate-logs/R-P2-core-findings.md), with commands in
+  [R-P2-validation.txt](.gate-logs/R-P2-validation.txt).
+
+The host orchestrator owns baseline re-recording.

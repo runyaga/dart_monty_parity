@@ -5,7 +5,8 @@ usage: python -I tool/parity/oracle/check_expected.py [--rust BIN] [--write]
 
 Runs tool/parity/oracle/run_cases.py over every case and run_probes.py over
 every probe with the interpreter running this script (which must have the
-hash-pinned pydantic-monty from tool/upstream/requirements.lock installed),
+hash-pinned pydantic-monty from tool/upstream/requirements.lock and OTel from
+tool/parity/oracle/otel-requirements.lock installed),
 and, with --rust, the Rust oracle binary for the three Rust-only probes. The
 result must equal tool/parity/expected byte for byte, and
 tool/parity/manifest.json must bind every case to it. --write replaces the

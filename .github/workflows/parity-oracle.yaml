@@ -56,7 +56,9 @@ jobs:
         run: |
           python3 -m venv /tmp/oracle
           /tmp/oracle/bin/pip install -q --disable-pip-version-check --no-cache-dir \
-            --require-hashes --only-binary :all: --no-deps -r tool/upstream/requirements.lock
+            --require-hashes --only-binary :all: --no-deps \
+            -r tool/upstream/requirements.lock \
+            -r tool/parity/oracle/otel-requirements.lock
       - name: Build the Rust oracle
         working-directory: tool/parity/oracle/rust
         run: cargo build --locked --release

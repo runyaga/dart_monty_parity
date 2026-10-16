@@ -38,6 +38,7 @@ import pydantic_monty as pm
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_cases import canon, stable  # noqa: E402
 from host_cases import CASES as HOST_CASES, build as host_build, show as host_show  # noqa: E402
+import telemetry_probes  # noqa: E402
 
 
 def pos(s: Any) -> Any:
@@ -1520,7 +1521,13 @@ def api_eager_coroutine(pool: pm.Monty, t: T) -> None:
         t.add({'ev': 'eager', 'await_call': b.allow_eager_await})
 
 
+# Telemetry is installed once before any probe; each scenario clears only buffers.
+for _scenario in telemetry_probes.SCENARIOS:
+    PROBES[f"telemetry_{_scenario}"] = lambda pool, t, name=_scenario: telemetry_probes.scenario(name, t)
+
+
 def main() -> int:
+    telemetry_probes.install()
     out = Path(sys.argv[1])
     only = set(sys.argv[2:])
     with pm.Monty() as pool:

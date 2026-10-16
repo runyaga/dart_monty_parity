@@ -1,9 +1,10 @@
 {
  "generator": {
-  "sha256": "7a9e8a0177b01c3bf0166ac92c5acdab7b1b84cdbb1d0ad5a026a5e031c1f90e",
+  "sha256": "01c1f78c7fbacce67c52302c729749492c38b302c4c0d27323a807a902dd10c0",
   "files": {
    "tool/parity/oracle/run_cases.py": "8ef68ce424f32ff959c9d736eb9c999b86fa0b52456ae955b5a316639ae3f477",
-   "tool/parity/oracle/run_probes.py": "acbe65cf1b0cdb49aa70f77e70fc0dbcb0c5a42727ae0079603da3ec890dc4b1",
+   "tool/parity/oracle/run_probes.py": "dfaf547e301f95fd544c24a86eb3e0bae863c24f2938a22ea6ff8997b16fc1cf",
+   "tool/parity/oracle/telemetry_probes.py": "6f3834264c7ab5a3116f801b731235861d23f6d2a27c87ec631440cee310c56f",
    "tool/parity/oracle/host_cases.py": "387e4ec1ab30dee7d593e242a7c7045aa34d4f218ed2b7f8c6380c926447d909",
    "tool/parity/oracle/rust/Cargo.toml": "e7bccce9812ea8ce32f65a72f835a5f82c87bf0f4359113601698781372d6f03",
    "tool/parity/oracle/rust/Cargo.lock": "a0cfbede3bedb6e846d2e24e6e089db40ae9171e858fd584d3bef299a1837858",
@@ -11,10 +12,11 @@
   }
  },
  "pins": {
-  "sha256": "8699ebc48e045a2b0f59d5914e75213230099a15176ef685e080f1e7251934d9",
+  "sha256": "122e6e5239af5ca6fa879a59ae81a97160aa615afc140cfeda1e05650f33e49a",
   "files": {
    "tool/upstream/requirements.lock": "0791321b7cc6eb7254bbb9dfd4df497b8baa1f1f26f399b18ca2f224e1dd6f5d",
-   "tool/upstream/upstream-pin.json": "3745c69e7937f62ec7beb063da5a6d560013c14b99faeeda97f7a70ddd18c2c1"
+   "tool/upstream/upstream-pin.json": "3745c69e7937f62ec7beb063da5a6d560013c14b99faeeda97f7a70ddd18c2c1",
+   "tool/parity/oracle/otel-requirements.lock": "bc09fc2dedf4316f02fcc9e36e3328b50885ca16f74a10edcbdc6e356745328b"
   }
  },
  "cases": {
@@ -5293,6 +5295,36 @@
   "sp_worker_recycling": {
    "outcomes": {
     "ref-py": "eb78fdee0ba8a0a4c03dfa37401f7759ea9c005dd71b37b63a44263c95a13b56"
+   }
+  },
+  "telemetry_dump_load": {
+   "outcomes": {
+    "ref-py": "1f8fe7852c902b1cd73b833319646a5191821e1c970f095ae13c9af0586c2071"
+   }
+  },
+  "telemetry_error": {
+   "outcomes": {
+    "ref-py": "4f640570ec6766278aabb7b62119009a1817b91cc852722f3dd7108510d6ab0d"
+   }
+  },
+  "telemetry_external": {
+   "outcomes": {
+    "ref-py": "11e4040f4e193f06c660fdc5e17cb31da796fb97cc9155e19a338b866c8a1e80"
+   }
+  },
+  "telemetry_manual": {
+   "outcomes": {
+    "ref-py": "8810b34e30e55cc9d5bda17ebd6843d5997e9f1ce3385deb7181ea7f34bd121b"
+   }
+  },
+  "telemetry_plain": {
+   "outcomes": {
+    "ref-py": "47d2bd80b32c7c776c37fd46bd3dfb2d87009865c1c71c8f55c3cdc3397eb1df"
+   }
+  },
+  "telemetry_print": {
+   "outcomes": {
+    "ref-py": "538c9ed2660e42f6da33d901fdc74b11109902cecb6644504aff17e9ef3f71a7"
    }
   }
  }

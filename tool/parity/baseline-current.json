@@ -1,28 +1,28 @@
 {
  "subject": "dart_monty_core F-1 58106a7c5807691b6fc2c82664229a3bd3680276: vm, dart2js and dart2wasm recorded from .gate-logs/host-run on macOS arm64 (host browser measurements with real Chrome). Rows the harness does not re-measure retain their capability-manifest status. Linux x86_64 applies the same architecture-independent F-1 window changes; it was not re-measured in this recording.",
  "present": {
-  "vm": 79,
-  "dart2js": 78,
-  "dart2wasm": 78
+  "vm": 83,
+  "dart2js": 82,
+  "dart2wasm": 82
  },
  "totals": {
   "vm": {
-   "ABSENT": 48,
-   "PRESENT": 79,
+   "ABSENT": 44,
+   "PRESENT": 83,
    "PARTIAL": 31,
    "N/A": 26,
    "REFUSED": 1
   },
   "dart2js": {
-   "ABSENT": 44,
-   "PRESENT": 78,
+   "ABSENT": 40,
+   "PRESENT": 82,
    "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
   },
   "dart2wasm": {
-   "ABSENT": 44,
-   "PRESENT": 78,
+   "ABSENT": 40,
+   "PRESENT": 82,
    "PARTIAL": 34,
    "N/A": 27,
    "REFUSED": 2
@@ -33,29 +33,29 @@
    "measured_on": "macOS arm64",
    "rows": {},
    "present": {
-    "vm": 79,
-    "dart2js": 78,
-    "dart2wasm": 78
+    "vm": 83,
+    "dart2js": 82,
+    "dart2wasm": 82
    },
    "cells": {},
    "totals": {
     "vm": {
-     "ABSENT": 48,
-     "PRESENT": 79,
+     "ABSENT": 44,
+     "PRESENT": 83,
      "PARTIAL": 31,
      "N/A": 26,
      "REFUSED": 1
     },
     "dart2js": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
     },
     "dart2wasm": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
@@ -66,30 +66,30 @@
    "measured_on": "Linux x86_64 (CI)",
    "rows": {},
    "present": {
-    "vm": 79,
-    "dart2js": 78,
-    "dart2wasm": 78
+    "vm": 83,
+    "dart2js": 82,
+    "dart2wasm": 82
    },
    "cells": {},
-   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured.",
+   "note": "The nine architecture-independent P-F1 deltas recorded for arm64 also apply to x86_64: mount cases and budget probes are unsupported until P-F2, and mount-free cwd is forwarded. Rows and cells inherit the shared F-1 expectations; totals include unmeasured manifest rows as in score.py. Linux x86_64 was not re-measured. The four telemetry rows and their cases inherit the arm64 PRESENT/MATCH expectations on all three backends; this is an unverified assumption for Linux CI to confirm.",
    "totals": {
     "vm": {
-     "ABSENT": 48,
-     "PRESENT": 79,
+     "ABSENT": 44,
+     "PRESENT": 83,
      "PARTIAL": 31,
      "N/A": 26,
      "REFUSED": 1
     },
     "dart2js": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
     },
     "dart2wasm": {
-     "ABSENT": 44,
-     "PRESENT": 78,
+     "ABSENT": 40,
+     "PRESENT": 82,
      "PARTIAL": 34,
      "N/A": 27,
      "REFUSED": 2
@@ -1708,6 +1708,26 @@
    "dart2wasm": "PRESENT"
   },
   "abandon_suspended_feed": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
+  "telemetry_adapter": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
+  "telemetry_context": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
+  "telemetry_metrics": {
+   "vm": "PRESENT",
+   "dart2js": "PRESENT",
+   "dart2wasm": "PRESENT"
+  },
+  "telemetry_instrumentation_lifecycle": {
    "vm": "PRESENT",
    "dart2js": "PRESENT",
    "dart2wasm": "PRESENT"
@@ -6471,6 +6491,119 @@
   },
   "abandon_suspended_feed": {
    "abandon": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   }
+  },
+  "telemetry_adapter": {
+   "telemetry_plain": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_print": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_external": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_manual": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_error": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_dump_load": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   }
+  },
+  "telemetry_context": {
+   "telemetry_external": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_manual": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_dump_load": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   }
+  },
+  "telemetry_metrics": {
+   "telemetry_plain": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_print": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_external": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_manual": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_error": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_dump_load": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   }
+  },
+  "telemetry_instrumentation_lifecycle": {
+   "telemetry_plain": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_print": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_external": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_manual": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_error": {
+    "vm": "MATCH",
+    "dart2js": "MATCH",
+    "dart2wasm": "MATCH"
+   },
+   "telemetry_dump_load": {
     "vm": "MATCH",
     "dart2js": "MATCH",
     "dart2wasm": "MATCH"
