@@ -93,9 +93,8 @@ Future<Map<String, Object?>> runSessionProbe(
   try {
     await body(t, shared, start);
     // A real MountDir constructor refusal on browser backends.
-    // ignore: avoid_catching_errors
-  } on UnsupportedError catch (e, st) {
-    if (_mountBudgets.contains(id)) {
+  } on BrowserMountRefused catch (e, st) {
+    if (backend != 'vm' && _mountBudgets.contains(id)) {
       out['refused'] = {'where': 'MountDir', 'type': 'UnsupportedError'};
     } else {
       out['runner_error'] = '$e\n$st';

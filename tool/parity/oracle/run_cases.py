@@ -601,7 +601,7 @@ def seed_files(root: Path, virtual: str, files: dict[str, Any]) -> None:
         if not (vpath == virtual or vpath.startswith(virtual.rstrip('/') + '/')):
             continue
         rel = vpath[len(virtual.rstrip('/')):].lstrip('/')
-        if vpath.endswith('/'):
+        if not rel or vpath.endswith('/'):
             (root / rel).mkdir(parents=True, exist_ok=True)
             continue
         f = root / rel
@@ -625,7 +625,12 @@ def build_mounts(case: dict[str, Any], fsroot: Path) -> tuple[list[Any] | None, 
             host = base / str(m.get('host_index', i))
             host.mkdir(parents=True, exist_ok=True)
             seed_files(host, m['virtual'], fs.get('files', {}))
-            kw: dict[str, Any] = {'host_path': host / 'missing' if m.get('host_missing') else str(host) + '/.' if m.get('host_noncanonical') else host, 'virtual_path': m['virtual'], 'mode': m.get('mode', 'read-write')}
+            host_path = host
+            if m.get('host_noncanonical'):
+                alias = Path(str(host) + '-link')
+                alias.symlink_to(host, target_is_directory=True)
+                host_path = str(alias) + '/.'
+            kw: dict[str, Any] = {'host_path': host / 'missing' if m.get('host_missing') else host_path, 'virtual_path': m['virtual'], 'mode': m.get('mode', 'read-write')}
             if m.get('write_bytes_limit') is not None:
                 kw['write_bytes_limit'] = m['write_bytes_limit']
             if m.get('memory_usage_limit') is not None:
@@ -799,7 +804,7 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                 kw['cwd'] = options['cwd']
             if options.get('skip_type_check'):
                 kw['skip_type_check'] = True
-            if 'mount_indices' in options:
+            if 'mount_indices' in options and mounts is not None:
                 kw['mount'] = [mounts[i] for i in options['mount_indices']]
             if case.get('auto_externals'):
                 # The host functions are answered by upstream's own loop (resume_auto), not scripted resumes:
@@ -817,9 +822,14 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                         raise getattr(builtins, a['raise']['type'])(a['raise'].get('message', ''))
                     return ext
                 kw['external_lookup'] = {n: make_ext(n) for n in (case.get('externals') or {})}
-            if mounts is not None or options.get('record_dispatch'):
+            handler_calls = 0
+            use_recorder = (mounts is not None or options.get('record_dispatch') or options.get('sleep_access')
+                            or options.get('dispatch') == 'manual' or options.get('expect_os_snapshot'))
+            if use_recorder:
                 sleep_access = pm.OSAccess(max_sleep=0) if options.get('sleep_access') else None
                 def recorder(*, name: Any, args: Any, kwargs: Any, is_async: Any, **_: Any) -> Any:
+                    nonlocal handler_calls
+                    handler_calls += 1
                     if sleep_access is not None:
                         step['host_calls'].append({'ev': 'handler', 'name': str(name)})
                         return sleep_access(name=name, args=args, kwargs=kwargs, is_async=is_async)
@@ -844,7 +854,9 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                     step['value'] = canon([(m.host_path, m.virtual_path, m.mode) for m in mounts])
                     out['steps'].append(step)
                     continue
-                if options.get('record_dispatch') and not options.get('feed_start'):
+                if (options.get('record_dispatch') and not options.get('feed_start')
+                        and not options.get('expect_os_snapshot') and options.get('dispatch') != 'manual'
+                        and not options.get('restore_snapshot_at') and not options.get('sleep_access')):
                     raw_out = session.feed_run(code, **kw)
                     step['value'] = canon(raw_out)
                     ctx.raw_outputs.append(raw_out)
@@ -857,7 +869,7 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                         or not snap.is_os_function or str(snap.function_name) != expected_os):
                     raise RuntimeError(f'OS suspension {expected_os} not reached')
                 if options.get('record_dispatch') and isinstance(snap, pm.FunctionSnapshot):
-                    step['host_calls'].append({'ev': 'start', 'name': str(snap.function_name), 'is_os': snap.is_os_function, 'handler_calls': len(step['os_calls']) + len(step['host_calls'])})
+                    step['host_calls'].append({'ev': 'start', 'name': str(snap.function_name), 'is_os': snap.is_os_function, 'handler_calls': handler_calls})
                 restore_at = options.get('restore_snapshot_at')
                 if restore_at:
                     while isinstance(snap, pm.FunctionSnapshot) and str(snap.function_name) != restore_at:
@@ -884,7 +896,7 @@ def run_case(pool: pm.Monty, case: dict[str, Any], fsroot: Path) -> dict[str, An
                             or (case.get('auto_externals') and not snap.is_os_function)):
                         snap = snap.resume_auto()
                         continue
-                    if (mounts is not None or options.get('record_dispatch')) and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:
+                    if use_recorder and isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function:
                         snap = snap.resume_auto()  # mounts first, then os= (recorder), then default
                         continue
                     if (isinstance(snap, pm.FunctionSnapshot) and snap.is_os_function

@@ -55,7 +55,7 @@ class RepositoryBaselineTest(unittest.TestCase):
             manifest = [r for r in csv.DictReader(source, delimiter='\t')
                         if r['in_scope'] == 'yes']
         rules = json.loads(score.RULES.read_text())['rows']
-        measured = {row for row, rule in rules.items() if 'cases' in rule or 'probes' in rule or 'status' in rule}
+        measured = {row for row, rule in rules.items() if 'cases' in rule or 'probes' in rule or 'allowed' in rule}
         for arch, platform in self.doc['platforms'].items():
             rows = self.rows(arch)
             self.assertFalse(set(rows) - measured)
@@ -104,6 +104,7 @@ class CurrentBaselineTest(unittest.TestCase):
         output = io.StringIO()
         with mock.patch.object(score, 'RULES', self.rules), \
              mock.patch.object(score, 'MANIFEST', self.manifest), \
+             mock.patch.object(score, 'case_index', return_value={**score.case_index(), 'a': {}, 'b': {}, 'c': {'fs': {'mounts': [{}]}}}), \
              mock.patch.object(sys, 'argv', ['score.py', str(self.out), '--expected', str(self.expected), *flags]), \
              contextlib.redirect_stdout(output):
             rc = score.main()
@@ -182,6 +183,9 @@ class CurrentBaselineTest(unittest.TestCase):
         rules = json.loads(self.rules.read_text())
         rules['rows']['measured']['cases_web'] = ['a', 'b']
         self.rules.write_text(json.dumps(rules))
+        for backend in ('dart2js', 'dart2wasm'):
+            (self.out / f'c/core-{backend}.json').write_text(json.dumps(
+                {'refused': {'where': 'MountDir', 'type': 'UnsupportedError'}}))
         after = self.write()
         self.assert_current()
         self.assertEqual(after['rows']['measured'], {'vm': 'PARTIAL', 'dart2js': 'PRESENT', 'dart2wasm': 'PRESENT'})

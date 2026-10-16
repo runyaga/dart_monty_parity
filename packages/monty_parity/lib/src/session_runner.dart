@@ -41,6 +41,13 @@ const _applies = {
   'ctor_only',
   'rename_host_before_feed',
   'restore_snapshot_at',
+  'feed_start',
+  'dispatch',
+  'expect_os_snapshot',
+  'record_dispatch',
+  'sleep_access',
+  'mount_indices',
+  'restore_mount',
 };
 
 /// Runs case [c] on [backend] through a session checked out of [pool], as
@@ -54,7 +61,7 @@ Future<Map<String, Object?>> runSessionCase(
   if (!sessionEngines.contains(engine)) {
     throw ArgumentError.value(engine, 'engine', 'not a session engine');
   }
-  final fixture = engine == 'refmem' ? MountFixture([]) : _fixture(c);
+  final fixture = engine == 'refmem' ? MountFixture([]) : _fixture(c, backend);
   if (fixture == null) {
     return newOutcome(c['id']! as String, engine, backend)
       ..['refused'] = {'where': 'MountDir', 'type': 'UnsupportedError'};
@@ -88,12 +95,12 @@ Future<Map<String, Object?>> runSessionCase(
   }
 }
 
-MountFixture? _fixture(Map<String, Object?> c) {
+MountFixture? _fixture(Map<String, Object?> c, String backend) {
   try {
     return buildMountFixture(c);
     // Core's browser constructor is the refusal being measured.
-    // ignore: avoid_catching_errors
-  } on UnsupportedError {
+  } on BrowserMountRefused {
+    if (backend == 'vm') rethrow;
     return null;
   }
 }
@@ -144,7 +151,19 @@ Map<String, Object?> refmemCase(Map<String, Object?> c) {
   final fs = (c['fs']! as Map).cast<String, Object?>();
 
   return {
-    ...c,
+    for (final entry in c.entries)
+      if (entry.key != 'mount_indices') entry.key: entry.value,
+    if (c['feeds'] case final List<Object?> feeds)
+      'feeds': [
+        for (final feed in feeds)
+          if (feed is Map)
+            {
+              for (final entry in feed.entries)
+                if (entry.key != 'mount_indices') entry.key: entry.value,
+            }
+          else
+            feed,
+      ],
     'fs': {
       for (final entry in fs.entries)
         if (entry.key != 'mounts') entry.key: entry.value,
@@ -303,7 +322,11 @@ final class _PoolCaseSession implements CaseSession {
 
     if (!byHand &&
         options['feed_start'] != true &&
-        options['restore_snapshot_at'] == null) {
+        options['restore_snapshot_at'] == null &&
+        options['expect_os_snapshot'] == null &&
+        options['dispatch'] != 'manual' &&
+        options['sleep_access'] != true &&
+        options['close_mount_before_feed'] == null) {
       return _session.feedRun(
         code,
         inputs: inputs,
@@ -317,16 +340,32 @@ final class _PoolCaseSession implements CaseSession {
     }
     // An OS answer built before its suspension resumes, replayed to core.
     final answer = _OsAnswer(handler);
-    var snap = await _session.feedStart(
-      code,
-      inputs: inputs,
-      externalLookup: hostFunctions(externals),
-      os: answer.call,
-      mount: mounts,
-      printCallback: onPrint,
-      cwd: cwd,
-      skipTypeCheck: options['skip_type_check'] == true,
-    );
+    final MontySnapshot initial;
+    try {
+      initial = await _session.feedStart(
+        code,
+        inputs: inputs,
+        externalLookup: hostFunctions(externals),
+        os: answer.call,
+        mount: mounts,
+        printCallback: onPrint,
+        cwd: cwd,
+        skipTypeCheck: options['skip_type_check'] == true,
+      );
+      // A deliberate closed-mount fixture is the only StateError measured as
+      // a host refusal. Guards and unrelated internal failures must escape.
+      // ignore: avoid_catching_errors
+    } on StateError catch (error) {
+      if (options['close_mount_before_feed'] == options['feed_index'] &&
+          mounts.any(
+            (mount) =>
+                error.message == "mount '${mount.virtualPath}' is closed",
+          )) {
+        throw ClosedMountRefused(error);
+      }
+      rethrow;
+    }
+    var snap = initial;
     final expectedOs = options['expect_os_snapshot'];
     if (expectedOs != null &&
         (snap is! FunctionSnapshot ||

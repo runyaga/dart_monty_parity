@@ -1,4 +1,4 @@
-// Requires an F-1 checkout with its VM worker built, as tool/parity/run.py does.
+// Requires an F-2 checkout with its VM worker built, as tool/parity/run.py does.
 @TestOn('vm')
 library;
 
@@ -12,6 +12,97 @@ import 'package:monty_parity/src/worker_runner.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'budget probe checkout UnsupportedError remains a runner error ',
+    () async {
+      final pool = await startMonty(
+        const PoolOptions(minProcesses: 0, maxProcesses: 1),
+        open: () => throw UnsupportedError('checkout failure'),
+      );
+      addTearDown(pool.close);
+      for (final backend in ['vm', 'dart2js']) {
+        final result = await runSessionProbe(
+          'api_memory_budget',
+          backend,
+          pool,
+          startMonty,
+          () => 0,
+        );
+        expect(result['refused'], isNull);
+        expect(result['runner_error'], contains('checkout failure'));
+      }
+    },
+  );
+
+  for (final options in [
+    {'record_dispatch': true, 'dispatch': 'manual'},
+    {'sleep_access': true},
+  ]) {
+    test('dispatch options apply without feed_start: $options', () async {
+      final pool = await startMonty(const PoolOptions(maxProcesses: 1));
+      addTearDown(pool.close);
+      final result = await runSessionCase(
+        {
+          'id': 'dispatch_options',
+          'code': 'import time\ntime.sleep(0)\n7',
+          ...options,
+          'os': {
+            'system.sleep': [
+              {
+                'return': {'t': 'none'},
+              },
+            ],
+          },
+        },
+        'vm',
+        pool,
+      );
+      final step = (result['steps']! as List).single as Map;
+      expect(step['exception'], isNull);
+      expect(step['value'], {'t': 'int', 'v': '7'});
+      if (options['dispatch'] == 'manual') {
+        expect(
+          (step['host_calls']! as List).first,
+          containsPair('ev', 'start'),
+        );
+        expect(step['os_calls'], hasLength(1));
+      } else {
+        expect(step['host_calls'], [
+          {'ev': 'handler', 'name': 'system.sleep'},
+        ]);
+      }
+    });
+  }
+  test('refmem ignores per-feed mount selection', () async {
+    final pool = await startMonty(const PoolOptions(maxProcesses: 1));
+    addTearDown(pool.close);
+    final result = await runSessionCase(
+      {
+        'id': 'refmem_selection',
+        'refmem': true,
+        'feeds': [
+          {
+            'code': "from pathlib import Path\nPath('/data/a').read_text()",
+            'mount_indices': [0],
+          },
+        ],
+        'fs': {
+          'mounts': [
+            {'virtual': '/data'},
+          ],
+          'files': {
+            '/data/a': {'text': 'A'},
+          },
+        },
+      },
+      'vm',
+      pool,
+      engine: 'refmem',
+    );
+    final step = (result['steps']! as List).single as Map;
+    expect(step['exception'], isNull);
+    expect(step['value'], {'t': 'str', 'v': 'A'});
+  });
   test('cwd reaches the worker feed', () async {
     final channel = await ProcessChannel.spawn(await locateWorker());
     addTearDown(channel.close);
@@ -59,15 +150,31 @@ void main() {
     'mount budget probes measure host mount limits on the VM',
     _budgetProbes,
   );
+  test('a missed restore suspension is a runner failure', () async {
+    final pool = await startMonty(const PoolOptions(maxProcesses: 1));
+    addTearDown(pool.close);
+    await expectLater(
+      runSessionCase(
+        {
+          'id': 'missing_restore',
+          'code': '1',
+          'local_refusal': true,
+          'restore_snapshot_at': 'system.sleep',
+        },
+        'vm',
+        pool,
+      ),
+      throwsA(isA<StateError>()),
+    );
+  });
   for (final delay in ['0', '0.001']) {
     test('async dispatch requires an OS snapshot (delay=$delay)', () async {
       final pool = await startMonty(const PoolOptions(maxProcesses: 1));
       addTearDown(pool.close);
-      final result = await runSessionCase(
+      final pending = runSessionCase(
         {
           'id': 'async_dispatch_snapshot',
           'code': 'import asyncio\nawait asyncio.sleep($delay)\n7',
-          'feed_start': true,
           'record_dispatch': true,
           'expect_os_snapshot': 'system.async_sleep',
           'sleep_access': true,
@@ -76,30 +183,24 @@ void main() {
         pool,
         engine: 'core',
       );
+      if (delay == '0') {
+        await expectLater(pending, throwsA(isA<StateError>()));
+        return;
+      }
+      final result = await pending;
       final steps = (result['steps']! as List).cast<Map<String, Object?>>();
       final step = steps.single;
-      if (delay == '0') {
-        expect(step['value'], isNull);
-        expect(
-          step['exception'],
-          containsPair(
-            'message',
-            'OS suspension system.async_sleep not reached',
-          ),
-        );
-      } else {
-        expect(step['exception'], isNull);
-        expect(step['value'], {'t': 'int', 'v': '7'});
-        expect(step['host_calls'], [
-          {
-            'ev': 'start',
-            'name': 'system.async_sleep',
-            'is_os': true,
-            'handler_calls': 0,
-          },
-          {'ev': 'handler', 'name': 'system.async_sleep'},
-        ]);
-      }
+      expect(step['exception'], isNull);
+      expect(step['value'], {'t': 'int', 'v': '7'});
+      expect(step['host_calls'], [
+        {
+          'ev': 'start',
+          'name': 'system.async_sleep',
+          'is_os': true,
+          'handler_calls': 0,
+        },
+        {'ev': 'handler', 'name': 'system.async_sleep'},
+      ]);
     });
   }
 }

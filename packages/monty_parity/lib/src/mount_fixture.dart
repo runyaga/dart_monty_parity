@@ -9,6 +9,38 @@ import 'package:monty_parity/src/mount_fixture_web.dart'
 /// Builds the case's mounts, including constructor failures on the web.
 MountFixture buildMountFixture(Map<String, Object?> c) => platform.build(c);
 
+/// A refusal caught only at the browser MountDir constructor boundary.
+final class BrowserMountRefused implements Exception {
+  /// Wraps core's browser constructor failure.
+  const BrowserMountRefused(this.error);
+
+  /// The original constructor error.
+  final UnsupportedError error;
+}
+
+/// Pass explicit caps through while leaving core's default cap under test.
+MountDir constructMount(String hostPath, Map<String, Object?> spec) {
+  final virtualPath = spec['virtual']! as String;
+  final mode = (spec['mode'] as String?) ?? 'read-write';
+  final writeBytesLimit = spec['write_bytes_limit'] as int?;
+  final memoryUsageLimit = spec['memory_usage_limit'] as int?;
+  if (memoryUsageLimit == null) {
+    return MountDir(
+      hostPath: hostPath,
+      virtualPath: virtualPath,
+      mode: mode,
+      writeBytesLimit: writeBytesLimit,
+    );
+  }
+  return MountDir(
+    hostPath: hostPath,
+    virtualPath: virtualPath,
+    mode: mode,
+    writeBytesLimit: writeBytesLimit,
+    memoryUsageLimit: memoryUsageLimit,
+  );
+}
+
 /// Open roots plus cleanup and stable-path encoding for their outcome.
 final class MountFixture {
   /// Creates an owned fixture.

@@ -24,19 +24,27 @@ MountFixture build(Map<String, Object?> c) {
         spec['virtual']! as String,
         (fs['files'] as Map?) ?? const {},
       );
-      mounts.add(
-        MountDir(
-          hostPath: spec['host_missing'] == true
-              ? '${host.path}/missing'
-              : spec['host_noncanonical'] == true
-              ? '${host.path}/.'
-              : host.path,
-          virtualPath: spec['virtual']! as String,
-          mode: (spec['mode'] as String?) ?? 'read-write',
-          writeBytesLimit: spec['write_bytes_limit'] as int?,
-          memoryUsageLimit: (spec['memory_usage_limit'] as int?) ?? 100000000,
-        ),
-      );
+      var hostPath = host.path;
+      if (spec['host_missing'] == true) {
+        hostPath = '${host.path}/missing';
+      } else if (spec['host_noncanonical'] == true) {
+        // A lexical normalizer cannot pass this fixture: core must resolve
+        // an actual symlink as well as the trailing dot segment.
+        final alias = Link('${host.path}-link')..createSync(host.path);
+        hostPath = '${alias.path}/.';
+      }
+      try {
+        mounts.add(constructMount(hostPath, spec));
+        // Registration argument errors are measured; setup/internal errors
+        // must escape to the runner-error boundary after cleanup.
+        // ignore: avoid_catching_errors
+      } on ArgumentError catch (error) {
+        for (final mount in mounts) {
+          mount.close();
+        }
+        temp.deleteSync(recursive: true);
+        return MountFixture([], root: root, error: error);
+      }
     }
     if (c['rename_host_before_feed'] == true) {
       for (final path in mounts.map((m) => m.hostPath).toSet()) {
@@ -48,12 +56,12 @@ MountFixture build(Map<String, Object?> c) {
       root: root,
       cleanup: () => temp.deleteSync(recursive: true),
     );
-  } on Object catch (e) {
+  } on Object {
     for (final mount in mounts) {
       mount.close();
     }
     temp.deleteSync(recursive: true);
-    return MountFixture([], root: root, error: e);
+    rethrow;
   }
 }
 
@@ -63,19 +71,29 @@ void _seed(String host, String virtual, Map<Object?, Object?> files) {
   final parts = <String>[];
   for (final part in virtual.split('/')) {
     if (part == '..') {
-      if (parts.isNotEmpty) parts.removeLast();
+      if (parts.isNotEmpty && parts.last != '..') {
+        parts.removeLast();
+      } else if (!virtual.startsWith('/')) {
+        parts.add(part);
+      }
     } else if (part.isNotEmpty && part != '.') {
       parts.add(part);
     }
   }
-  final prefix = '/${parts.join('/')}';
-  final base = prefix == '/' ? '' : prefix;
+  final leading = virtual.startsWith('//') && !virtual.startsWith('///')
+      ? '//'
+      : virtual.startsWith('/')
+      ? '/'
+      : '';
+  final normalized = '$leading${parts.join('/')}';
+  final prefix = normalized.isEmpty ? '.' : normalized;
+  final base = prefix.replaceFirst(RegExp(r'/+$'), '');
   for (final entry in files.entries) {
     final path = entry.key! as String;
     if (path != prefix && !path.startsWith('$base/')) continue;
     final rel = path.substring(base.length).replaceFirst(RegExp('^/+'), '');
     final target = '$host/$rel';
-    if (path.endsWith('/')) {
+    if (rel.isEmpty || path.endsWith('/')) {
       Directory(target).createSync(recursive: true);
       continue;
     }

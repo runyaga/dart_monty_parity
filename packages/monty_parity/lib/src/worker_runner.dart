@@ -41,6 +41,13 @@ const _inexpressible = {
   'ctor_only': 'no mounts in the worker driver',
   'rename_host_before_feed': 'no mounts in the worker driver',
   'restore_snapshot_at': 'no snapshots in the worker driver',
+  'feed_start': 'requires the public session driver',
+  'dispatch': 'requires the public session driver',
+  'expect_os_snapshot': 'requires the public session driver',
+  'record_dispatch': 'requires the public session driver',
+  'sleep_access': 'requires the public session driver',
+  'mount_indices': 'requires the public session driver',
+  'restore_mount': 'requires the public session driver',
   'assert_message_annotations': 'no knob in the worker driver',
 };
 
@@ -74,6 +81,15 @@ abstract interface class CaseSession {
 
   /// Ends the session.
   Future<void> close();
+}
+
+/// An intentional closed mount refused at the initial feed boundary.
+final class ClosedMountRefused implements Exception {
+  /// Retains the host error without catching unrelated runner StateErrors.
+  const ClosedMountRefused(this.error);
+
+  /// Core's closed-root feed refusal.
+  final StateError error;
 }
 
 /// The host could not build an OS call's answer: [error] is core's refusal of
@@ -153,7 +169,16 @@ Future<Map<String, Object?>> runEngineCase(
     // its `host` block.
     if (key == 'host' && host.appliesHost) continue;
     if (applies.contains(key)) continue;
-    if (c[key] == null || (c[key] is Map && (c[key]! as Map).isEmpty)) continue;
+    final requested =
+        [
+          c,
+          ...((c['feeds'] as List?) ?? []).whereType<Map<Object?, Object?>>(),
+        ].any(
+          (options) =>
+              options[key] != null &&
+              !(options[key] is Map && (options[key]! as Map).isEmpty),
+        );
+    if (!requested) continue;
     unsupported[key] = value;
   }
   final config = configure(c, unsupported);
@@ -336,11 +361,10 @@ Future<Map<String, Object?>> runEngineCase(
         step['thrown'] = 'MontyTypingError';
         host.rawOutputs.add(null);
         // A closed mount is a host-state refusal.
-        // ignore: avoid_catching_errors
-      } on StateError catch (e) {
+      } on ClosedMountRefused catch (e) {
         step['exception'] = {
           'type': 'StateError',
-          'message': e.message,
+          'message': e.error.message,
           'traceback': <Object?>[],
         };
         step['thrown'] = 'host';

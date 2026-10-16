@@ -3280,7 +3280,6 @@
   "mount_usage_inspection": {
    "allowed": "REFUSED-as-upstream",
    "reason": "no binding API (P13)",
-   "status": "REFUSED",
    "historical": null
   },
   "telemetry_adapter": {

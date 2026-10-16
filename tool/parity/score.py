@@ -37,6 +37,10 @@ other fails. Nothing else is tolerated.
 `controls_web` lists portable controls that must MATCH on each selected web
 backend, independently of the row's mount-capability status. A missing,
 refused or divergent control always fails scoring, including baseline recording.
+Every case omitted by `cases_web` is audited too: mounted cases must record a
+MountDir constructor refusal, and portable cases must MATCH. Historical runs
+ignore both current web selectors and controls. The sole unmeasured refusal,
+mount_usage_inspection, is derived from its validated upstream declaration.
 
 --assert-rows fails when a re-measured row's status differs from the status
 recorded for it in rows.json under the backend's `expect` (the baseline
@@ -161,7 +165,10 @@ NUM = re.compile(r'\d+(\.\d+)?')
 ALL_CODES = ['V', 'E', 'P', 'O', 'X', 'H', 'C']
 E_PARTS = ['Et', 'Em', 'Ef', 'Ed']  # exception type, message, frames, structured data
 FIELD = {'V': 'value', 'P': 'prints', 'O': 'os_calls', 'X': 'ext_calls', 'H': 'host_calls'}
-CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close')
+CONFIG_KEYS = ('inputs', 'limits', 'os_policy', 'fs', 'cwd', 'mount_close',
+               'feed_start', 'dispatch', 'expect_os_snapshot', 'record_dispatch',
+               'sleep_access', 'mount_indices', 'restore_mount', 'restore_snapshot_at',
+               'close_mount_before_feed', 'ctor_only', 'rename_host_before_feed')
 
 
 # ------------------------------------------------------------------ compare
@@ -258,9 +265,53 @@ def load(p: Path):
     return json.loads(p.read_text()) if p.exists() else None
 
 
-def cases_for(rule: dict, backend: str) -> list[str]:
-    """Select an explicit browser case set, including an intentionally empty one."""
-    return rule.get('cases_web', rule.get('cases', [])) if backend != 'vm' else rule.get('cases', [])
+def cases_for(rule: dict, backend: str, *, historical: bool = False) -> list[str]:
+    """Historical runs predate web selection; current omissions are audited separately."""
+    return (rule.get('cases_web', rule.get('cases', []))
+            if backend != 'vm' and not historical else rule.get('cases', []))
+
+
+def check_rule_evidence(rules: dict, *, historical: bool = False) -> None:
+    """A status is measured, except the explicitly approved upstream API absence."""
+    for row, rule in rules.items():
+        if 'status' in rule or 'allowed' in rule:
+            if not (row == 'mount_usage_inspection'
+                    and rule.get('allowed') == 'REFUSED-as-upstream'
+                    and rule.get('reason') == 'no binding API (P13)'
+                    and rule.get('status', 'REFUSED') == 'REFUSED'
+                    and not rule.get('cases') and not rule.get('probes')):
+                sys.exit(f'{row}: status needs measured evidence or the approved upstream refusal declaration')
+        for key in (() if historical else ('cases_web', 'controls_web')):
+            if key in rule:
+                ids = rule[key]
+                if (not isinstance(ids, list) or len(ids) != len(set(ids))
+                        or set(ids) - set(rule.get('cases', []))):
+                    sys.exit(f'{row}: {key} must be a unique subset of cases')
+
+
+def web_controls(rule: dict, backend: str, out: Path, expected: Path,
+                 cases: dict) -> list[dict]:
+    """Every omitted case remains enforced: mount construction refuses, portable work matches."""
+    omitted = set(rule.get('cases', [])) - set(cases_for(rule, backend))
+    controls = []
+    for cid in sorted(omitted | set(rule.get('controls_web', []))):
+        mounted = bool(cases[cid].get('fs', {}).get('mounts'))
+        want = 'REFUSED' if mounted else 'MATCH'
+        if mounted:
+            # Check the actual host-mount instrument, never a refmem override.
+            got = load(out / cid / f'core-{backend}.json')
+            if got is None or got.get('runner_error'):
+                cls, bad, applied = 'NO-OUTCOME', ['!'], []
+            elif (got.get('refused') == {'where': 'MountDir', 'type': 'UnsupportedError'}
+                  and not got.get('unsupported') and not got.get('steps')):
+                cls, bad, applied = 'REFUSED', [], []
+            else:
+                cls, bad, applied = 'DIVERGE', ['refusal'], []
+        else:
+            cls, bad, applied = classify_case(cid, backend, rule, out, expected, historical=False)
+        controls.append({'case': cid, 'class': cls, 'expected': want,
+                         'differs': bad, 'exceptions': applied})
+    return controls
 
 
 def classify_case(cid: str, backend: str, rule: dict, out: Path, expected: Path,
@@ -1207,8 +1258,9 @@ def main() -> int:
     if historical:
         all_rules = {row: rule.get('historical', rule) for row, rule in all_rules.items()
                      if rule.get('historical', rule) is not None}
+    check_rule_evidence(all_rules, historical=historical)
     # A row with only a `worker` block has no core-engine cases: its recorded status stands.
-    rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule or 'status' in rule}
+    rules = {row: rule for row, rule in all_rules.items() if 'cases' in rule or 'probes' in rule or 'allowed' in rule}
     backends = a.backends.split(',')
     with MANIFEST.open() as manifest_file:
         manifest = list(csv.DictReader(manifest_file, delimiter='\t'))
@@ -1225,23 +1277,22 @@ def main() -> int:
 
     result: dict = {'backends': backends, 'arch': arch, 'rows': {}}
     mismatches = []
+    indexed_cases = case_index()
     for row, rule in rules.items():
         result['rows'][row] = {}
         for b in backends:
             cells = probe_status(row, rule, b, a.outcomes, a.expected)[1] if 'probes' in rule else []
-            for cid in cases_for(rule, b):
+            for cid in cases_for(rule, b, historical=historical):
                 cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=historical)
                 cells.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
-            status = row_status([c['class'] for c in cells]) if cells else rule.get('status', 'UNVERIFIED')
+            status = row_status([c['class'] for c in cells]) if cells else ('REFUSED' if rule.get('allowed') == 'REFUSED-as-upstream' else 'UNVERIFIED')
             expect = (rule.get('expect') or {}).get('web' if b != 'vm' else 'ffi')
             expect = plat.get('rows', {}).get(row, {}).get(b, expect)
             result['rows'][row][b] = {'status': status, 'expect': expect, 'cells': cells}
-            if b != 'vm' and rule.get('controls_web'):
-                controls = []
-                for cid in rule['controls_web']:
-                    cls, bad, applied = classify_case(cid, b, rule, a.outcomes, a.expected, historical=False)
-                    controls.append({'case': cid, 'class': cls, 'differs': bad, 'exceptions': applied})
-                result['rows'][row][b]['controls'] = controls
+            if b != 'vm' and not historical:
+                controls = web_controls(rule, b, a.outcomes, a.expected, indexed_cases)
+                if controls:
+                    result['rows'][row][b]['controls'] = controls
             if expect and status != expect:
                 mismatches.append((row, b, status, expect))
 
@@ -1267,7 +1318,7 @@ def main() -> int:
             r = result['rows'][row][b]
             mark = '' if not r['expect'] or r['status'] == r['expect'] else f" (historical {r['expect']})"
             controls = r.get('controls', [])
-            control_mark = (f"; controls {sum(c['class'] == 'MATCH' for c in controls)}/{len(controls)} MATCH"
+            control_mark = (f"; controls {sum(c['class'] == c['expected'] for c in controls)}/{len(controls)} satisfied"
                             if controls else '')
             cells.append(r['status'] + mark + control_mark)
         lines.append(f'| {row} | ' + ' | '.join(cells) + ' |')
@@ -1293,7 +1344,7 @@ def main() -> int:
     for row, by_backend in result['rows'].items():
         for b, verdict in by_backend.items():
             for control in verdict.get('controls', []):
-                if control['class'] != 'MATCH':
+                if control['class'] != control['expected']:
                     print(f"FAIL web control {control['case']} (row {row}) on {b}: "
                           f"{control['class']} {control['differs']}")
                     rc = 1

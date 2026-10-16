@@ -56,9 +56,9 @@ Not exceptions, but they decide statuses:
 | `memory_filesystem` | the separate `refmem` engine outcome is compared to upstream's `OSAccess`+`MemoryFile` (`refmem-py.json`); compares value, exception type and message | the row is the in-memory filesystem; upstream's in-memory filesystem is the comparable oracle |
 | B1 filesystem OS rows (all ten) | `core-vm.json` against `ref-py.json` on VM; `refmem-<backend>.json` against `refmem-py.json` on dart2js and dart2wasm; compares values, exceptions, prints, OS/external calls and configuration (refmem has no host-call column); missing memory outcomes fail, with no fallback to the core column | web has no host mounts; the VM uses the same host-directory mount as the Python oracle |
 | cases with nonempty `fs.mounts`; mount budget probes | real `MountDir` on VM; `refused: {where: 'MountDir', type: 'UnsupportedError'}` on web scores REFUSED | upstream only exports MountDir from `monty-js/ts/node.ts:3-4`; the separate refmem run applies no mount mode or cap |
-| `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects only mount-free cases on web | mount refusal must not hide portable cwd/path behavior |
+| `working_directory`, `virtual_path_validation_normalization` | `cases_web` selects the capability cells; all omitted cases retain mandatory web verdicts (MountDir constructor REFUSED for mounted cases, MATCH for portable cases) | missing, crashing, unrefused mounted cases and omitted portable regressions fail scoring and baseline recording |
 | `mount_dispatch_and_fallback` | web scores mount-dependent cases as the capability verdict; every mount-free sleep/no-table case is also a mandatory `controls_web` verdict | each portable control must MATCH or `score.py` fails, even when the capability row is accepted as REFUSED; missing outcomes, refusals and transcript/value mutations fail |
-| `mount_usage_inspection` | declared REFUSED, `allowed: REFUSED-as-upstream`, no synthetic probe | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
+| `mount_usage_inspection` | REFUSED derived from the validated `allowed: REFUSED-as-upstream` declaration and exact reason `no binding API (P13)`; no arbitrary `status` fallback | P13: neither binding exposes usage counters; the draft target allows REFUSED everywhere |
 | `interactive_continuation`, `compile_program`, `compiled_source` | oracle is upstream `monty`'s Rust API at the pinned commit (`ref-rust.json`) | no upstream binding exposes them |
 | `file_mode_inspection`, `file_handle_value_conversion` | value and exception only, not the OS-call transcript | path-type differences in transcripts (str vs PurePosixPath) belong to `os_callback_adapter` |
 | `raised_exception` / `traceback_frames` | exception type + message / frames only, over the 273 `b12_*` cases | each row is one part of an exception |
@@ -227,3 +227,29 @@ now MATCH and all four telemetry rows are PRESENT on vm. See
 [the source-cited finding and resolution](../../.gate-logs/R-P2-core-findings.md).
 OTel dependencies live in the parity-only oracle lock; the shared upstream
 lock matches core.
+
+## Runner boundaries after P-F2 review
+
+Only the browser fixture's direct `MountDir` constructor can emit a browser mount
+refusal. Unsupported errors in VM construction, fixture setup, checkout, feed,
+or cleanup remain runner failures. The intentional closed-mount case records
+only core's matching closed-root error at the initial feed-start call; snapshot
+guards and unrelated StateErrors escape to `runner_error`.
+
+`host_noncanonical` supplies a real symlink plus `/.` in both runners. Core must
+resolve that link to produce the recorded canonical host path. Seed prefixes
+follow POSIX normalization (including relative paths); an entry equal to the
+mount root denotes a directory. An explicit empty `fs.mounts` list still means
+host dispatch with no mount table, as upstream does, rather than the independent
+`refmem` memory-filesystem instrument. Refmem ignores host mount selection.
+
+`expect_os_snapshot`, manual dispatch, restore points and sleep access request
+the suspendable session path without requiring `feed_start`. The OS-handler
+counter excludes unrelated host-object events. The raw protocol worker cannot
+express public mount/snapshot dispatch semantics: it now reports those controls
+as `unsupported`, including per-feed options, rather than silently ignoring them.
+The Python oracle and Dart public-session runner implement the controls.
+
+Historical scoring uses historical case lists and ignores current browser case
+selection and control audits. Current scoring validates the sole approved
+unmeasured refusal declaration; other empty rows cannot claim PRESENT or REFUSED.
