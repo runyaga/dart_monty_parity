@@ -2,11 +2,12 @@
  "case": "b11cb_rename",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": {
-    "t": "none"
+    "t": "path",
+    "v": "/d/b.txt"
    },
    "exception": null,
    "prints": [],

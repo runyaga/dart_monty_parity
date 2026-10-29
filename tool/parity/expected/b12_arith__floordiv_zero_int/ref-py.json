@@ -2,7 +2,7 @@
  "case": "b12_arith__floordiv_zero_int",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,

@@ -1,7 +1,7 @@
 # dart_monty_parity
 
 Measures how far [dart_monty_core](https://github.com/runyaga/dart_monty_core) matches upstream
-[pydantic/monty](https://github.com/pydantic/monty) 1.1.0, per capability row of
+[pydantic/monty](https://github.com/pydantic/monty) 1.2.0, per capability row of
 `tool/upstream/capability-manifest.tsv`, on the Dart VM (a worker process), dart2js and dart2wasm (a Web
 Worker).
 
@@ -19,9 +19,12 @@ as long as its `tool/upstream` files equal the copies here (`tool/check_core_ups
 P-F2 requires core's F-2 host `MountDir`, the per-feed `mount` parameter and the
 native mount service beside its worker executable. `tool/build_worker.sh` builds
 both artifacts; the VM Rust cache has a mount-service-specific key.
-`CORE_REF` uses F-2's squash merge `8f45d1de077f9dca7d23045819518758a39ea3d7`.
-The merged baseline currently comes from main's R-P2 recording; all three
-backends need re-recording for the combined telemetry and filesystem runner.
+`CORE_REF` targets core branch `0.120` at
+`feb13f9173eee492310661156ca9f19a600bc84d` for the upstream 1.2.0 port.
+The expected outcomes in `tool/parity/expected/` and `tool/parity/manifest.json`
+come from pydantic-monty 1.2.0 via `check_expected.py --write` on Linux and pass
+a clean `check_expected.py` run. Only the merged baseline still predates this
+port and must be re-recorded on all three backends.
 The M3 F-1-window allowance has been retired on VM.
 The owner-approved M6 target (PLAN M6T) combines 24 filesystem and four telemetry
 rows. CI asserts it at `CORE_REF` in `current`, over the core engine's measured

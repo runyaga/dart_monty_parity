@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reference runner: each parity case through upstream pydantic/monty 1.1.0.
+"""Reference runner: each parity case through upstream pydantic/monty 1.2.0.
 
 pydantic_monty is the oracle: its outcome for a case is the expected value
 every dart_monty_core backend is scored against.

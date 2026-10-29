@@ -2,7 +2,7 @@
  "case": "b11fs_rename",
  "engine": "refmem",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0 OSAccess+MemoryFile",
+ "engine_version": "pydantic_monty 1.2.0 OSAccess+MemoryFile",
  "steps": [
   {
    "value": {
@@ -10,7 +10,7 @@
     "items": [
      {
       "t": "str",
-      "v": "None"
+      "v": "/data/z.txt"
      },
      {
       "t": "bool",

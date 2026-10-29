@@ -2,7 +2,7 @@
  "case": "b11fs_stat_file",
  "engine": "refmem",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0 OSAccess+MemoryFile",
+ "engine_version": "pydantic_monty 1.2.0 OSAccess+MemoryFile",
  "steps": [
   {
    "value": {

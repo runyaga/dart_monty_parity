@@ -2,7 +2,7 @@
  "case": "b11fs_rename_replace",
  "engine": "refmem",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0 OSAccess+MemoryFile",
+ "engine_version": "pydantic_monty 1.2.0 OSAccess+MemoryFile",
  "steps": [
   {
    "value": {
