@@ -2,7 +2,7 @@
  "case": "b12_import__error_module_not_found",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,
@@ -22,7 +22,18 @@
     ]
    },
    "prints": [],
-   "os_calls": [],
+   "os_calls": [
+    {
+     "name": "import",
+     "args": [
+      {
+       "t": "str",
+       "v": "nonexistent_module"
+      }
+     ],
+     "kwargs": {}
+    }
+   ],
    "ext_calls": [],
    "name_lookups": [],
    "host_calls": [],

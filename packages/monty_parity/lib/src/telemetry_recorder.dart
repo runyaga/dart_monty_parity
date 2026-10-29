@@ -181,7 +181,7 @@ final class ParityTelemetry implements MontyTelemetry {
       );
     }
     if (span.name.startsWith('session ')) {
-      _require(span.attributes['monty_version'] == '1.1.0', 'monty_version');
+      _require(span.attributes['monty_version'] == '1.2.0', 'monty_version');
     }
 
     return {

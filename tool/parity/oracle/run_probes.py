@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reference probes: API-level parity probes through upstream pydantic/monty 1.1.0.
+"""Reference probes: API-level parity probes through upstream pydantic/monty 1.2.0.
 
 usage: python -I tool/parity/oracle/run_probes.py OUTDIR
 

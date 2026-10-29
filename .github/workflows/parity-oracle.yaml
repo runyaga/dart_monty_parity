@@ -1,7 +1,7 @@
 name: Parity oracle
 
 # Regenerates every parity expected outcome (tool/parity/expected) from the
-# reference oracle -- pydantic-monty 1.1.0 by sha256 (tool/upstream) and
+# reference oracle -- pydantic-monty 1.2.0 by sha256 (tool/upstream) and
 # upstream monty at the pinned commit for three Rust-only probes -- and fails
 # on any byte of difference, or on a manifest that does not bind them.
 #

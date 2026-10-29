@@ -2,7 +2,7 @@
  "case": "l07_feed_timeout_catch",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,

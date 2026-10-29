@@ -2,7 +2,7 @@
  "case": "b12_fstring__error_float_f_on_str",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,

@@ -2,38 +2,29 @@
  "case": "b11fs_iter_open",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
-   "value": null,
-   "exception": {
-    "type": "TypeError",
-    "message": "'_io.TextIOWrapper' object is not iterable",
-    "traceback": [
+   "value": {
+    "t": "list",
+    "items": [
      {
-      "filename": "<python-input-0>",
-      "line": 4,
-      "column": 10,
-      "end_line": 4,
-      "end_column": 11,
-      "function": "<module>",
-      "source_line": "    r = [l for l in f]"
+      "t": "str",
+      "v": "hello\n"
+     },
+     {
+      "t": "str",
+      "v": "world\n"
      }
     ]
    },
+   "exception": null,
    "prints": [],
    "os_calls": [],
    "ext_calls": [],
    "name_lookups": [],
    "host_calls": [],
-   "usage": null,
-   "error_class": "MontyRuntimeError",
-   "host_exception_mro": [
-    "TypeError",
-    "Exception",
-    "BaseException",
-    "object"
-   ]
+   "usage": null
   }
  ],
  "unsupported": {

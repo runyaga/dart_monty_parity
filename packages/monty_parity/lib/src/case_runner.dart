@@ -30,6 +30,11 @@ final class Inexpressible implements Exception {
 
 /// [MontyValue] -> canonical form.
 Object? montyToCanon(MontyValue v) => switch (v) {
+  // Core returns host modules as ExternalModule with no canonical form here.
+  ExternalModule() => throw const Inexpressible(
+    'core returns a host module as an ExternalModule, '
+    'which has no canonical form here',
+  ),
   MontyNone() => {'t': 'none'},
   MontyBool(:final value) => {'t': 'bool', 'v': value},
   MontyInt(:final value) => {'t': 'int', 'v': '$value'},

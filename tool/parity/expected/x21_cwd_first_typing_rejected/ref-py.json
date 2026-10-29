@@ -2,7 +2,7 @@
  "case": "x21_cwd_first_typing_rejected",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,
@@ -22,7 +22,7 @@
   {
    "value": {
     "t": "str",
-    "v": "/second"
+    "v": "/first"
    },
    "exception": null,
    "prints": [],

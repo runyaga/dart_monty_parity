@@ -2,7 +2,7 @@
  "case": "b12_try_except__bare_raise_no_context",
  "engine": "ref",
  "backend": "py",
- "engine_version": "pydantic_monty 1.1.0",
+ "engine_version": "pydantic_monty 1.2.0",
  "steps": [
   {
    "value": null,

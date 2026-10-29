@@ -1,6 +1,6 @@
 """The host-object cases of the session probes (`sp_host_*`): one host class, its wrappers and steps.
 
-Shared by run_probes.py (the oracle: upstream's `ClassInstance` / `ClassType` on pydantic-monty 1.1.0) and, through
+Shared by run_probes.py (the oracle: upstream's `ClassInstance` / `ClassType` on pydantic-monty 1.2.0) and, through
 `python3 -I tool/parity/oracle/host_cases.py --write`, by the Dart runner
 (packages/monty_parity/lib/src/host_cases.g.dart, `--check` fails if it is stale). The case language is
 core's own host oracle's (`tool/generate_host_oracle.py` there); the cases here are the same, minus the steps

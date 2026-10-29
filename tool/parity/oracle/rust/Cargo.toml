@@ -8,8 +8,8 @@ edition = "2024"
 publish = false
 
 [dependencies]
-monty = { git = "https://github.com/pydantic/monty", rev = "591527397445bf734873252d1ee20c1b6308fe7f" }
-monty-types = { git = "https://github.com/pydantic/monty", rev = "591527397445bf734873252d1ee20c1b6308fe7f" }
+monty = { git = "https://github.com/pydantic/monty", rev = "e8db9aef41aa73f4f709c15a4bc8a2d198be5ead" }
+monty-types = { git = "https://github.com/pydantic/monty", rev = "e8db9aef41aa73f4f709c15a4bc8a2d198be5ead" }
 serde_json = "1"
 
 [workspace]

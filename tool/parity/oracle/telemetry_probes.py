@@ -94,7 +94,7 @@ class Recorder:
                 assert p.start_time <= s.start_time <= s.end_time <= p.end_time
         for s in spans:
             if s.name.startswith('session '):
-                assert s.attributes['monty_version'] == '1.1.0'
+                assert s.attributes['monty_version'] == '1.2.0'
         state_sizes = [int(s.attributes['state_bytes']) for s in spans if 'state_bytes' in s.attributes]
         assert state_sizes == sizes, ('state_bytes', state_sizes, sizes)
         logs = []
